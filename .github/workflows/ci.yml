@@ -33,7 +33,29 @@ jobs:
       run: chmod +x ./gradlew
     
     - name: Run tests
-      run: ./gradlew test
+      run: ./gradlew test --continue --info
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: build/test-results/test/
+    
+    - name: Upload test reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-reports
+        path: build/reports/tests/test/
+    
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Gradle Tests
+        path: build/test-results/test/TEST-*.xml
+        reporter: java-junit
     
     - name: Build application
       run: ./gradlew build -x test

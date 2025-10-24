@@ -47,4 +47,19 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	
+	// 테스트 리포트 생성 설정
+	testLogging {
+		events("passed", "skipped", "failed")
+		showStandardStreams = false
+	}
+	
+	// 테스트 실패 시에도 계속 진행
+	ignoreFailures = false
+	
+	// 테스트 결과 리포트 생성
+	reports {
+		junitXml.required.set(true)
+		html.required.set(true)
+	}
 }
