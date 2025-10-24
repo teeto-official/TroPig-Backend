@@ -1,0 +1,99 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresql-dev-backup
+  namespace: tropig-dev
+spec:
+  schedule: "0 2 * * *"  # 매일 오전 2시
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              BACKUP_FILE="/backup/tropig_dev_$(date +%Y%m%d_%H%M%S).sql"
+              pg_dump -h postgresql-dev-service -U tropig_user -d tropig_dev > $BACKUP_FILE
+              echo "Backup completed: $BACKUP_FILE"
+              # 7일 이상 된 백업 파일 삭제
+              find /backup -name "tropig_dev_*.sql" -mtime +7 -delete
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-dev-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgresql-dev-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-dev-backup-pvc
+  namespace: tropig-dev
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresql-prod-backup
+  namespace: tropig-prod
+spec:
+  schedule: "0 3 * * *"  # 매일 오전 3시
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              BACKUP_FILE="/backup/tropig_prod_$(date +%Y%m%d_%H%M%S).sql"
+              pg_dump -h postgresql-prod-service -U tropig_user -d tropig_prod > $BACKUP_FILE
+              echo "Backup completed: $BACKUP_FILE"
+              # 30일 이상 된 백업 파일 삭제
+              find /backup -name "tropig_prod_*.sql" -mtime +30 -delete
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-prod-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgresql-prod-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-prod-backup-pvc
+  namespace: tropig-prod
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi

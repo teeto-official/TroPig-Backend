@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tropig-dev
+  labels:
+    name: tropig-dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tropig-prod
+  labels:
+    name: tropig-prod

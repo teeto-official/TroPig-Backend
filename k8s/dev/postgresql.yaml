@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql-dev
+  namespace: tropig-dev
+  labels:
+    app: postgresql-dev
+spec:
+  serviceName: postgresql-dev
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-dev
+  template:
+    metadata:
+      labels:
+        app: postgresql-dev
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: tropig_dev
+        - name: POSTGRES_USER
+          value: tropig_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-dev-secret
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgresql-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U tropig_user -d tropig_dev -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U tropig_user -d tropig_dev -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 6
+  volumeClaimTemplates:
+  - metadata:
+      name: postgresql-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgresql-dev-secret
+  namespace: tropig-dev
+type: Opaque
+data:
+  password: dHJvcGlnX3Bhc3N3b3Jk  # tropig_password (base64 encoded)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-dev-service
+  namespace: tropig-dev
+  labels:
+    app: postgresql-dev
+spec:
+  selector:
+    app: postgresql-dev
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  type: ClusterIP
