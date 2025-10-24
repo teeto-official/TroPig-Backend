@@ -39,7 +39,7 @@ account-validation:
     monthly-limit: 30000
     rate-limit: 100  # 분당 요청 수
 
-# 캐시 설정
+# Spring 설정
 spring:
   cache:
     type: simple
