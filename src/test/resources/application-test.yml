@@ -1,0 +1,55 @@
+spring:
+  profiles:
+    active: test
+  
+  # Test database (H2 in-memory)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  
+  cache:
+    type: simple
+
+# Disable external API calls during tests
+toss:
+  api:
+    key: test-key
+    secret: test-secret
+    base-url: http://localhost:9999
+    timeout: 1000
+    retry-count: 1
+    account-validation:
+      enabled: false
+
+account-validation:
+  methods:
+    - FORMAT
+  cache:
+    enabled: false
+  format-validation:
+    enabled: true
+    strict-mode: false
+  api-limits:
+    daily-limit: 10000
+    monthly-limit: 100000
+    rate-limit: 1000
+
+logging:
+  level:
+    com.tropig.backend: WARN
+    org.springframework: WARN
+    org.hibernate: WARN
