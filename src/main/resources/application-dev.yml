@@ -17,7 +17,6 @@ spring:
       platform: h2
       mode: always
       schema-locations: classpath:schema-postgresql.sql
-      data-locations: classpath:data.sql
 
 server:
   port: 8080
