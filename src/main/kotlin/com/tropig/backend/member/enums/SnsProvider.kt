@@ -1,4 +1,4 @@
-package com.tropig.backend.user.enums
+package com.tropig.backend.member.enums
 
 enum class SnsProvider {
     GOOGLE,

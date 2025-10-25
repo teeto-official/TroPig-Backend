@@ -14,9 +14,14 @@ spring:
         format_sql: true
   sql:
     init:
-      platform: h2
+      platform: postgresql
       mode: always
-      schema-locations: classpath:schema-h2.sql
+      schema-locations: classpath:schema-postgresql.sql
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=10m
 
 server:
   port: 8080
@@ -37,3 +42,7 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
+jwt:
+  secret: "your256bitSecretKeyPleaseChangeItThisIsDevelopTest"
+  expiration: 3600000 # 1시간 (ms)
+  refresh-expiration: 86400000 # 24H

@@ -12,12 +12,6 @@ CREATE TABLE IF NOT EXISTS member (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Trigger for member.updated_at
-CREATE TRIGGER member_updated_at_trigger
-AFTER UPDATE ON member
-FOR EACH ROW
-CALL "org.h2.samples.TriggerUpdatedAt";
-
 -- Indexes
 CREATE INDEX idx_users_username ON member(username);
 CREATE INDEX idx_users_email ON member(email);

@@ -1,7 +1,8 @@
-package com.tropig.backend.controller
+package com.tropig.backend.member.controller
 
-import com.tropig.backend.user.entity.Member
-import com.tropig.backend.service.MemberService
+import com.tropig.backend.member.entity.Member
+import com.tropig.backend.member.model.request.SignUpRequest
+import com.tropig.backend.member.service.MemberService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -9,14 +10,10 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/member")
 @CrossOrigin(origins = ["*"])
-class MemberController(private val memberService: MemberService) {
-    
-    @GetMapping
-    fun getAllUsers(): ResponseEntity<List<Member>> {
-        val users = memberService.getAllUsers()
-        return ResponseEntity.ok(users)
-    }
-    
+class MemberController(
+    private val memberService: MemberService
+) {
+
     @GetMapping("/{id}")
     fun getUserById(@PathVariable id: Long): ResponseEntity<Member> {
         val user = memberService.getUserById(id)
@@ -37,10 +34,12 @@ class MemberController(private val memberService: MemberService) {
         }
     }
     
-    @PostMapping
-    fun createUser(@RequestBody request: CreateUserRequest): ResponseEntity<Any> {
+    @PostMapping("/sign-up")
+    fun createUser(
+        @RequestBody request: SignUpRequest
+    ): ResponseEntity<Any> {
         return try {
-            val user = memberService.createUser(request.snsId, request.snsProvider, request.email, request.nickname)
+            val user = memberService.signUp(request)
             ResponseEntity.status(HttpStatus.CREATED).body(user)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().body(mapOf("error" to e.message))
@@ -70,13 +69,6 @@ class MemberController(private val memberService: MemberService) {
         }
     }
 }
-
-data class CreateUserRequest(
-    val snsId: String,
-    val snsProvider: com.tropig.backend.user.enums.SnsProvider,
-    val email: String,
-    val nickname: String
-)
 
 data class UpdateUserRequest(
     val email: String?,

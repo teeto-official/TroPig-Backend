@@ -1,11 +1,12 @@
-package com.tropig.backend.user.entity
+package com.tropig.backend.member.entity
 
-import com.tropig.backend.user.enums.Role
-import com.tropig.backend.user.enums.SnsProvider
+import com.tropig.backend.member.enums.Role
+import com.tropig.backend.member.enums.SnsProvider
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Entity
 @Table(name = "member")
@@ -42,11 +43,15 @@ data class Member(
     @Column(nullable = true)
     var deletedAt: LocalDateTime? = null
 
-    @Column(name = "created_at")
-    @CreatedDate
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    @Column(nullable = true)
+    var favoriteGenres: String? = null
 
-    @Column(name = "updated_at")
+    @Column(nullable = true)
+    var favoriteRules: String? = null
+
+    @CreatedDate
+    val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+
     @LastModifiedDate
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    val updatedAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
 }
