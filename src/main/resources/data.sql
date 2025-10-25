@@ -24,3 +24,4 @@ INSERT INTO comments (content, post_id, author_id) VALUES
 ('Amazing work! Keep it up.', 3, 1),
 ('This is exactly what I was looking for.', 3, 2)
 ON CONFLICT DO NOTHING;
+

@@ -43,5 +43,3 @@ account-validation:
 spring:
   cache:
     type: simple
-    cache-names:
-      - accountValidation

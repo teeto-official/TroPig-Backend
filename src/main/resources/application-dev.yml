@@ -14,8 +14,9 @@ spring:
         format_sql: true
   sql:
     init:
+      platform: postgresql
       mode: always
-      schema-locations: classpath:schema.sql
+      schema-locations: classpath:schema-postgresql.sql
       data-locations: classpath:data.sql
 
 server:
