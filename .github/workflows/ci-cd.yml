@@ -37,6 +37,10 @@ jobs:
           echo "SPRING_PROFILES_ACTIVE=dev" >> $GITHUB_ENV
         fi
 
+    - name: Check env
+      run: |
+        echo "Spring profile is $SPRING_PROFILES_ACTIVE"
+
     - name: Cache Gradle packages
       uses: actions/cache@v3
       with:
