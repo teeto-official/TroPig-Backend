@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: dev
+
   datasource:
     url: jdbc:postgresql://postgresql-dev-service.tropig-dev.svc.cluster.local:5432/tropig_dev
     username: ${DB_USERNAME:tropig_user}
