@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: ${PROFILES_ACTIVE:local}
 
   datasource:
     url: jdbc:postgresql://postgresql-dev-service.tropig-dev.svc.cluster.local:5432/tropig_dev
@@ -46,6 +46,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 jwt:
-  secret: "your256bitSecretKeyPleaseChangeItThisIsDevelopTest"
+  secret: ${JWT_SECRET}
   expiration: 3600000 # 1시간 (ms)
   refresh-expiration: 86400000 # 24H

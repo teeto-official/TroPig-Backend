@@ -57,6 +57,12 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run tests
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: ./gradlew test -Dspring.profiles.active=test
 
       - name: Generate test report
