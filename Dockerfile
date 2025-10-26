@@ -29,6 +29,9 @@ WORKDIR /app
 # Copy the built jar from builder stage
 COPY --from=builder /app/build/libs/*.jar app.jar
 
+# ARG 값을 ENV로 전달 (컨테이너 실행 시 사용 가능)
+ENV SPRING_PROFILES_ACTIVE=${PROFILE}
+
 # Change ownership to app user
 RUN chown appuser:appuser app.jar
 
