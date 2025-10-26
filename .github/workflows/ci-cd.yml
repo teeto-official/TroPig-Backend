@@ -57,6 +57,8 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run tests
+        env:
+          SPRING_PROFILES_ACTIVE: test
         run: ./gradlew test
 
       - name: Generate test report
