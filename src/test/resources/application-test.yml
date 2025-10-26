@@ -50,3 +50,8 @@ logging:
     com.tropig.backend: WARN
     org.springframework: WARN
     org.hibernate: WARN
+
+jwt:
+  secret: "your256bitSecretKeyPleaseChangeItThisIsTestTest"
+  expiration: 3600000
+  refresh-expiration: 86400000
