@@ -23,14 +23,18 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    - name: Set environment by branch
+    - name: Set Spring profile by branch
       run: |
-        if [[ "${GITHUB_REF##*/}" == "main" ]]; then
-          echo "PROFILE=prod" >> $GITHUB_ENV
-        elif [[ "${GITHUB_REF##*/}" == "develop" ]]; then
-          echo "PROFILE=dev" >> $GITHUB_ENV
+        BRANCH_NAME=${GITHUB_REF##*/}
+        echo "Current branch: $BRANCH_NAME"
+        if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
+          echo "SPRING_PROFILES_ACTIVE=prod" >> $GITHUB_ENV
+        elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+          echo "SPRING_PROFILES_ACTIVE=dev" >> $GITHUB_ENV
+        elif [[ "$GITHUB_REF" == refs/heads/feature/* ]]; then
+          echo "SPRING_PROFILES_ACTIVE=local" >> $GITHUB_ENV
         else
-          echo "PROFILE=local" >> $GITHUB_ENV
+          echo "SPRING_PROFILES_ACTIVE=dev" >> $GITHUB_ENV
         fi
 
     - name: Cache Gradle packages
