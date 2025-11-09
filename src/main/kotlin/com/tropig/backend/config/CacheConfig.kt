@@ -12,6 +12,6 @@ class CacheConfig {
 
     @Bean
     fun cacheManager(): CacheManager {
-        return ConcurrentMapCacheManager("accountValidation")
+        return ConcurrentMapCacheManager()
     }
 }

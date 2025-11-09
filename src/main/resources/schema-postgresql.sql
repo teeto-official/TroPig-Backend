@@ -2,17 +2,24 @@
 -- This file will be executed when the application starts
 
 -- Create users table
-CREATE TABLE IF NOT EXISTS member (
+CREATE TABLE member (
     id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    sns_id VARCHAR(255) NOT NULL,
+    sns_provider VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    nickname VARCHAR(255) NOT NULL,
+    role VARCHAR(255) NOT NULL,
+    is_adult BOOLEAN NOT NULL DEFAULT FALSE,
+    bio VARCHAR(255),
+    marketing_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    favorite_genres VARCHAR(255),
+    favorite_rules VARCHAR(255),
+    profile VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_member_username ON member(username);
+CREATE INDEX IF NOT EXISTS idx_member_nickname ON member(nickname);
 CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);

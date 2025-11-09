@@ -1,39 +1,29 @@
 package com.tropig.backend.member.controller
 
+import com.tropig.backend.common.annotation.LoginMember
+import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.exception.NotFoundException
+import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.member.entity.Member
+import com.tropig.backend.member.model.request.SignInRequest
 import com.tropig.backend.member.model.request.SignUpRequest
+import com.tropig.backend.member.model.request.UpdateMemberRequest
+import com.tropig.backend.member.model.response.MemberResponse
+import com.tropig.backend.member.model.response.TokenResponse
 import com.tropig.backend.member.service.MemberService
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/member")
 @CrossOrigin(origins = ["*"])
+@SecurityRequirement(name = "Bearer Authentication")
 class MemberController(
     private val memberService: MemberService
 ) {
-
-    @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Long): ResponseEntity<Member> {
-        val user = memberService.getUserById(id)
-        return if (user != null) {
-            ResponseEntity.ok(user)
-        } else {
-            ResponseEntity.notFound().build()
-        }
-    }
-    
-    @GetMapping("/email/{email}")
-    fun getUserByEmail(@PathVariable email: String): ResponseEntity<Member> {
-        val user = memberService.getUserByEmail(email)
-        return if (user != null) {
-            ResponseEntity.ok(user)
-        } else {
-            ResponseEntity.notFound().build()
-        }
-    }
-    
     @PostMapping("/sign-up")
     fun createUser(
         @RequestBody request: SignUpRequest
@@ -45,32 +35,39 @@ class MemberController(
             ResponseEntity.badRequest().body(mapOf("error" to e.message))
         }
     }
-    
-    @PutMapping("/{id}")
-    fun updateUser(
-        @PathVariable id: Long,
-        @RequestBody request: UpdateUserRequest
-    ): ResponseEntity<Any> {
-        val user = memberService.updateUser(id, request.email, request.nickname)
-        return if (user != null) {
-            ResponseEntity.ok(user)
-        } else {
-            ResponseEntity.notFound().build()
-        }
+
+    @PostMapping("/sign-in")
+    fun loginUser(
+        @RequestBody request: SignInRequest
+    ): TokenResponse {
+        val member = memberService.signIn(request)
+        return member
     }
-    
-    @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
-        val deleted = memberService.deleteUser(id)
-        return if (deleted) {
-            ResponseEntity.ok(mapOf("message" to "User deleted successfully"))
-        } else {
-            ResponseEntity.notFound().build()
-        }
+
+    @PutMapping
+    fun updateUser(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: UpdateMemberRequest,
+    ): MemberResponse {
+        val member = memberService.getUserByEmail(authMember.email) ?: throw NotFoundException(
+            message = "회원 정보를 찾을 수 없습니다.",
+            code = MessageCode.NOT_FOUND_MEMBER
+        )
+
+        val updatedMember = memberService.updateUser(member, request)
+        return MemberResponse.from(updatedMember)
+    }
+
+    @GetMapping
+    fun findUser(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+    ): MemberResponse {
+        val member = memberService.getUserByEmail(authMember.email) ?: throw NotFoundException(
+            message = "회원 정보를 찾을 수 없습니다.",
+            code = MessageCode.NOT_FOUND_MEMBER
+        )
+        return MemberResponse.from(member)
     }
 }
-
-data class UpdateUserRequest(
-    val email: String?,
-    val nickname: String?
-)

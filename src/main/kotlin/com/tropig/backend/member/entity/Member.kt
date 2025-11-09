@@ -18,14 +18,10 @@ data class Member(
     val email: String,
     
     @Column(nullable = false)
-    val nickname: String,
+    var nickname: String,
 
     @Column(nullable = false)
     val role: Role,
-
-    @Column(nullable = false)
-    var isMarketing: Boolean = false,
-
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +44,8 @@ data class Member(
 
     @Column(nullable = true)
     var favoriteRules: String? = null
+
+    var profile: String? = null
 
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
