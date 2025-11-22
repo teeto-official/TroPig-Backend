@@ -15,7 +15,7 @@ COPY src/ src/
 RUN ./gradlew bootJar --no-daemon
 
 # Runtime stage
-FROM openjdk:21-jre-slim
+FROM openjdk:21-jdk-slim
 
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -28,6 +28,9 @@ WORKDIR /app
 
 # Copy the built jar from builder stage
 COPY --from=builder /app/build/libs/*.jar app.jar
+
+# ARG 값을 ENV로 전달 (컨테이너 실행 시 사용 가능)
+ENV SPRING_PROFILES_ACTIVE=${PROFILE}
 
 # Change ownership to app user
 RUN chown appuser:appuser app.jar

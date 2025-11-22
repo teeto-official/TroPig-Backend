@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: tropig-backend
-        image: ghcr.io/your-username/tropig-backend:develop
+        image: ghcr.io/teeto-official/TroPig-Backend:develop
         ports:
         - containerPort: 8080
         env:

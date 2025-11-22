@@ -3,6 +3,7 @@ plugins {
 	kotlin("plugin.spring") version "1.9.25"
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("org.jetbrains.kotlin.plugin.jpa") version "1.9.0"
 }
 
 group = "com.tropig.backend"
@@ -34,9 +35,18 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     
     // swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
-	
+	// Cache
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("com.github.ben-manes.caffeine:caffeine")
+
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
+	implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+	implementation("org.springframework.boot:spring-boot-starter-security")
 }
 
 kotlin {
@@ -47,4 +57,19 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	
+	// 테스트 리포트 생성 설정
+	testLogging {
+		events("passed", "skipped", "failed")
+		showStandardStreams = false
+	}
+	
+	// 테스트 실패 시에도 계속 진행
+	ignoreFailures = false
+	
+	// 테스트 결과 리포트 생성
+	reports {
+		junitXml.required.set(true)
+		html.required.set(true)
+	}
 }
