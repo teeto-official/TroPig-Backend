@@ -12,6 +12,7 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "content")
 data class Content(
+    var alias: String,
     var title: String,
     var type: ContentType,
     val memberId: Long,
