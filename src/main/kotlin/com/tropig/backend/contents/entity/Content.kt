@@ -6,7 +6,6 @@ import com.tropig.backend.contents.enums.*
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
-import java.time.Duration
 import java.time.LocalDateTime
 
 @Entity
@@ -18,10 +17,9 @@ data class Content(
     val memberId: Long,
     var rule: Rule,
     var genre: Genre,
-    var referralType: ReferralType,
+    var playerCountType: PlayerCountType,
     var termType: TermType,
-    var publishingType: PublishingType?,
-    var publishingPath: String?,
+    var publishingInfo: String?,
     var status: ContentsStatus,
     var publishedAt: LocalDateTime?,
     var freeContent: String?,
