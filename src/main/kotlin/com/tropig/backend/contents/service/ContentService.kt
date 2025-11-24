@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.contents.entity.Content
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
@@ -13,4 +15,7 @@ class ContentService(
     private val relatedContentRepository: RelatedContentRepository,
     private val tagRepository: TagRepository,
 ) {
+
+    fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
+        contentRepository.findByIdInAndType(ids, type)
 }

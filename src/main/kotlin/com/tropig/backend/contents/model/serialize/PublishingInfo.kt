@@ -1,4 +1,4 @@
-package com.tropig.backend.contents.model
+package com.tropig.backend.contents.model.serialize
 
 import com.tropig.backend.contents.enums.PublishingType
 import kotlinx.serialization.Serializable
