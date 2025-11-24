@@ -1,6 +1,7 @@
 plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
+	kotlin("plugin.serialization") version "1.9.22"
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("org.jetbrains.kotlin.plugin.jpa") version "1.9.0"
@@ -47,6 +48,9 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
 	implementation("org.springframework.boot:spring-boot-starter-security")
+
+	implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25") // or "kotlin-stdlib-jdk8"
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0") // JVM dependency
 }
 
 kotlin {

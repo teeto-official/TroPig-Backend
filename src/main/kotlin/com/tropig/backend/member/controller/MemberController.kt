@@ -1,5 +1,6 @@
 package com.tropig.backend.member.controller
 
+import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
@@ -17,10 +18,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
-@RestController
+@ApiController
 @RequestMapping("/api/member")
-@CrossOrigin(origins = ["*"])
-@SecurityRequirement(name = "Bearer Authentication")
 class MemberController(
     private val memberService: MemberService
 ) {
