@@ -1,18 +1,17 @@
 package com.tropig.backend.contents.entity
 
-import com.tropig.backend.contents.enums.ContentType
+import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedDate
-import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
 
+@Entity
 @Table(name = "pick_content")
 data class PickContent(
     val contentId: Long,
-    val type: ContentType,
     val orderNo: Int,
 ) {
     @Id
@@ -21,7 +20,4 @@ data class PickContent(
 
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now()
-
-    @LastModifiedDate
-    val updatedAt: LocalDateTime = LocalDateTime.now()
 }

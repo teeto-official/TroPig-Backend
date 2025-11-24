@@ -20,6 +20,37 @@ CREATE TABLE member (
     updated_at TIMESTAMP NOT NULL
 );
 
+-- content
+CREATE TABLE content (
+    id BIGSERIAL PRIMARY KEY,
+    alias VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(10) NOT NULL,
+    member_id BIGINT NOT NULL,
+    rule VARCHAR(255) NOT NULL,
+    genre VARCHAR(255) NOT NULL,
+    player_count_type VARCHAR(20) NOT NULL,
+    term_type VARCHAR(20) NOT NULL,
+    publishing_info TEXT,
+    status VARCHAR(20) NOT NULL,
+    published_at TIMESTAMP,
+    free_content TEXT,
+    non_free_content TEXT,
+    price DOUBLE PRECISION NOT NULL,
+    level INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pick_content (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    order_no INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_member_nickname ON member(nickname);
 CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);
+
+CREATE UNIQUE INDEX idx_content_alias ON content(alias);

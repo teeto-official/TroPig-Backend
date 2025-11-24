@@ -31,6 +31,42 @@ CREATE TABLE IF NOT EXISTS member_account (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE content (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    alias VARCHAR(255) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+
+    type VARCHAR(255) NOT NULL,
+    member_id BIGINT NOT NULL,
+    rule VARCHAR(255) NOT NULL,
+    genre VARCHAR(255) NOT NULL,
+    player_count_type VARCHAR(255) NOT NULL,
+    term_type VARCHAR(255) NOT NULL,
+
+    publishing_info CLOB,
+    status VARCHAR(255) NOT NULL,
+
+    published_at TIMESTAMP,
+    free_content CLOB,
+    non_free_content CLOB,
+
+    price DOUBLE NOT NULL,
+    level INT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+);
+
+CREATE TABLE pick_content (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    content_id BIGINT NOT NULL,
+    order_no INT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+);
+
 -- Indexes
 CREATE INDEX idx_users_nickname ON member(nickname);
 CREATE INDEX idx_users_email ON member(email);

@@ -35,7 +35,6 @@ class AdminContentPickController(
             .mapIndexed { index, sorted ->
                 PickContent(
                     contentId = sorted.id,
-                    type = sorted.type,
                     orderNo = index + 1,
                 )
             }
