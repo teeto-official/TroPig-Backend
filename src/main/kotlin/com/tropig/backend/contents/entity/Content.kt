@@ -13,13 +13,19 @@ import java.time.LocalDateTime
 data class Content(
     val alias: String,
     var title: String,
+    @Enumerated(value = EnumType.STRING)
     var type: ContentType,
     val memberId: Long,
+    @Enumerated(value = EnumType.STRING)
     var rule: Rule,
+    @Enumerated(value = EnumType.STRING)
     var genre: Genre,
+    @Enumerated(value = EnumType.STRING)
     var playerCountType: PlayerCountType,
+    @Enumerated(value = EnumType.STRING)
     var termType: TermType,
     var publishingInfo: String?,
+    @Enumerated(value = EnumType.STRING)
     var status: ContentsStatus,
     var publishedAt: LocalDateTime?,
     var freeContent: String?,

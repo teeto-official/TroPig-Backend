@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 @Table(name = "report_content")
 data class ReportContent(
     val contentId: Long,
+    @Enumerated(value = EnumType.STRING)
     val type: ReportType,
     val memberId: Long,
     val reason: String?,
