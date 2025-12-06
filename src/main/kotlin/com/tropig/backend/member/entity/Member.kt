@@ -12,6 +12,7 @@ import java.time.ZoneId
 @Table(name = "member")
 data class Member(
     val snsId: String,
+    @Enumerated(value = EnumType.STRING)
     val snsProvider: SnsProvider,
 
     @Column(nullable = false, unique = true)
@@ -21,6 +22,7 @@ data class Member(
     var nickname: String,
 
     @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
     val role: Role,
 ) {
     @Id

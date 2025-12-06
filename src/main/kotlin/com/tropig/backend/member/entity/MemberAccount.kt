@@ -11,6 +11,7 @@ import java.time.ZoneId
 @Table(name = "member_account")
 data class MemberAccount(
     val memberId: Long,
+    @Enumerated(value = EnumType.STRING)
     val bankCode: BankCode,
     val account: String,
 ) {

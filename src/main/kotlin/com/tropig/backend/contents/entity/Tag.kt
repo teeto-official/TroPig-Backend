@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 @Table(name = "tag")
 data class Tag(
     val name: String,
+    @Enumerated(value = EnumType.STRING)
     val type: TagType,
     val parentId: Long,
 ) {
