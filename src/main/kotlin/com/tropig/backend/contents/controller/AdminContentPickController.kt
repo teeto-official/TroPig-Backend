@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.servlet.ModelAndView
 
 @ApiController
 @RequestMapping("/admin/content")
@@ -19,6 +18,11 @@ class AdminContentPickController(
     private val contentService: ContentService,
     private val pickContentService: PickContentService,
 ) {
+
+    companion object {
+        const val MAX_VALUE = Int.MAX_VALUE
+    }
+
 
     @PostMapping("/pick")
     fun setUpPickContent(
@@ -31,7 +35,7 @@ class AdminContentPickController(
         val originContents = contentService.findByIdInAndType(request.map { it.contentId }, type)
         val orderMap = request.associate { it.contentId to it.orderNo }
 
-        val sortedContents = originContents.sortedBy { orderMap[it.id] ?: Int.MAX_VALUE }
+        val sortedContents = originContents.sortedBy { orderMap[it.id] ?: MAX_VALUE }
             .mapIndexed { index, sorted ->
                 PickContent(
                     contentId = sorted.id,
@@ -39,8 +43,7 @@ class AdminContentPickController(
                 )
             }
 
-        pickContentService.deleteAll()
-        return pickContentService.saveAllPickContents(sortedContents).map {
+        return pickContentService.updatePickContents(sortedContents).map {
             AdminPickContentResponse(
                 contentId = it.contentId,
                 orderNo = it.orderNo
