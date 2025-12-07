@@ -8,7 +8,7 @@ CREATE TABLE member (
     email VARCHAR(255) NOT NULL UNIQUE,
     nickname VARCHAR(255) NOT NULL,
     role VARCHAR(255) NOT NULL,
-    is_adult BOOLEAN NOT NULL DEFAULT FALSE,
+    adult BOOLEAN NOT NULL DEFAULT FALSE,
     bio VARCHAR(255),
     marketing_at TIMESTAMP,
     deleted_at TIMESTAMP,
@@ -46,6 +46,7 @@ CREATE TABLE content (
 
     publishing_info CLOB,
     status VARCHAR(255) NOT NULL,
+    adult BOOLEAN NOT NULL DEFAULT FALSE,
 
     published_at TIMESTAMP,
     free_content CLOB,

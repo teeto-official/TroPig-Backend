@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository
 interface ContentRepository: JpaRepository<Content, Long> {
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content>
+
+    fun findContentsByIdInAndTypeAndAdult(ids: List<Long>, type: ContentType, adult: Boolean): List<Content>
 }

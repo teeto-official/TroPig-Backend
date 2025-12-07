@@ -34,7 +34,7 @@ class JwtAuthenticationFilter(
                 memberId = user.id,
                 email = user.email,
                 nickname = user.nickname,
-                isAdult = user.isAdult,
+                adult = user.adult,
                 role = user.role
             )
 

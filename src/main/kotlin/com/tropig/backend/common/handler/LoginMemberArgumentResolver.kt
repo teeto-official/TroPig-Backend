@@ -20,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException
 @Component
 class LoginMemberArgumentResolver(
     private val jwtTokenProvider: JwtTokenProvider,
-    private val memberRepository: MemberRepository
 ): HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter): Boolean {
         return parameter.hasParameterAnnotation(LoginMember::class.java)
@@ -53,7 +52,7 @@ class LoginMemberArgumentResolver(
             memberId = memberId,
             email = claims["email"].toString(),
             nickname = claims["nickname"].toString(),
-            isAdult = claims["isAdult"].toString().toBoolean(),
+            adult = claims["adult"].toString().toBoolean(),
             role = Role.valueOf(claims["role"].toString()),
         )
     }
