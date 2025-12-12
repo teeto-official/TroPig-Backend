@@ -68,6 +68,44 @@ CREATE TABLE pick_content (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
+CREATE TABLE content_thumbnail (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    height INT NOT NULL,
+    weight INT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE content_tag (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE report_content (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    member_id BIGINT NOT NULL,
+    reason VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE tag (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    parent_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+
 -- Indexes
 CREATE INDEX idx_users_nickname ON member(nickname);
 CREATE INDEX idx_users_email ON member(email);

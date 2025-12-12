@@ -50,6 +50,44 @@ CREATE TABLE pick_content (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE content_thumbnail (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    height INT NOT NULL,
+    weight INT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE content_tag (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE report_content (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    member_id BIGINT NOT NULL,
+    reason VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE tag (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    parent_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_member_nickname ON member(nickname);
 CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);
