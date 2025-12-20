@@ -12,27 +12,25 @@ import java.time.ZoneId
 @Table(name = "member")
 data class Member(
     val snsId: String,
+    @Enumerated(value = EnumType.STRING)
     val snsProvider: SnsProvider,
 
     @Column(nullable = false, unique = true)
     val email: String,
     
     @Column(nullable = false)
-    val nickname: String,
+    var nickname: String,
 
     @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
     val role: Role,
-
-    @Column(nullable = false)
-    var isMarketing: Boolean = false,
-
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L
 
     @Column(nullable = false)
-    var isAdult: Boolean = false
+    var adult: Boolean = false
 
     @Column(nullable = true)
     var bio: String? = null
@@ -48,6 +46,8 @@ data class Member(
 
     @Column(nullable = true)
     var favoriteRules: String? = null
+
+    var profile: String? = null
 
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))

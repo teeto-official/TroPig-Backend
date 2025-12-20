@@ -9,7 +9,7 @@ import java.io.InputStreamReader
 @Component
 class StringUtil {
 
-    @Cacheable(cacheNames = ["nicknameComponent"], key = "#key")
+    @Cacheable(cacheNames = ["nicknameComponent"])
     fun getWordLists(): Pair<List<String>, List<String>> {
         val adjust = ClassPathResource("nickname/adjustList.txt")
         val noun = ClassPathResource("nickname/nounList.txt")

@@ -1,6 +1,8 @@
 package com.tropig.backend.member.service.jwt
 
 import com.tropig.backend.member.entity.Member
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.io.Decoders
@@ -30,16 +32,51 @@ class JwtTokenProvider(
     private fun generateToken(expiration: Long, now: Date, member: Member): String {
         return Jwts.builder()
             .setSubject(member.id.toString())
+            .claim("memberId", member.id)
             .claim("email", member.email)
             .claim("snsProvider", member.snsProvider)
+            .claim("role", member.role)
+            .claim("adult", member.adult)
             .setIssuedAt(now)
             .setExpiration(Date(now.time + expiration))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact()
     }
 
-    fun getClaims(token: String): Map<String, Any> {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-            .parseClaimsJws(token).body
+
+    fun getUserIdFromToken(token: String): Long {
+        val claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .body
+        return claims.subject.toLong()
+    }
+
+    fun validateToken(token: String): Boolean {
+        return try {
+            Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun parseToken(token: String): Map<String, Any> {
+        try {
+            val claimsJws = Jwts.parserBuilder()
+                .setSigningKey(secretKey.toByteArray())
+                .build()
+                .parseClaimsJws(token)
+
+            return claimsJws.body.entries.associate { it.key to it.value }
+        } catch (e: ExpiredJwtException) {
+            throw IllegalArgumentException("JWT가 만료되었습니다")
+        } catch (e: JwtException) {
+            throw IllegalArgumentException("JWT가 유효하지 않습니다")
+        }
     }
 }

@@ -16,6 +16,7 @@ data class MemberAuthInfo(
     val authUserAt: LocalDateTime,
     val isCreator: Boolean,
     val authCreatorAt: LocalDateTime,
+    @Enumerated(value = EnumType.STRING)
     val bankCode: BankCode,
     val bankAccount: String
 ) {
