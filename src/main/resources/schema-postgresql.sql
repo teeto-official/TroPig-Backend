@@ -9,7 +9,7 @@ CREATE TABLE member (
     email VARCHAR(255) NOT NULL UNIQUE,
     nickname VARCHAR(255) NOT NULL,
     role VARCHAR(255) NOT NULL,
-    is_adult BOOLEAN NOT NULL DEFAULT FALSE,
+    adult BOOLEAN NOT NULL DEFAULT FALSE,
     bio VARCHAR(255),
     marketing_at TIMESTAMP,
     deleted_at TIMESTAMP,
@@ -33,6 +33,7 @@ CREATE TABLE content (
     term_type VARCHAR(20) NOT NULL,
     publishing_info TEXT,
     status VARCHAR(20) NOT NULL,
+    adult BOOLEAN NOT NULL DEFAULT FALSE,
     published_at TIMESTAMP,
     free_content TEXT,
     non_free_content TEXT,
@@ -48,6 +49,44 @@ CREATE TABLE pick_content (
     order_no INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE content_thumbnail (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    height INT NOT NULL,
+    weight INT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE content_tag (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE report_content (
+    id BIGSERIAL PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    member_id BIGINT NOT NULL,
+    reason VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE tag (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    parent_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_member_nickname ON member(nickname);

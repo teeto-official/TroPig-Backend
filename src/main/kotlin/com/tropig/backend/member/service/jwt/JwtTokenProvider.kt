@@ -36,7 +36,7 @@ class JwtTokenProvider(
             .claim("email", member.email)
             .claim("snsProvider", member.snsProvider)
             .claim("role", member.role)
-            .claim("isAdult", member.isAdult)
+            .claim("adult", member.adult)
             .setIssuedAt(now)
             .setExpiration(Date(now.time + expiration))
             .signWith(key, SignatureAlgorithm.HS256)

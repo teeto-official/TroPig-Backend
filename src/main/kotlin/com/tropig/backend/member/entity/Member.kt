@@ -30,7 +30,7 @@ data class Member(
     val id: Long = 0L
 
     @Column(nullable = false)
-    var isAdult: Boolean = false
+    var adult: Boolean = false
 
     @Column(nullable = true)
     var bio: String? = null

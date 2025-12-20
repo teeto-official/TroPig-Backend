@@ -2,6 +2,7 @@ package com.tropig.backend.member.controller
 
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
+import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
@@ -43,6 +44,7 @@ class MemberController(
         return member
     }
 
+    @RequireAuth
     @PutMapping
     fun updateUser(
         @AuthenticationPrincipal
@@ -58,6 +60,7 @@ class MemberController(
         return MemberResponse.from(updatedMember)
     }
 
+    @RequireAuth
     @GetMapping
     fun findUser(
         @AuthenticationPrincipal

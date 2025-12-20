@@ -27,6 +27,7 @@ data class Content(
     var publishingInfo: String?,
     @Enumerated(value = EnumType.STRING)
     var status: ContentsStatus,
+    var adult: Boolean,
     var publishedAt: LocalDateTime?,
     var freeContent: String?,
     var nonFreeContent: String?,

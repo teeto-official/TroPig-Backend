@@ -5,6 +5,7 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.util.DateUtil
 import com.tropig.backend.common.util.StringUtil
 import com.tropig.backend.member.entity.Member
+import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.model.request.SignInRequest
 import com.tropig.backend.member.model.request.SignUpRequest
 import com.tropig.backend.member.model.request.UpdateMemberRequest
@@ -114,6 +115,11 @@ class MemberService(
         }
         
         return memberRepository.save(updatedUser)
+    }
+
+    fun getWritersName(writerIds: List<Long>): Map<Long, String> {
+        return memberRepository.findByIdInAndRoleAndDeletedAtIsNull(writerIds, Role.CREATOR)
+            .associate { it.id to it.nickname }
     }
     
     fun deleteUser(id: Long): Boolean {

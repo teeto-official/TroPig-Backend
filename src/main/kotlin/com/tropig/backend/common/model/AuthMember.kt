@@ -6,6 +6,6 @@ data class AuthMember(
     val memberId: Long,
     val email: String,
     val nickname: String,
-    val isAdult: Boolean,
+    val adult: Boolean,
     val role: Role,
 )
