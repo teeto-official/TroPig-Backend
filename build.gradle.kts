@@ -21,7 +21,8 @@ java {
 }
 
 repositories {
-	mavenCentral()
+//	mavenCentral()
+	maven("https://maven-central-asia.storage-download.googleapis.com/maven2/")
 }
 
 dependencies {
