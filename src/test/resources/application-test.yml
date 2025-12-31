@@ -23,6 +23,13 @@ spring:
         connection:
           init_sql: ""
         format_sql: false
+        # H2에서 ENUM을 VARCHAR로 처리
+        use_sql_comments: false
+        globally_quoted_identifiers: false
+  
+  sql:
+    init:
+      mode: never
   
   cache:
     type: simple
@@ -65,4 +72,4 @@ jwt:
 # PortOne 실제 API 설정 (환경 변수에서 가져오거나 기본값 사용)
 portone:
   base-url: ${PORTONE_BASE_URL:https://api.portone.io}
-  secret-key: ${PORTONE_SECRET_KEY}
+  secret-key: ${PORTONE_SECRET_KEY:test-secret-key}
