@@ -10,19 +10,21 @@ import java.time.ZoneId
 @Entity
 @Table(name = "member_auth_info")
 data class MemberAuthInfo(
-    val userId: Long,
-    val di: String,
-    val birthedAt: LocalDateTime,
-    val authUserAt: LocalDateTime,
-    val isCreator: Boolean,
-    val authCreatorAt: LocalDateTime,
-    @Enumerated(value = EnumType.STRING)
-    val bankCode: BankCode,
-    val bankAccount: String
+    val memberId: Long,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L
+
+    var name: String? = null
+    var di: String? = null
+    var birthedAt: LocalDateTime? = null
+    var authUserAt: LocalDateTime? = null
+
+    var authCreatorAt: LocalDateTime? = null
+    @Enumerated(value = EnumType.STRING)
+    var bankCode: BankCode? = null
+    var bankAccount: String? = null
 
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))

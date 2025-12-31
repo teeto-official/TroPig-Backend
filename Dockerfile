@@ -1,49 +1,33 @@
-# Multi-stage build for Spring Boot application
-FROM gradle:8.5-jdk21-alpine AS builder
-
-# Set working directory
+# Build stage
+FROM gradle:8.5-jdk21 AS builder
 WORKDIR /app
 
-# Copy gradle files
-COPY build.gradle.kts settings.gradle.kts gradlew ./
+# Gradle wrapper/설정 먼저 복사 (캐시 이점)
+COPY gradlew build.gradle.kts settings.gradle.kts ./
 COPY gradle/ gradle/
+RUN chmod +x gradlew
 
-# Copy source code
+# 소스 복사 후 빌드
 COPY src/ src/
+RUN ./gradlew clean bootJar --no-daemon
 
-# Build the application
-RUN ./gradlew bootJar --no-daemon
+# Runtime stage (JRE)
+FROM eclipse-temurin:21-jre
+WORKDIR /app
 
-# Runtime stage
-FROM openjdk:21-jdk-slim
-
-# Install curl for health checks
+# (선택) actuator healthcheck 쓸 때만 curl 설치
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Create app user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Set working directory
-WORKDIR /app
-
-# Copy the built jar from builder stage
-COPY --from=builder /app/build/libs/*.jar app.jar
-
-# ARG 값을 ENV로 전달 (컨테이너 실행 시 사용 가능)
-ENV SPRING_PROFILES_ACTIVE=${PROFILE}
-
-# Change ownership to app user
-RUN chown appuser:appuser app.jar
-
-# Switch to app user
+# non-root 유저
+RUN useradd -m appuser
 USER appuser
 
-# Expose port
+COPY --from=builder /app/build/libs/*.jar app.jar
+
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+# (선택) actuator 켜져 있을 때만 사용
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD curl -fsS http://localhost:8080/actuator/health | grep -q '"status"' || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

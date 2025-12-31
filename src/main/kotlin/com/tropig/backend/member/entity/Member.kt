@@ -23,7 +23,7 @@ data class Member(
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
-    val role: Role,
+    var role: Role,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
