@@ -55,3 +55,8 @@ jwt:
   secret: "your256bitSecretKeyPleaseChangeItThisIsTestTest"
   expiration: 3600000
   refresh-expiration: 86400000
+
+# PortOne 실제 API 설정 (환경 변수에서 가져오거나 기본값 사용)
+portone:
+  base-url: ${PORTONE_BASE_URL:https://api.portone.io}
+  secret-key: ${PORTONE_SECRET_KEY}
