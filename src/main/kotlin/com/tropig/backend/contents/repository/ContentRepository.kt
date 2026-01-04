@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ContentRepository: JpaRepository<Content, Long> {
+interface ContentRepository: JpaRepository<Content, Long>, ContentCustomRepository {
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content>
 

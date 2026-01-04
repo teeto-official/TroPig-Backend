@@ -1,9 +1,7 @@
 package com.tropig.backend.contents.repository
 
 import com.tropig.backend.contents.entity.ContentTag
-import com.tropig.backend.contents.entity.Tag
-import com.tropig.backend.contents.model.result.TagResult
-import com.tropig.backend.contents.model.result.TagResultProjection
+import com.tropig.backend.contents.model.result.projection.TagResultProjection
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -12,17 +10,19 @@ import org.springframework.stereotype.Repository
 interface ContentTagRepository: JpaRepository<ContentTag, Long> {
 
     @Query(
-        """
+        nativeQuery = true,
+        value = """
             SELECT
-                t.id,
-                ct.contentId,
-                t.type
+                t.id as tagId,
+                ct.content_id,
+                t.type,
+                t.name
             FROM
-                Tag t
+                tag t
             INNER JOIN
-                ContentTag ct ON t.id = ct.tagId
+                content_tag ct ON t.id = ct.tag_id
             WHERE
-                ct.contentId in (:contentIds)
+                ct.content_id in (:contentIds)
         """
     )
     fun findByContentIdIn(contentIds: List<Long>): List<TagResultProjection>
