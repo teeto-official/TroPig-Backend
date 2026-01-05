@@ -1,14 +1,15 @@
 package com.tropig.backend.contents.repository
 
 import com.tropig.backend.contents.entity.BookmarkContent
-import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.projection.BookmarkContentProjection
+import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long> {
+interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, BookmarkContentCustomRepository {
 
     @Query(
         nativeQuery = true,
@@ -52,4 +53,32 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long> {
         """
     )
     fun getBookmarkInfoByContentIds(contentIds: List<Long>): List<BookmarkContentProjection>
+
+    @Modifying
+    @Transactional
+    @Query(
+        """
+    UPDATE BookmarkContent b
+    SET b.deleted = true, updatedAt = now
+    WHERE b.memberId = :memberId
+      AND b.contentId = :contentId
+      AND b.deleted = false
+    """
+    )
+    fun deleteBookmark(memberId: Long, contentId: Long): Int
+
+    @Modifying
+    @Transactional
+    @Query(
+        value = """
+        INSERT INTO bookmark_content (member_id, content_id, deleted, created_at, updated_at)
+        VALUES (:memberId, :contentId, false, now(), now())
+        ON CONFLICT (member_id, content_id)
+        DO UPDATE SET
+            deleted = false,
+            updated_at = now()
+    """,
+        nativeQuery = true
+    )
+    fun upsertBookmark(memberId: Long, contentId: Long): Int
 }

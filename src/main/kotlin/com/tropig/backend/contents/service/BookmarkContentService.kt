@@ -1,8 +1,16 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.common.enums.SortMode
+import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.contents.entity.BookmarkContent
+import com.tropig.backend.contents.entity.Content
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
+import com.tropig.backend.contents.model.result.BookmarkContentResult
 import com.tropig.backend.contents.repository.BookmarkContentRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class BookmarkContentService(
@@ -23,5 +31,39 @@ class BookmarkContentService(
                 bookmarked = it.bookmarked
             )
         }.associateBy { it.contentId }
+    }
+
+    fun getBookmarkList(
+        memberId: Long,
+        type: ContentType,
+        cursorId: Long?,
+        cursorCreatedAt: LocalDateTime?,
+        sortMode: SortMode,
+        size: Int,
+    ): CursorSlice<BookmarkContentResult> {
+        return bookmarkContentRepository.getBookmarkList(
+            memberId,
+            type,
+            cursorId,
+            cursorCreatedAt,
+            sortMode,
+            size
+        )
+    }
+
+    @Transactional
+    fun saveBookmark(
+        memberId: Long,
+        contentId: Long,
+    ) {
+        bookmarkContentRepository.upsertBookmark(memberId, contentId)
+    }
+
+    @Transactional
+    fun deleteBookmark(
+        memberId: Long,
+        contentId: Long,
+    ) {
+        bookmarkContentRepository.deleteBookmark(memberId, contentId)
     }
 }
