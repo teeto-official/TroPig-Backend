@@ -8,6 +8,7 @@ import com.tropig.backend.contents.model.result.TagDto
 import java.time.LocalDateTime
 
 data class SearchContentResponse(
+    val id: Long,
     val alias: String,
     val title: String,
     val type: ContentType,

@@ -6,14 +6,14 @@ data class CursorSlice<T>(
     val items: List<T>,   // 이번 페이지 결과
     val hasNext: Boolean, // 다음 페이지가 있는지
     val nextCursorId: Long? = null,
-    val nextCursorPublishedAt: LocalDateTime? = null,
+    val nextCursorDateAt: LocalDateTime? = null,
     val nextCursorTitle: String? = null
 ) {
     fun <R> map(transform: (T) -> R): CursorSlice<R> =
         CursorSlice(
             items = items.map(transform),
             hasNext = hasNext,
-            nextCursorPublishedAt = nextCursorPublishedAt,
+            nextCursorDateAt = nextCursorDateAt,
             nextCursorId = nextCursorId,
             nextCursorTitle = nextCursorTitle
         )

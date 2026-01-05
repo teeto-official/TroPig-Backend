@@ -87,6 +87,7 @@ class ContentController(
         ) { content, ctx ->
             val bookmarkInfo = ctx.bookmarkInfo[content.id]
             SearchContentResponse(
+                id = content.id,
                 alias = content.alias,
                 title = content.title,
                 type = content.type,
