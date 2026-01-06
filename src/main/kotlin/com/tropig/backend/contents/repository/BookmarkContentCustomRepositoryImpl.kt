@@ -43,6 +43,8 @@ class BookmarkContentCustomRepositoryImpl(
             WHERE
                 c.type = :type
             AND
+                c.status = :status
+            AND
                 bc.member_id = :memberId
             AND
                 bc.deleted = false
@@ -50,6 +52,7 @@ class BookmarkContentCustomRepositoryImpl(
         )
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
+            "status" to ContentsStatus.PUBLISHED.name,
             "memberId" to memberId
         )
 
