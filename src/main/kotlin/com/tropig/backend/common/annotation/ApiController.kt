@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController
 @Retention(AnnotationRetention.RUNTIME)
 @RestController
 @CrossOrigin(origins = ["*"])
-@SecurityRequirement(name = "Bearer Authentication")
+@SecurityRequirement(name = "bearerAuth")
 annotation class ApiController()

@@ -68,7 +68,7 @@ class JwtTokenProvider(
     fun parseToken(token: String): Map<String, Any> {
         try {
             val claimsJws = Jwts.parserBuilder()
-                .setSigningKey(secretKey.toByteArray())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
 

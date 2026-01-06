@@ -59,7 +59,7 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
     @Query(
         """
     UPDATE BookmarkContent b
-    SET b.deleted = true, updatedAt = now
+    SET b.deleted = true, b.updatedAt = CURRENT_TIMESTAMP
     WHERE b.memberId = :memberId
       AND b.contentId = :contentId
       AND b.deleted = false

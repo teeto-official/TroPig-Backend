@@ -1,10 +1,13 @@
 package com.tropig.backend.contents.repository
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
+import com.tropig.backend.contents.enums.PlayerCountType
 import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.result.BookmarkContentResult
 import jakarta.persistence.EntityManager
@@ -71,7 +74,7 @@ class BookmarkContentCustomRepositoryImpl(
         }
 
         sql.append("\nLIMIT :size")
-        params["limit"] = size + 1
+        params["size"] = size + 1
 
         val rows = execute(sql.toString(), params)
         val hasNext = rows.size > size
@@ -87,11 +90,24 @@ class BookmarkContentCustomRepositoryImpl(
         )
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun execute(sql: String, params: Map<String, Any?>): List<BookmarkContentResult> {
-        val q = em.createNativeQuery(sql, Content::class.java)
-
+        val q = em.createNativeQuery(sql)
         params.forEach { (k, v) -> q.setParameter(k, v) }
-        return q.resultList as List<BookmarkContentResult>
+
+        @Suppress("UNCHECKED_CAST")
+        val rows = q.resultList as List<Array<Any?>>
+
+        return rows.map { r ->
+            BookmarkContentResult(
+                id = (r[0] as Number).toLong(),
+                alias = r[1] as String,
+                title = r[2] as String,
+                rule = Rule.valueOf(r[3] as String),
+                genre = Genre.valueOf(r[4] as String),
+                memberId = (r[5] as Number).toLong(),
+                playerCountType = PlayerCountType.valueOf(r[6] as String),
+                updatedAt = (r[7] as java.sql.Timestamp).toLocalDateTime(),
+            )
+        }
     }
 }
