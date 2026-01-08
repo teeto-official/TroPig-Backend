@@ -4,6 +4,7 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.contents.enums.PlayerCountType
+import java.time.LocalDateTime
 
 data class SearchContentRequest(
     val searchText: String,
@@ -13,7 +14,7 @@ data class SearchContentRequest(
     val genre: Genre? = null,
 
     val sortMode: SortMode,
-    val cursorPublishedAt: Long? = null,
+    val cursorPublishedAt: LocalDateTime? = null,
     val cursorTitle: String? = null,
     val cursorId: Long = 0L,
 

@@ -15,7 +15,7 @@ interface FavoriteContentRepository: JpaRepository<FavoriteContent, Long> {
             """
             SELECT
                 fc.content_id,
-                count(1) as `count`
+                count(1) as count
             FROM
                 favorite_content fc
             WHERE
