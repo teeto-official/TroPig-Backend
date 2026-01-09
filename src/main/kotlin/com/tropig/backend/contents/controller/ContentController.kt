@@ -135,6 +135,7 @@ class ContentController(
                 bookmarkCount = bookmarkInfo?.bookmarkCount ?: 0L,
                 favoriteCount = ctx.favoriteCounts[content.id] ?: 0L,
                 publishedAt = content.publishedAt!!,
+                freeContent = content.freeContent,
             )
         }
     }

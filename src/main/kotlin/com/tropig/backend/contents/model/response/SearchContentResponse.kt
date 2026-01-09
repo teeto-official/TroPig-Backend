@@ -22,6 +22,7 @@ data class SearchContentResponse(
     val bookmarkCount: Long,
     val favoriteCount: Long,
     val publishedAt: LocalDateTime,
+    val freeContent: String?,
 )
 
 data class CountSearchContentResponse(
