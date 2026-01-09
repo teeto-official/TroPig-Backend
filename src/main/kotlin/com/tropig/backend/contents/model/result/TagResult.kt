@@ -1,13 +1,20 @@
 package com.tropig.backend.contents.model.result
 
 data class TagResult(
-    val id: Long,
+    val tagId: Long,
     val contentId: Long,
     val type: String,
 )
 
-interface TagResultProjection {
-    val id: Long
-    val contentId: Long
-    val type: String
-}
+data class ContentTagResult(
+    val tagId: Long,
+    val contentId: Long,
+    val type: String,
+    val name: String,
+)
+
+data class TagDto(
+    val tagId: Long,
+    val type: String,
+    val name: String,
+)

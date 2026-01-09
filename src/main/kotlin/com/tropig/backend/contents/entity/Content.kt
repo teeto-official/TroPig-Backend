@@ -33,6 +33,7 @@ data class Content(
     var nonFreeContent: String?,
     var price: Double,
     var level: Int,
+    var searchText: String,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

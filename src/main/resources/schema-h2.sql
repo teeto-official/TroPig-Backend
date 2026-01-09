@@ -15,8 +15,8 @@ CREATE TABLE member (
     favorite_genres VARCHAR(255),
     favorite_rules VARCHAR(255),
     profile VARCHAR(255),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create member table
@@ -54,6 +54,7 @@ CREATE TABLE content (
 
     price DOUBLE NOT NULL,
     level INT NOT NULL,
+    search_text CLOB,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
@@ -74,16 +75,16 @@ CREATE TABLE content_thumbnail (
     path VARCHAR(255) NOT NULL,
     height INT NOT NULL,
     weight INT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE content_tag (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     content_id BIGINT NOT NULL,
     tag_id BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE report_content (
@@ -92,17 +93,35 @@ CREATE TABLE report_content (
     type VARCHAR(50) NOT NULL,
     member_id BIGINT NOT NULL,
     reason VARCHAR(255),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE bookmark_content (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    member_id BIGINT NOT NULL,
+    deleted BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE favorite_content (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    member_id BIGINT NOT NULL,
+    deleted BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE tag (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    parent_id BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
