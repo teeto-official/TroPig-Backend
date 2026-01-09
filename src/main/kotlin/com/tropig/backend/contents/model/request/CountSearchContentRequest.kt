@@ -3,7 +3,6 @@ package com.tropig.backend.contents.model.request
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.model.dto.CountSearchContentRequestDto
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import jakarta.validation.constraints.Size
 

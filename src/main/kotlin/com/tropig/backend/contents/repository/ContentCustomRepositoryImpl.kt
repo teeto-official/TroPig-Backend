@@ -215,7 +215,7 @@ class ContentCustomRepositoryImpl(
 
         val arr = when (val row = q.singleResult) {
             is Array<*> -> row
-            is Object -> (row as Array<*>) // 방어용
+            is Any -> (row as Array<*>) // 방어용
             else -> error("Unexpected count result type: ${row::class}")
         }
 
