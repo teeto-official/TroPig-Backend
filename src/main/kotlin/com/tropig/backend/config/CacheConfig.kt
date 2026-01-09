@@ -23,7 +23,7 @@ class CacheConfig {
 
                     // ---- 원하는 cacheName에 따라 TTL/Size 지정 ----
                     "pickContent" -> Caffeine.newBuilder()
-                        .expireAfterWrite(3, TimeUnit.MINUTES)   // TTL 1분
+                        .expireAfterWrite(3, TimeUnit.MINUTES)   // TTL 3분
                         .maximumSize(40)
 
                     "pickContentByType" -> Caffeine.newBuilder()

@@ -6,8 +6,9 @@ import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.enums.ContentType
+import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
-import com.tropig.backend.contents.model.request.SearchOptionalContentRequest
+import com.tropig.backend.contents.model.response.CountSearchContentResponse
 import com.tropig.backend.contents.model.response.PickContentResponse
 import com.tropig.backend.contents.model.response.SearchContentResponse
 import com.tropig.backend.contents.service.*
@@ -53,6 +54,26 @@ class ContentController(
         }.sortedBy { it.orderNo }
     }
 
+    @PostMapping("/search/count")
+    fun countSearchContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @RequestBody request: CountSearchContentRequest,
+    ): CountSearchContentResponse {
+        val isAdult = authMember?.adult ?: false
+        val tagIds = request.tags?.let { tagList ->
+            val nameSet = tagList.toSet()
+            tagService.findAllTags()
+                .asSequence()
+                .filter { it.name in nameSet }
+                .map { it.id }
+                .toList()
+        }
+
+        val dto = request.toCountDto(isAdult, tagIds)
+        return contentService.countSearchContents(dto).toResponse()
+    }
+
     @PostMapping("/search/{type}")
     fun searchContent(
         @AuthenticationPrincipal
@@ -63,7 +84,19 @@ class ContentController(
     ): CursorSlice<SearchContentResponse> {
         val isAdult = authMember?.adult ?: false
         val memberId = authMember?.memberId
-        val contents = contentService.searchContents(request, isAdult, type)
+
+        val tagIds = request.tags?.let { tagList ->
+            val nameSet = tagList.toSet()
+
+            tagService.findAllTags()
+                .asSequence()
+                .filter { it.name in nameSet }
+                .map { it.id }
+                .toList()
+        }
+
+        val dto = request.toDto(isAdult, type, tagIds)
+        val contents = contentService.searchContents(dto)
 
         return contents.mapWith(
             buildContext = { items ->
@@ -89,59 +122,6 @@ class ContentController(
             val bookmarkInfo = ctx.bookmarkInfo[content.id]
             SearchContentResponse(
                 id = content.id,
-                alias = content.alias,
-                title = content.title,
-                type = content.type,
-                rule = content.rule,
-                genre = content.genre,
-                writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
-                playerCountType = content.playerCountType,
-                thumbnailPath = ctx.thumbnailPaths[content.id],
-                tags = ctx.tagsByContentId[content.id].orEmpty(),
-                isBookmark = bookmarkInfo?.bookmarked ?: false,
-                bookmarkCount = bookmarkInfo?.bookmarkCount ?: 0L,
-                favoriteCount = ctx.favoriteCounts[content.id] ?: 0L,
-                publishedAt = content.publishedAt!!,
-            )
-        }
-    }
-
-    @PostMapping("/search/optional/{type}")
-    fun searchOptionalContent(
-        @AuthenticationPrincipal
-        @LoginMember authMember: AuthMember?,
-        @PathVariable
-        type: ContentType,
-        @RequestBody request: SearchOptionalContentRequest,
-    ): CursorSlice<SearchContentResponse> {
-        val isAdult = authMember?.adult ?: false
-        val memberId = authMember?.memberId
-        val contents = contentService.searchOptionalContents(request, isAdult, type)
-
-        return contents.mapWith(
-            buildContext = { items ->
-
-                val contentIds = items.map { it.id }
-                val writerIds = items.map { it.memberId }.distinct()
-
-                val nickByMemberId = memberService.getWritersName(writerIds)
-                val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
-                val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
-                val favoriteCountsByContentId = favoriteContentService.getFavoriteCountByContentIds(contentIds)
-                val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
-
-                SearchContext(
-                    nickByMemberId = nickByMemberId,
-                    tagsByContentId = tagsByContentId,
-                    bookmarkInfo = bookmarksInfo,
-                    favoriteCounts = favoriteCountsByContentId,
-                    thumbnailPaths = thumbnailPaths,
-                )
-            }
-        ) { content, ctx ->
-            val bookmarkInfo = ctx.bookmarkInfo[content.id]
-            SearchContentResponse(
                 alias = content.alias,
                 title = content.title,
                 type = content.type,

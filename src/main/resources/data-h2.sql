@@ -14,7 +14,7 @@ INSERT INTO content (
  null, 'DRAFT', false, null,
  '무료 설명 2', null, 5.99, 3, 'content-2'),
 
-('content-3', '테스트 콘텐츠 3', 'RESOURCE', 2, 'COC', 'COMIC', 'MULTI_PLAYER', 'LONG_TERM',
+('content-3', '테스트 콘텐츠 3', 'RESOURCE', 2, 'COC', 'COMEDY', 'MULTI_PLAYER', 'LONG_TERM',
  null, 'PUBLISHED', true, '2025-12-31 12:00:00',
  null, '유료 설명 3', 12.99, 5, 'content-3'),
 
@@ -26,7 +26,7 @@ INSERT INTO content (
  null, 'DRAFT', true, null,
  null, null, 0.0, 1, 'content-5'),
 
-('content-6', '테스트 콘텐츠 6', 'SCENARIO', 3, 'FIASCO', 'COMIC', 'ONE_ON_ONE', 'LONG_TERM',
+('content-6', '테스트 콘텐츠 6', 'SCENARIO', 3, 'FIASCO', 'COMEDY', 'ONE_ON_ONE', 'LONG_TERM',
  null, 'PUBLISHED', false, CURRENT_TIMESTAMP,
  '무료 설명 6', null, 3.50, 4, 'content-6'),
 
@@ -38,7 +38,7 @@ INSERT INTO content (
  null, 'DRAFT', false, null,
  '무료 설명 8', null, 1.99, 1, 'content-8'),
 
-('content-9', '테스트 콘텐츠 9', 'SCENARIO', 5, 'COC', 'COMIC', 'MULTI_PLAYER', 'LONG_TERM',
+('content-9', '테스트 콘텐츠 9', 'SCENARIO', 5, 'COC', 'COMEDY', 'MULTI_PLAYER', 'LONG_TERM',
  null, 'PUBLISHED', true, '2025-12-01 12:00:00',
  null, '유료 설명 9', 9.99, 6, 'content-9'),
 

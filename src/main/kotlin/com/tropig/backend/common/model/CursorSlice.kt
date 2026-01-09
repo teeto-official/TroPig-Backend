@@ -32,7 +32,7 @@ data class CursorSlice<T>(
                 hasNext = hasNext,
                 nextCursorId = nextCursorId,
                 nextCursorTitle = nextCursorTitle,
-                nextCursorPublishedAt = nextCursorPublishedAt
+                nextCursorDateAt = nextCursorDateAt
             )
         }
 
