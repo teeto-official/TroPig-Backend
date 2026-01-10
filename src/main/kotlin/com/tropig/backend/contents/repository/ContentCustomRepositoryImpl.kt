@@ -35,6 +35,10 @@ class ContentCustomRepositoryImpl(
                 fetchSize = fetchSize,
                 sortSpec = SortSpec.title()
             )
+            else -> CursorSlice(
+                emptyList(),
+                false,
+            )
         }
     }
 
@@ -123,7 +127,7 @@ class ContentCustomRepositoryImpl(
                     CursorSlice(
                         items = items,
                         hasNext = hasNext,
-                        nextCursorPublishedAt = last?.publishedAt,
+                        nextCursorDateAt = last?.publishedAt,
                         nextCursorId = last?.id
                     )
                 }

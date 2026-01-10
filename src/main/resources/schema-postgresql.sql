@@ -38,7 +38,7 @@ CREATE TABLE content (
     free_content TEXT,
     non_free_content TEXT,
     price DOUBLE PRECISION NOT NULL,
-    `level` INTEGER NOT NULL,
+    level INTEGER NOT NULL,
     search_text TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
