@@ -29,9 +29,7 @@ class LoginMemberArgumentResolver: HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?
     ): AuthMember? {
-        println("### resolve resolver = ${this::class.qualifiedName} @${System.identityHashCode(this)}")
         val request = webRequest.nativeRequest as HttpServletRequest
-        val authHeader = request.getHeader(HttpHeaders.AUTHORIZATION)
 
         //error 같은 에러 디스패치에서는 불필요한 인증 처리로 2차 에러가 날 수 있어 방어
         if (request.requestURI == "/error") return null

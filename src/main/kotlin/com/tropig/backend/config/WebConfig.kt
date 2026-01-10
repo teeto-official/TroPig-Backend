@@ -13,7 +13,6 @@ class WebConfig(
     private val requireAuthInterceptor: RequireAuthInterceptor,
 ) : WebMvcConfigurer {
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
-        println("### register resolver = ${loginMemberArgumentResolver::class.qualifiedName} @${System.identityHashCode(loginMemberArgumentResolver)}")
         resolvers.add(loginMemberArgumentResolver)
     }
 
