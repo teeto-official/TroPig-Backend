@@ -4,7 +4,8 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.enums.ContentType
-import com.tropig.backend.contents.model.request.SearchContentRequest
+import com.tropig.backend.contents.model.dto.SearchContentRequestDto
+import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.result.TagResult
 import com.tropig.backend.contents.repository.ContentRepository
@@ -53,8 +54,15 @@ class ContentService(
         return contentThumbnailRepository.findByContentIdIn(contentIds)
     }
 
-    fun searchContents(request: SearchContentRequest, isAdult: Boolean, type: ContentType): CursorSlice<Content> {
-        request.isAdult = isAdult
-        return contentRepository.searchContents(request, type)
+    fun searchContents(
+        request: SearchContentRequestDto,
+    ): CursorSlice<Content> {
+        return contentRepository.searchContents(request)
+    }
+
+    fun countSearchContents(
+        request: SearchContentRequestDto,
+    ): CountSearchContentsResult {
+        return contentRepository.countSearchContents(request)
     }
 }

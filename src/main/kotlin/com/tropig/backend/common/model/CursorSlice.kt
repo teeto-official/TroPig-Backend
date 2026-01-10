@@ -26,6 +26,17 @@ data class CursorSlice<T>(
         buildContext: (List<T>) -> C,
         crossinline transform: (T, C) -> R
     ): CursorSlice<R> {
+        if (items.isEmpty()) {
+            return CursorSlice(
+                items = emptyList(),
+                hasNext = hasNext,
+                nextCursorId = nextCursorId,
+                nextCursorTitle = nextCursorTitle,
+                nextCursorDateAt = nextCursorDateAt
+            )
+        }
+
+
         val ctx = buildContext(items)
         return map { t -> transform(t, ctx) }
     }
