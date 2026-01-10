@@ -65,6 +65,7 @@ class ContentCustomRepositoryImpl(
         when (this.sortMode) {
             SortMode.LATEST -> SortSpec.latest()
             SortMode.TITLE -> SortSpec.title()
+            SortMode.OLDEST -> SortSpec.oldest()
         }
 
     /**
@@ -242,6 +243,28 @@ class ContentCustomRepositoryImpl(
                 },
                 appendOrderBy = { sql ->
                     sql.append("\nORDER BY c.published_at DESC NULLS LAST, c.id DESC")
+                },
+                buildSlice = { items, hasNext, last ->
+                    CursorSlice(
+                        items = items,
+                        hasNext = hasNext,
+                        nextCursorDateAt = last?.publishedAt,
+                        nextCursorId = last?.id
+                    )
+                }
+            )
+
+            fun oldest(): SortSpec = SortSpec(
+                mode = SortMode.OLDEST,
+                appendCursor = { sql, params, req ->
+                    if (req.cursorDateAt != null && req.cursorId != 0L) {
+                        sql.append("\n  AND (c.published_at, c.id) > (:cursorPublishedAt, :cursorId)")
+                        params["cursorPublishedAt"] = req.cursorDateAt
+                        params["cursorId"] = req.cursorId
+                    }
+                },
+                appendOrderBy = { sql ->
+                    sql.append("\nORDER BY c.published_at ASC NULLS LAST, c.id ASC")
                 },
                 buildSlice = { items, hasNext, last ->
                     CursorSlice(
