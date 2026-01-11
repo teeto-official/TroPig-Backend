@@ -1,6 +1,10 @@
 package com.tropig.backend.contents.service
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.CursorSlice
@@ -36,6 +40,7 @@ class ContentService(
     private val relatedContentRepository: RelatedContentRepository,
     private val s3Service: S3Service,
 ) {
+    private val typeToken = object : TypeToken<List<String>>() {}.type
 
     fun findById(id: Long): Content? =
         contentRepository.findById(id).getOrNull()
@@ -404,4 +409,22 @@ class ContentService(
         return save(content)
     }
 
+
+    fun getRandomGenreContent(genres: String, isAdult: Boolean): Content {
+        val genreNames: List<String> = Gson().fromJson(genres, typeToken)
+        val genreList = genreNames.map { Genre.valueOf(it) }
+
+        return contentRepository.findRandomGenreContent(genreList, isAdult)
+    }
+
+    fun getRandomRuleContent(rules: String, isAdult: Boolean): Content {
+        val ruleNames: List<String> = Gson().fromJson(rules, typeToken)
+        val ruleList = ruleNames.map { Rule.valueOf(it) }
+
+        return contentRepository.findRandomRuleContent(ruleList, isAdult)
+    }
+
+    fun getRandomContent(isAdult: Boolean): Content {
+        return contentRepository.findRandomContent(isAdult)
+    }
 }
