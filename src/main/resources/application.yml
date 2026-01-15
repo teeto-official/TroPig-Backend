@@ -77,3 +77,11 @@ aws:
     region: ${AWS_S3_REGION:ap-northeast-2}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+portone:
+  key:
+    api: ${PORTONE_API_KEY}
+    secret: ${PORTONE_SECRET}
+    secret-v2: ${PORTONE_SECRET_V2}
+  base-url: ${PORTONE_BASE_URL:https://api.portone.io}
+  store-id: ${PORTONE_STORE_ID}
