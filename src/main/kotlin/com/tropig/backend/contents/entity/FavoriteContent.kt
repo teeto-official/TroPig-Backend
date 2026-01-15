@@ -1,17 +1,16 @@
 package com.tropig.backend.contents.entity
 
-import com.tropig.backend.contents.enums.TagType
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "tag")
-data class Tag(
-    val name: String,
-    @Enumerated(value = EnumType.STRING)
-    val type: TagType,
+@Table(name = "favorite_content")
+data class FavoriteContent(
+    val contentId: Long,
+    val memberId: Long,
+    val deleted: Boolean,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

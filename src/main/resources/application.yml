@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none  # 수동 DB 관리: 스키마 변경은 migration 도구나 수동 SQL 실행으로 관리
     show-sql: true
     properties:
       hibernate:
@@ -18,13 +18,22 @@ spring:
   sql:
     init:
       platform: postgresql
-      mode: always
-      schema-locations: classpath:schema-postgresql.sql
+      mode: never  # 자동 초기화 비활성화
 
   cache:
     type: caffeine
     caffeine:
       spec: maximumSize=100,expireAfterWrite=10m
+
+  mail:
+    host: email-smtp.ap-northeast-2.amazonaws.com
+    port: 587
+    username: ${SES_SMTP_USERNAME}
+    password: ${SES_SMTP_PASSWORD}
+    properties:
+      mail.smtp:
+        auth: true
+        starttls.enable: true
 
 server:
   port: 8080
@@ -49,3 +58,11 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: 3600000 # 1시간 (ms)
   refresh-expiration: 86400000 # 24H
+
+mail:
+  sender:
+    address: ${MAIL_ADDRESS}
+    name: ${MAIL_NAME}
+  subjects:
+    sign_up: "가입을 환영합니다"
+    receipt: "구매 확정 안내"

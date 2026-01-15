@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cat > /opt/dev/.env << 'EOF'
-            SPRING_PROFILES_ACTIVE=dev
+            SPRING_PROFILES_ACTIVE=${{ secrets.PROFILES_ACTIVE }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }}
