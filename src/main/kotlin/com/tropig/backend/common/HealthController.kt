@@ -1,12 +1,14 @@
-package com.tropig.backend.controller
+package com.tropig.backend.common
 
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
+@RequestMapping("/api")
 @RestController
 class HealthController {
-    
+
     @GetMapping("/health")
     fun health(): Map<String, Any> {
         return mapOf(
@@ -15,7 +17,7 @@ class HealthController {
             "service" to "TroPig Backend"
         )
     }
-    
+
     @GetMapping("/")
     fun root(): Map<String, String> {
         return mapOf(
