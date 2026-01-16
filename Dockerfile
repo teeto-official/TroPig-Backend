@@ -30,6 +30,7 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 # ARG 값을 ENV로 전달 (컨테이너 실행 시 사용 가능)
+ARG PROFILE
 ENV SPRING_PROFILES_ACTIVE=${PROFILE}
 
 # Change ownership to app user
