@@ -122,11 +122,14 @@ class MemberService(
                 this.favoriteGenres = request.favoriteGenres.joinToString()
             }
 
-            if (request.isMarketing && (this.marketingAt == null)) {
-                this.marketingAt = LocalDateTime.now()
-            } else if (!request.isMarketing && (this.marketingAt != null)) {
-                        this.marketingAt = null
+            request.isMarketing?.let {
+                if (it && (this.marketingAt == null)) {
+                    this.marketingAt = LocalDateTime.now()
+                } else if (!it && (this.marketingAt != null)) {
+                    this.marketingAt = null
+                }
             }
+
         }
         
         return memberRepository.save(updatedUser)
