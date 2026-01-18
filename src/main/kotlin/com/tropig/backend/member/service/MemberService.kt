@@ -2,7 +2,8 @@ package com.tropig.backend.member.service
 
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
-import com.tropig.backend.common.util.DateUtil
+import com.tropig.backend.common.exception.IllegalArgumentException
+import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.util.StringUtil
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.WithdrawMember
@@ -43,9 +44,15 @@ class MemberService(
             it.deletedAt?.let { date ->
                 if (date.plusDays(REJOIN_DAYS) >= LocalDateTime.now()) {
                     // 탈퇴일로부터 7일이 지나지 않음
-                    throw IllegalArgumentException("탈퇴 후, ${REJOIN_DAYS}일간 재가입이 불가합니다. 탈퇴일: $date")
+                    throw MemberException(
+                        message = "탈퇴 후, ${REJOIN_DAYS}일간 재가입이 불가합니다. 탈퇴일: $date",
+                        code = MessageCode.CANNOT_REJOIN_MEMBER
+                    )
                 }
-            } ?: throw IllegalArgumentException("해당 이메일을 사용하는 유저가 있습니다. email: ${request.email}")
+            } ?: throw MemberException(
+                "해당 이메일을 사용하는 유저가 있습니다. email: ${request.email}",
+                MessageCode.ALREADY_EXISTS_MEMBER
+            )
         }
 
         val nickname = generateSequence { makeNickname() }
@@ -94,7 +101,10 @@ class MemberService(
 
         member.deletedAt?.let {
             if (it.plusDays(7) > LocalDateTime.now()) {
-                throw IllegalArgumentException("탈퇴한 회원입니다.")
+                throw MemberException(
+                    "탈퇴한 회원입니다.",
+                    MessageCode.WITHDRAW_MEMBER,
+                )
             }
         }
 
@@ -106,7 +116,10 @@ class MemberService(
     fun updateUser(member: Member, request: UpdateMemberRequest): Member {
         request.nickname?.let {
             if (memberRepository.existsByNickname(it)) {
-                throw IllegalArgumentException("이미 존재하는 닉네임입니다.")
+                throw IllegalArgumentException(
+                    "이미 존재하는 닉네임입니다.",
+                    MessageCode.ALREADY_EXISTS
+                )
             }
         }
         val updatedUser = member.copy(
