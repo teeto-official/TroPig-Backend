@@ -28,6 +28,9 @@ class CacheConfig {
                         .expireAfterWrite(3, TimeUnit.MINUTES)    // TTL 3분
                         .maximumSize(20)
 
+                    "nicknameComponent" -> Caffeine.newBuilder()
+                        .expireAfterWrite(30, TimeUnit.MINUTES)   // TTL 30분 (닉네임 리스트는 자주 변경되지 않음)
+
                     else -> Caffeine.newBuilder()
                         .expireAfterWrite(5, TimeUnit.MINUTES)    // 디폴트 TTL
                 }
@@ -37,7 +40,7 @@ class CacheConfig {
         }
 
         cacheManager.setCacheNames(
-            listOf("pickContent", "pickContentByType")
+            listOf("pickContent", "pickContentByType", "nicknameComponent", "tagList")
         )
 
         return cacheManager
