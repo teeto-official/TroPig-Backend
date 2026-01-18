@@ -1,6 +1,6 @@
 package com.tropig.backend.common.enums
 
-enum class Genre(name: String) {
+enum class Genre(val displayName: String) {
     GAME_FANTASY("게임판타지"),
     GORE("고어"),
     HORROR("공포"),

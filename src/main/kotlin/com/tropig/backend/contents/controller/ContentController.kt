@@ -149,10 +149,10 @@ class ContentController(
             SearchTagResponse.TagResponse(it.id, it.name, it.type)
         }
         val genres = Genre.entries.map {
-            SearchTagResponse.GenreResponse(it, it.name)
+            SearchTagResponse.GenreResponse(it, it.displayName)
         }
         val rules = Rule.entries.map {
-            SearchTagResponse.RuleResponse(it, it.name)
+            SearchTagResponse.RuleResponse(it, it.displayName)
         }
 
         return SearchTagResponse(tags, genres, rules)
