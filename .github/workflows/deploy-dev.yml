@@ -49,9 +49,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            set -e
-            cd /opt/dev
-
-            docker compose -f /opt/dev/docker-compose.yml pull
-            docker compose -f /opt/dev/docker-compose.yml up -d --force-recreate
-            docker compose -f /opt/dev/docker-compose.yml ps
+            cd /opt/***
+            docker compose -f /opt/***/docker-compose.yml pull
+            docker compose -f /opt/***/docker-compose.yml up -d --force-recreate
+            docker compose -f /opt/***/docker-compose.yml ps

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app:
     image: ghcr.io/teeto-official/tropig-backend:develop   # 예: ghcr.io/owner/repo:latest 또는 dockerhub-user/app:latest
@@ -19,3 +17,6 @@ services:
     volumes:
       - redis-data:/data
     restart: unless-stopped
+
+volumes:
+  redis-data:
