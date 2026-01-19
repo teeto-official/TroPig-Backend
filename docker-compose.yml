@@ -3,7 +3,7 @@ version: "3.8"
 services:
   app:
     image: ghcr.io/teeto-official/tropig-backend:develop   # 예: ghcr.io/owner/repo:latest 또는 dockerhub-user/app:latest
-    container_name: app
+    container_name: dev-api-1
     ports:
       - "8080:8080"
     # GitHub Actions가 생성하는 /opt/dev/.env를 컨테이너 환경변수로 주입

@@ -10,6 +10,21 @@ jobs:
     environment: development
 
     steps:
+      # 레포에 있는 docker-compose.yml을 서버로 올리려면 checkout이 필요
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # (중요) 서버의 /opt/dev/docker-compose.yml을 항상 최신으로 유지
+      - name: Upload docker-compose.yml to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/opt/dev"
+          overwrite: true
+
       - name: Create .env on Lightsail
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -27,13 +42,16 @@ jobs:
             SPRING_DATA_REDIS_PORT=6379
             EOF
 
-      - name: Restart dev containers
+      - name: Restart dev containers (pull & recreate)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ubuntu
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
             cd /opt/dev
-            docker compose pull
-            docker compose up -d
+
+            docker compose -f /opt/dev/docker-compose.yml pull
+            docker compose -f /opt/dev/docker-compose.yml up -d --force-recreate
+            docker compose -f /opt/dev/docker-compose.yml ps
