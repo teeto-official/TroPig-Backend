@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  app:
+    image: ghcr.io/teeto-official/tropig-backend:develop   # 예: ghcr.io/owner/repo:latest 또는 dockerhub-user/app:latest
+    container_name: app
+    ports:
+      - "8080:8080"
+    # GitHub Actions가 생성하는 /opt/dev/.env를 컨테이너 환경변수로 주입
+    env_file:
+      - /opt/dev/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
