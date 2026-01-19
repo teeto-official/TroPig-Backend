@@ -55,6 +55,7 @@ jobs:
             PROFILE=${{ secrets.PROFILES_ACTIVE }}
 
   deploy-dev:
+    needs: build-and-push
     runs-on: ubuntu-latest
     environment: development
 
