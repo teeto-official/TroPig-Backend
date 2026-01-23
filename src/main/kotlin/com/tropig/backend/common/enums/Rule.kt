@@ -1,6 +1,6 @@
 package com.tropig.backend.common.enums
 
-enum class Rule(name: String) {
+enum class Rule(val displayName: String) {
     DND("디앤디"),
     COC("크툴루의 부름"),
     FIASCO("피아스코"),

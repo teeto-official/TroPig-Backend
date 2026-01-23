@@ -2,6 +2,8 @@ package com.tropig.backend.contents.controller
 
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
@@ -11,6 +13,7 @@ import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.CountSearchContentResponse
 import com.tropig.backend.contents.model.response.PickContentResponse
 import com.tropig.backend.contents.model.response.SearchContentResponse
+import com.tropig.backend.contents.model.response.SearchTagResponse
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.service.MemberService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -139,4 +142,20 @@ class ContentController(
             )
         }
     }
+
+    @GetMapping("/tag")
+    fun getSearchTagList(): SearchTagResponse {
+        val tags = tagService.findAllTags().map {
+            SearchTagResponse.TagResponse(it.id, it.name, it.type)
+        }
+        val genres = Genre.entries.map {
+            SearchTagResponse.GenreResponse(it, it.displayName)
+        }
+        val rules = Rule.entries.map {
+            SearchTagResponse.RuleResponse(it, it.displayName)
+        }
+
+        return SearchTagResponse(tags, genres, rules)
+    }
+
 }
