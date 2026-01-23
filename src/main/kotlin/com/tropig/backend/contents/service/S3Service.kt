@@ -1,8 +1,10 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.common.enums.FileType
 import com.tropig.backend.config.S3Properties
 import com.tropig.backend.contents.model.request.FileInfoRequest
 import com.tropig.backend.contents.model.request.UploadFileRequest
+import com.tropig.backend.contents.model.result.FileResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.core.sync.RequestBody
@@ -165,25 +167,27 @@ class S3Service(
      * @param request 업로드할 파일 리스트
      * @param contentId 컨텐츠 ID
      * @param onSuccess 업로드 성공 후 실행할 작업 (업로드된 S3 Key를 파라미터로 받음)
-     * @return 업로드된 파일의 목록 (orderNo, s3Key 쌍)
+     * @return 업로드된 파일의 목록 (orderNo, s3Key, fileType)
      */
     fun uploadFileWithRollback(
         request: List<UploadFileRequest>,
         contentId: Long,
-        onSuccess: (List<Pair<Int, String>>) -> Unit
-    ): List<Pair<Int, String>> {
+        onSuccess: (List<FileResult>) -> Unit
+    ): List<FileResult> {
         // InputStream을 미리 바이트 배열로 변환 (비동기 처리 전에 읽어야 함)
-        val fileDataList = request.map {
-            val fileBytes = it.file.inputStream.readAllBytes()
-            val contentType = it.file.contentType ?: "application/content"
-            val originalFileName = it.file.originalFilename ?: "${contentId}_${it.orderNo}"
-            FileInfoRequest(it.orderNo, fileBytes, contentType, originalFileName)
+        val fileDataList = request.mapNotNull {
+            it.file?.let { f ->
+                val fileBytes = f.inputStream.readAllBytes()
+                val contentType = f.contentType ?: "application/content"
+                val originalFileName = f.originalFilename ?: "${contentId}_${it.orderNo}"
+                FileInfoRequest(it.orderNo!!, fileBytes, contentType, originalFileName, it.type!!,  it.isCover!!, it.publishingType)
+            }
         }
 
         // 모든 파일을 비동기로 업로드 (별도 서비스를 통해 호출하여 프록시가 작동하도록 함)
         val uploadFutures = fileDataList.map {
-            s3AsyncUploadService.uploadFileAsync(it.fileBytes, it.contentType, it.originalFileName, contentId)
-                .thenApply { s3Key -> Pair(it.orderNo, s3Key) }
+            s3AsyncUploadService.uploadFileAsync(it.fileBytes, it.contentType, it.originalFileName, contentId, it.type.path)
+                .thenApply { s3Key -> FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType) }
                 .exceptionally { throwable ->
                     logger.error("파일 업로드 실패: orderNo=${it.orderNo}", throwable)
                     throw RuntimeException("파일 업로드에 실패했습니다: ${throwable.message}", throwable)

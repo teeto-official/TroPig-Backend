@@ -58,6 +58,7 @@ class S3AsyncUploadService(
         contentType: String,
         originalFileName: String,
         contentId: Long,
+        prefix: String,
     ): CompletableFuture<String> {
         // 파일 타입 검증
         if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
@@ -76,7 +77,7 @@ class S3AsyncUploadService(
 
         // 파일명 생성 (UUID + 원본 파일명)
         val fileName = "${UUID.randomUUID()}-${originalFileName}"
-        val s3Key = "$contentId/$fileName"
+        val s3Key = "$prefix/$contentId/$fileName"
 
         try {
             // S3에 업로드

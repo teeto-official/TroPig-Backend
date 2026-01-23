@@ -10,8 +10,8 @@ import java.time.LocalDateTime
 data class ContentThumbnail(
     val contentId: Long,
     val path: String,
-    val height: Int,
-    val weight: Int,
+    val orderNo: Int,
+    val cover: Boolean,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
