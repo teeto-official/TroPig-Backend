@@ -3,19 +3,19 @@ package com.tropig.backend.contents.controller
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
-import com.tropig.backend.contents.model.response.CountSearchContentResponse
-import com.tropig.backend.contents.model.response.PickContentResponse
-import com.tropig.backend.contents.model.response.SearchContentResponse
-import com.tropig.backend.contents.model.response.SearchTagResponse
+import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
-import com.tropig.backend.member.service.MemberService
+import com.tropig.backend.member.enums.Role
+import com.tropig.backend.member.service.WriterService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -26,7 +26,7 @@ class ContentController(
     private val pickContentService: PickContentService,
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
-    private val memberService: MemberService,
+    private val writerService: WriterService,
     private val tagService: TagService,
 ) {
 
@@ -40,7 +40,7 @@ class ContentController(
         val isAdult = authMember?.adult ?: false
         val pickContents = pickContentService.getAllPickContent()
         val contents = contentService.getPickContentsByType(type, isAdult, pickContents.map { it.contentId })
-        val writerName = memberService.getWritersName(contents.map { it.writerId })
+        val writerName = writerService.getWritersName(contents.map { it.writerId })
         val contentsMap = contents.associateBy { it.id }
 
         return pickContents.mapNotNull {
@@ -106,7 +106,7 @@ class ContentController(
                 val contentIds = items.map { it.id }
                 val writerIds = items.map { it.memberId }.distinct()
 
-                val nickByMemberId = memberService.getWritersName(writerIds)
+                val nickByMemberId = writerService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
                 val favoriteCountsByContentId = favoriteContentService.getFavoriteCountByContentIds(contentIds)
@@ -156,6 +156,31 @@ class ContentController(
         }
 
         return SearchTagResponse(tags, genres, rules)
+    }
+
+    @GetMapping("/{alias}")
+    fun getContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @PathVariable
+        alias: String,
+    ): ContentDetailResponse {
+        val content = contentService.findByAlias(alias)?.let {
+            // 1. 작가인 경우
+            if (authMember?.role == Role.CREATOR &&
+                authMember.memberId == it.memberId)
+            // 2. 구입한 유저의 경우
+            // 3. 일반 유저
+                (it.status == )
+            it
+        } ?: throw NotFoundException(
+            "해당 시나리오/자료를 찾을 수 없습니다.",
+            MessageCode.NOT_FOUND_CONTENT
+        )
+
+        val writer = writerService.getWriter(content.memberId)
+
+
     }
 
 }

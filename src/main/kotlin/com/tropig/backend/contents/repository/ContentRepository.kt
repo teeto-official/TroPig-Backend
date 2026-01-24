@@ -15,5 +15,9 @@ interface ContentRepository: JpaRepository<Content, Long>, ContentCustomReposito
 
     fun findByMemberId(memberId: Long): List<Content>
 
+    fun findByAliasAndStatusNot(alias: String, status: ContentsStatus): Content?
+
+    fun findByAliasAndStatusIn(alias: String, status: List<ContentsStatus>): Content?
+
     fun findByIdAndStatus(id: Long, status: ContentsStatus): Content?
 }
