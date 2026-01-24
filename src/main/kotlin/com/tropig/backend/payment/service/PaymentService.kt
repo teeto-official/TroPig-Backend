@@ -48,6 +48,13 @@ class PaymentService(
                     MessageCode.ADULT_CONTENT
                 )
             }
+
+            if (it.memberId == memberId) {
+                throw PaymentException(
+                    "본인의 작품입니다.",
+                    MessageCode.OWN_CONTENT,
+                )
+            }
             it
         }
             ?: throw NotFoundException(

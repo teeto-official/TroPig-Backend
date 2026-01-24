@@ -14,4 +14,5 @@ enum class MessageCode {
     ALREADY_PURCHASED,
     WITHDRAW_MEMBER,
     ADULT_CONTENT,
+    OWN_CONTENT,
 }
