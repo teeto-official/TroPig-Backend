@@ -1,6 +1,7 @@
 package com.tropig.backend.common.handler
 
 import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.ErrorResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
 import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
-import com.tropig.backend.common.exception.NotFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {

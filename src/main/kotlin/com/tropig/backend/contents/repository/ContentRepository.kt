@@ -11,4 +11,6 @@ interface ContentRepository: JpaRepository<Content, Long>, ContentCustomReposito
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content>
 
     fun findContentsByIdInAndTypeAndAdult(ids: List<Long>, type: ContentType, adult: Boolean): List<Content>
+
+    fun findByMemberId(memberId: Long): List<Content>
 }

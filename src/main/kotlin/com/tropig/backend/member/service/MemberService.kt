@@ -2,15 +2,18 @@ package com.tropig.backend.member.service
 
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
-import com.tropig.backend.common.util.DateUtil
+import com.tropig.backend.common.exception.IllegalArgumentException
+import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.util.StringUtil
 import com.tropig.backend.member.entity.Member
+import com.tropig.backend.member.entity.WithdrawMember
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.model.request.SignInRequest
 import com.tropig.backend.member.model.request.SignUpRequest
 import com.tropig.backend.member.model.request.UpdateMemberRequest
 import com.tropig.backend.member.model.response.TokenResponse
 import com.tropig.backend.member.repository.MemberRepository
+import com.tropig.backend.member.repository.WithdrawMemberRepository
 import com.tropig.backend.member.service.jwt.JwtTokenProvider
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
@@ -22,24 +25,38 @@ import java.util.*
 @Service
 class MemberService(
     private val memberRepository: MemberRepository,
+    private val withdrawMemberRepository: WithdrawMemberRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val stringUtil: StringUtil,
 ) {
-    fun getUserById(id: Long): Member? {
-        return memberRepository.findById(id).orElse(null)
+
+    companion object {
+        private const val REJOIN_DAYS: Long = 7
     }
-    
+
     fun getUserByEmail(email: String): Member? {
         return memberRepository.findByEmail(email)
     }
 
     @Transactional
     fun createMember(request: SignUpRequest): Member {
-        if (memberRepository.existsByEmail(request.email)) {
-            // TODO: 재가입 여부 체크 로직 추가 예정
-            throw IllegalArgumentException("User with email ${request.email} already exists")
+        memberRepository.findByEmail(request.email)?.let {
+            it.deletedAt?.let { date ->
+                if (date.plusDays(REJOIN_DAYS) >= LocalDateTime.now()) {
+                    // 탈퇴일로부터 7일이 지나지 않음
+                    throw MemberException(
+                        message = "탈퇴 후, ${REJOIN_DAYS}일간 재가입이 불가합니다. 탈퇴일: $date",
+                        code = MessageCode.CANNOT_REJOIN_MEMBER
+                    )
+                }
+            } ?: throw MemberException(
+                "해당 이메일을 사용하는 유저가 있습니다. email: ${request.email}",
+                MessageCode.ALREADY_EXISTS_MEMBER
+            )
         }
-        val nickname = request.nickname ?: makeNickname()
+
+        val nickname = generateSequence { makeNickname() }
+            .first { !memberRepository.existsByNickname(it) }
 
         return memberRepository.save(request.toEntity(nickname))
     }
@@ -84,7 +101,10 @@ class MemberService(
 
         member.deletedAt?.let {
             if (it.plusDays(7) > LocalDateTime.now()) {
-                throw IllegalArgumentException("탈퇴한 회원입니다.")
+                throw MemberException(
+                    "탈퇴한 회원입니다.",
+                    MessageCode.WITHDRAW_MEMBER,
+                )
             }
         }
 
@@ -94,6 +114,14 @@ class MemberService(
 
     @Transactional
     fun updateUser(member: Member, request: UpdateMemberRequest): Member {
+        request.nickname?.let {
+            if (memberRepository.existsByNickname(it)) {
+                throw IllegalArgumentException(
+                    "이미 존재하는 닉네임입니다.",
+                    MessageCode.ALREADY_EXISTS
+                )
+            }
+        }
         val updatedUser = member.copy(
             nickname = request.nickname ?: member.nickname,
         ).apply {
@@ -107,11 +135,14 @@ class MemberService(
                 this.favoriteGenres = request.favoriteGenres.joinToString()
             }
 
-            if (request.isMarketing && (this.marketingAt == null)) {
-                this.marketingAt = LocalDateTime.now()
-            } else if (!request.isMarketing && (this.marketingAt != null)) {
-                        this.marketingAt = null
+            request.isMarketing?.let {
+                if (it && (this.marketingAt == null)) {
+                    this.marketingAt = LocalDateTime.now()
+                } else if (!it && (this.marketingAt != null)) {
+                    this.marketingAt = null
+                }
             }
+
         }
         
         return memberRepository.save(updatedUser)
@@ -121,13 +152,24 @@ class MemberService(
         return memberRepository.findByIdInAndRoleAndDeletedAtIsNull(writerIds, Role.CREATOR)
             .associate { it.id to it.nickname }
     }
-    
-    fun deleteUser(id: Long): Boolean {
-        return if (memberRepository.existsById(id)) {
-            memberRepository.deleteById(id)
-            true
-        } else {
-            false
+
+    @Transactional
+    fun deleteUser(id: Long): Member? {
+        return memberRepository.findMemberByIdAndDeletedAtIsNull(id)?.let {
+            // 90일간 보관용
+            withdrawMemberRepository.save(
+                WithdrawMember(
+                    memberId = it.id,
+                    snsId = it.snsId,
+                    snsProvider = it.snsProvider,
+                    email = it.email,
+                    nickname = it.nickname,
+                    bio = it.bio,
+                )
+            )
+            // 7일간 보관용
+            it.deletedAt = LocalDateTime.now()
+            it
         }
     }
 

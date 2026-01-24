@@ -4,6 +4,7 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.enums.ContentType
+import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
@@ -12,6 +13,7 @@ import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.TagRepository
+import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import kotlin.jvm.optionals.getOrNull
@@ -80,4 +82,11 @@ class ContentService(
 
     fun save(content: Content): Content =
         contentRepository.save(content)
+
+    @Transactional
+    fun updateContentToDelete(memberId: Long) {
+        contentRepository.findByMemberId(memberId).forEach {
+            it.status = ContentsStatus.DELETED
+        }
+    }
 }
