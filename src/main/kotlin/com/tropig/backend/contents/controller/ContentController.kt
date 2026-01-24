@@ -29,6 +29,7 @@ class ContentController(
     private val favoriteContentService: FavoriteContentService,
     private val writerService: WriterService,
     private val tagService: TagService,
+    private val s3Service: S3Service,
 ) {
 
     @GetMapping("/pick/{type}")
@@ -198,8 +199,10 @@ class ContentController(
         } ?: false
         val purchased = authMember?.let {
             // TODO: 구매 로직 추가 후, 체크 추가
-            true
-        } ?: false
+            content.nonFreeContent?.let { purchase ->
+                s3Service.getFileAsString(purchase)
+            }
+        }
 
         return content.toDetailResponse(
             writer,

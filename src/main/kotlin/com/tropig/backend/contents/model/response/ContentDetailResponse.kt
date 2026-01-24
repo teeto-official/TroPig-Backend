@@ -33,7 +33,7 @@ data class ContentDetailResponse(
 fun Content.toDetailResponse(
     writer: Member?,
     tags: List<TagDto>,
-    purchased: Boolean,
+    purchasedContent: String?,
     isBookmark: Boolean,
 ): ContentDetailResponse {
     val writerInfo = writer?.let {
@@ -62,7 +62,7 @@ fun Content.toDetailResponse(
         tags = tags,
         publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
-        nonFreeContent = if (purchased) nonFreeContent else null,
+        nonFreeContent = purchasedContent,
         isBookmark = isBookmark,
     )
 }
