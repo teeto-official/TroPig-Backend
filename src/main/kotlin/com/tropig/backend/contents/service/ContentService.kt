@@ -16,14 +16,17 @@ import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class ContentService(
     private val contentRepository: ContentRepository,
     private val contentTagRepository: ContentTagRepository,
     private val contentThumbnailRepository: ContentThumbnailRepository,
-    private val tagRepository: TagRepository,
 ) {
+
+    fun findById(id: Long): Content? =
+        contentRepository.findById(id).getOrNull()
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
         contentRepository.findByIdInAndType(ids, type)
@@ -67,6 +70,18 @@ class ContentService(
     ): CountSearchContentsResult {
         return contentRepository.countSearchContents(request)
     }
+
+    fun saveAllContentThumbnail(contentThumbnails: List<ContentThumbnail>) =
+        contentThumbnailRepository.saveAll(contentThumbnails)
+
+    fun findThumbnailByContentId(contentId: Long): List<ContentThumbnail> =
+        contentThumbnailRepository.findByContentId(contentId)
+
+    fun deleteThumbnails(ids: List<Long>) =
+        contentThumbnailRepository.deleteByIdIn(ids)
+
+    fun save(content: Content): Content =
+        contentRepository.save(content)
 
     @Transactional
     fun updateContentToDelete(memberId: Long) {

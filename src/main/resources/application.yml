@@ -70,3 +70,10 @@ mail:
   subjects:
     sign_up: "가입을 환영합니다"
     receipt: "구매 확정 안내"
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_S3_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}

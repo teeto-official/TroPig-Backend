@@ -1,5 +1,6 @@
 package com.tropig.backend.common.handler
 
+import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.ErrorResponse
 import org.slf4j.LoggerFactory
@@ -36,6 +37,14 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(message = e.message!!, code = e.code))
     }
+
+    @ExceptionHandler(ContentException::class)
+    fun handleContentException(e: MemberException): ResponseEntity<ErrorResponse> {
+        logger.debug("ContentException: ${e.message}")
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(message = e.message!!, code = e.code))
+    }
+
 
     @ExceptionHandler(ResponseStatusException::class)
     fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> {

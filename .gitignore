@@ -40,3 +40,8 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+/src/main/resources/data-h2.sql
+/src/main/resources/schema-postgresql.sql
+/src/main/resources/schema-h2.sql
+/src/main/resources/data-postgresql.sql
