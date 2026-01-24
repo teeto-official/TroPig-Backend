@@ -15,4 +15,8 @@ interface MemberRepository : JpaRepository<Member, Long> {
     fun findBySnsIdAndSnsProviderAndEmail(snsId: String, snsProvider: SnsProvider, email: String): Member?
 
     fun findByIdInAndRoleAndDeletedAtIsNull(ids: List<Long>, role: Role): List<Member>
+
+    fun findMemberByIdAndDeletedAtIsNull(id: Long): Member?
+
+    fun existsByNickname(nickname: String): Boolean
 }
