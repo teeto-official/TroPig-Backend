@@ -31,7 +31,7 @@ class PaymentController(
         @LoginMember authMember: AuthMember,
         @Valid @RequestBody request: CreatePurchaseRequest
     ): ResponseEntity<CreatePurchaseResponse> {
-        val response = paymentService.createPurchase(authMember.memberId, request)
+        val response = paymentService.createPurchase(authMember.memberId, authMember.adult, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 

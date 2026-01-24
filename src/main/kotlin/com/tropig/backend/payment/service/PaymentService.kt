@@ -1,12 +1,14 @@
 package com.tropig.backend.payment.service
 
 import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.NotFoundException
+import com.tropig.backend.common.exception.PaymentException
+import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
-import com.tropig.backend.member.repository.MemberRepository
-import com.tropig.backend.payment.client.PortOnePaymentClient
 import com.tropig.backend.payment.client.ConfirmPaymentRequest
 import com.tropig.backend.payment.client.PortOneApiException
+import com.tropig.backend.payment.client.PortOnePaymentClient
 import com.tropig.backend.payment.entity.Payment
 import com.tropig.backend.payment.entity.Purchase
 import com.tropig.backend.payment.enums.PaymentStatus
@@ -28,7 +30,6 @@ class PaymentService(
     private val paymentRepository: PaymentRepository,
     private val purchaseRepository: PurchaseRepository,
     private val contentRepository: ContentRepository,
-    private val memberRepository: MemberRepository,
     @Value("\${portone.store-id}")
     private val storeId: String,
 ) {
@@ -37,34 +38,34 @@ class PaymentService(
      * 구매 요청 생성 (결제 생성)
      */
     @Transactional
-    fun createPurchase(memberId: Long, request: CreatePurchaseRequest): CreatePurchaseResponse {
+    fun createPurchase(memberId: Long, adult: Boolean, request: CreatePurchaseRequest): CreatePurchaseResponse {
         // 1. 콘텐츠 조회 및 검증
-        val content = contentRepository.findById(request.contentId)
-            .orElseThrow {
-                NotFoundException(
-                    "콘텐츠를 찾을 수 없습니다: ${request.contentId}",
-                    MessageCode.NOT_FOUND_CONTENT_INFO
+        val content = contentRepository.findByIdAndStatus(request.contentId, ContentsStatus.PUBLISHED)?.let {
+            // adult가 false일 때, it.adult가 true인 경우에는 콘텐츠 구매가 안되게 하고 싶어
+            if (!adult && it.adult) {
+                throw PaymentException(
+                    "성인 인증이 필요한 콘텐츠입니다.",
+                    MessageCode.ADULT_CONTENT
                 )
             }
+            it
+        }
+            ?: throw NotFoundException(
+                "콘텐츠를 찾을 수 없습니다: ${request.contentId}",
+                MessageCode.NOT_FOUND_CONTENT_INFO
+            )
         
         // 2. 이미 구매한 콘텐츠인지 확인
         val existingPurchase = purchaseRepository.findByMemberIdAndContentId(memberId, request.contentId)
         if (existingPurchase != null && existingPurchase.status == PurchaseStatus.COMPLETED) {
-            throw IllegalArgumentException("이미 구매한 콘텐츠입니다.")
+            throw PaymentException(
+                "이미 구매한 콘텐츠입니다.",
+                MessageCode.ALREADY_PURCHASED
+            )
         }
-        
-        // 3. 회원 정보 조회
-        val member = memberRepository.findById(memberId)
-            .orElseThrow {
-                NotFoundException(
-                    "회원을 찾을 수 없습니다: $memberId",
-                    MessageCode.NOT_FOUND_MEMBER,
-                )
-            }
-        
+
         // 4. 결제 ID 생성 (PortOne v2는 서버에서 paymentId를 생성)
-        val orderId = generateOrderId(memberId, request.contentId)
-        val paymentId = generatePaymentId(memberId, request.contentId)
+        val paymentId = generateOrderId(memberId, request.contentId)
         
         // 5. Payment 엔티티 저장 (결제는 프론트엔드에서 PortOne SDK로 시작됨)
         val payment = Payment(
@@ -111,7 +112,10 @@ class PaymentService(
         
         // 2. 권한 확인
         if (payment.memberId != memberId) {
-            throw IllegalArgumentException("본인의 결제만 확인할 수 있습니다.")
+            throw PaymentException(
+                "본인의 결제만 확인할 수 있습니다.",
+                MessageCode.NOT_OWN_PAYMENT_INFO
+            )
         }
         
         // 3. 포트원 결제 승인
@@ -176,12 +180,15 @@ class PaymentService(
             .orElseThrow {
                 NotFoundException(
                     "구매 내역을 찾을 수 없습니다: $purchaseId",
-                    MessageCode.NOT_FOUND_PURCHASE_INFO
+                    MessageCode.NOT_FOUND_PURCHASE_INFO,
                 )
             }
         
         if (purchase.memberId != memberId) {
-            throw IllegalArgumentException("본인의 구매 내역만 조회할 수 있습니다.")
+            throw PaymentException(
+                "본인의 구매 내역만 조회할 수 있습니다.",
+                MessageCode.NOT_OWN_PAYMENT_INFO,
+            )
         }
         
         val payment = paymentRepository.findById(purchase.paymentId)
@@ -250,11 +257,4 @@ class PaymentService(
     private fun generateOrderId(memberId: Long, contentId: Long): String {
         return "order-${memberId}-${contentId}-${UUID.randomUUID().toString().substring(0, 8)}"
     }
-    
-    private fun generatePaymentId(memberId: Long, contentId: Long): String {
-        // PortOne v2에서 사용할 paymentId 생성 (UUID 기반)
-        return UUID.randomUUID().toString()
-    }
 }
-
-// PurchaseRepository에 findByMemberIdAndPaymentId 메서드 추가 필요

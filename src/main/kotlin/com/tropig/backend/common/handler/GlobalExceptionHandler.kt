@@ -1,7 +1,6 @@
 package com.tropig.backend.common.handler
 
-import com.tropig.backend.common.exception.ContentException
-import com.tropig.backend.common.exception.NotFoundException
+import com.tropig.backend.common.exception.*
 import com.tropig.backend.common.model.ErrorResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -9,8 +8,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
-import com.tropig.backend.common.exception.IllegalArgumentException
-import com.tropig.backend.common.exception.MemberException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -34,6 +31,13 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MemberException::class)
     fun handleMemberException(e: MemberException): ResponseEntity<ErrorResponse> {
         logger.debug("MemberException: ${e.message}")
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(message = e.message!!, code = e.code))
+    }
+
+    @ExceptionHandler(PaymentException::class)
+    fun handlePaymentException(e: PaymentException): ResponseEntity<ErrorResponse> {
+        logger.debug("PaymentException: ${e.message}")
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(message = e.message!!, code = e.code))
     }
