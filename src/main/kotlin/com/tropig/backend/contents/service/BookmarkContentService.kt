@@ -10,6 +10,7 @@ import com.tropig.backend.contents.model.result.BookmarkContentResult
 import com.tropig.backend.contents.repository.BookmarkContentRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.s3.endpoints.internal.Value.Bool
 import java.time.LocalDateTime
 
 @Service
@@ -65,5 +66,9 @@ class BookmarkContentService(
         contentId: Long,
     ) {
         bookmarkContentRepository.deleteBookmark(memberId, contentId)
+    }
+
+    fun existsBookmark(memberId: Long, contentId: Long): Boolean {
+        return bookmarkContentRepository.existsByMemberIdAndContentIdAndDeleted(memberId, contentId, false)
     }
 }

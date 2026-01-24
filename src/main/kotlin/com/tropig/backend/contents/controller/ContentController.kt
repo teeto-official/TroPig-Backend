@@ -5,6 +5,7 @@ import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
+import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
@@ -166,12 +167,23 @@ class ContentController(
         alias: String,
     ): ContentDetailResponse {
         val content = contentService.findByAlias(alias)?.let {
-            // 1. 작가인 경우
-            if (authMember?.role == Role.CREATOR &&
-                authMember.memberId == it.memberId)
-            // 2. 구입한 유저의 경우
-            // 3. 일반 유저
-                (it.status == )
+            // 1. 작가이고 본인 작품일 경우 조회 가능 (작가는 항상 성인 인증이 되어 있음)
+            val isCreatorAndOwnContent = authMember?.role == Role.CREATOR && authMember.memberId == it.memberId
+            
+            // 2. 구입한 유저일 경우 조회 가능 (추후 추가)
+            // val isPurchased = authMember?.let { paymentService.isContentPurchased(it.memberId, it.id) } ?: false
+            
+            // 3. 성인 콘텐츠 조회 제한: adult가 false이고 콘텐츠가 adult인 경우 조회 불가
+            // 작가이고 본인 작품이 아닌 경우에만 체크 (작가는 항상 성인 인증이 되어 있으므로)
+            val isAdultContentBlocked = authMember?.adult == false && it.adult
+            
+            if (isAdultContentBlocked && !isCreatorAndOwnContent) {
+                throw ContentException(
+                    "성인 인증이 필요한 콘텐츠입니다.",
+                    MessageCode.NOT_FOUND_CONTENT
+                )
+            }
+            
             it
         } ?: throw NotFoundException(
             "해당 시나리오/자료를 찾을 수 없습니다.",
@@ -180,6 +192,21 @@ class ContentController(
 
         val writer = writerService.getWriter(content.memberId)
 
+        val tags = tagService.findByContentId(content.id)
+        val bookmark = authMember?.let {
+            bookmarkContentService.existsBookmark(it.memberId, content.id)
+        } ?: false
+        val purchased = authMember?.let {
+            // TODO: 구매 로직 추가 후, 체크 추가
+            true
+        } ?: false
+
+        return content.toDetailResponse(
+            writer,
+            tags,
+            purchased,
+            bookmark,
+        )
 
     }
 
