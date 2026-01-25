@@ -1,5 +1,8 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentTag
@@ -381,6 +384,24 @@ class ContentService(
         } else {
             alias
         }
+    }
+
+    @Transactional
+    fun deleteContent(contentId: Long, memberId: Long): Content {
+        val content = findById(contentId) ?: throw NotFoundException(
+            "콘텐츠를 찾을 수 없습니다.",
+            MessageCode.NOT_FOUND_CONTENT
+        )
+
+        if (content.memberId != memberId) {
+            throw ContentException(
+                "본인의 콘텐츠만 삭제할 수 있습니다.",
+                MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        content.status = ContentsStatus.DELETED
+        return save(content)
     }
 
 }

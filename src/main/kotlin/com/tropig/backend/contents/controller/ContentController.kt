@@ -290,4 +290,25 @@ class ContentController(
         return mapOf("id" to updatedContent.id)
     }
 
+    @RequireAuth
+    @DeleteMapping("/{contentId}")
+    fun deleteContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @PathVariable
+        contentId: Long,
+    ) {
+        // 1. AuthMember의 role이 CREATOR인지 확인
+        if (authMember.role != Role.CREATOR) {
+            throw ContentException(
+                "CREATOR 권한이 필요합니다.",
+                MessageCode.INCORRECT_ROLE
+            )
+        }
+
+        // 2. content.member_id가 authMember.member_id와 같은지 확인 (ContentService에서 처리)
+        // 3. status만 DELETED로 변경 (ContentService에서 처리)
+        contentService.deleteContent(contentId, authMember.memberId)
+    }
+
 }
