@@ -157,6 +157,55 @@ class S3Service(
     }
 
     /**
+     * 기존 S3 key를 사용하여 파일을 업데이트합니다.
+     * @param inputStream 업로드할 파일의 InputStream
+     * @param contentType 파일의 MIME 타입
+     * @param s3Key 업데이트할 S3 key (기존 key)
+     * @return 업로드된 파일의 S3 Key (입력한 key와 동일)
+     */
+    fun updateFile(
+        inputStream: InputStream,
+        contentType: String,
+        s3Key: String,
+    ): String {
+        val fileBytes = inputStream.readAllBytes()
+        
+        // 파일 타입 검증
+        if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
+            throw IllegalArgumentException(
+                "허용되지 않는 파일 타입입니다. 지원 형식: 이미지(JPEG, PNG, GIF, WEBP), " +
+                "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
+                "압축파일(ZIP, RAR, 7Z), " +
+                "기타(JSON, XML, TXT, CSV)"
+            )
+        }
+
+        // 파일 크기 검증
+        if (fileBytes.size > MAX_FILE_SIZE) {
+            throw IllegalArgumentException("파일 크기가 너무 큽니다. 최대 크기: ${MAX_FILE_SIZE / 1024 / 1024}MB")
+        }
+
+        try {
+            // S3에 업로드 (기존 key 사용)
+            val putObjectRequest = PutObjectRequest.builder()
+                .bucket(s3Properties.bucket)
+                .key(s3Key)
+                .contentType(contentType)
+                .build()
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes))
+
+            logger.info("파일 업데이트 성공: s3Key=$s3Key, contentType=$contentType, size=${fileBytes.size} bytes")
+
+            // S3 Key 반환
+            return s3Key
+        } catch (e: Exception) {
+            logger.error("파일 업데이트 실패: s3Key=$s3Key", e)
+            throw RuntimeException("파일 업데이트에 실패했습니다: ${e.message}", e)
+        }
+    }
+
+    /**
      * 바이트 배열을 사용하여 S3에 파일을 업로드합니다. (내부 구현 - 동기)
      * @param fileBytes 업로드할 파일의 바이트 배열
      * @param contentType 파일의 MIME 타입
