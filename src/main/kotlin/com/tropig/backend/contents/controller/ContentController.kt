@@ -2,6 +2,7 @@ package com.tropig.backend.contents.controller
 
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
+import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
@@ -12,6 +13,7 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
+import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
@@ -19,6 +21,7 @@ import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.service.PaymentContentService
 import com.tropig.backend.payment.service.PaymentService
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -173,21 +176,21 @@ class ContentController(
         val content = contentService.findByAlias(alias)?.let {
             // 1. 작가이고 본인 작품일 경우 조회 가능 (작가는 항상 성인 인증이 되어 있음)
             val isCreatorAndOwnContent = authMember?.role == Role.CREATOR && authMember.memberId == it.memberId
-            
+
             // 2. 구입한 유저일 경우 조회 가능 (추후 추가)
             // val isPurchased = authMember?.let { paymentService.isContentPurchased(it.memberId, it.id) } ?: false
-            
+
             // 3. 성인 콘텐츠 조회 제한: adult가 false이고 콘텐츠가 adult인 경우 조회 불가
             // 작가이고 본인 작품이 아닌 경우에만 체크 (작가는 항상 성인 인증이 되어 있으므로)
             val isAdultContentBlocked = authMember?.adult == false && it.adult
-            
+
             if (isAdultContentBlocked && !isCreatorAndOwnContent) {
                 throw ContentException(
                     "성인 인증이 필요한 콘텐츠입니다.",
                     MessageCode.NOT_FOUND_CONTENT
                 )
             }
-            
+
             it
         } ?: throw NotFoundException(
             "해당 시나리오/자료를 찾을 수 없습니다.",
@@ -218,6 +221,31 @@ class ContentController(
             bookmark,
         )
 
+    }
+
+    @PostMapping
+    @RequireAuth
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: CreateContentRequest,
+    ): Map<String, Long> {
+        // CREATOR 권한 체크
+        if (authMember.role != Role.CREATOR) {
+            throw ContentException(
+                message = "콘텐츠를 생성할 권한이 없습니다. CREATOR 권한이 필요합니다.",
+                code = MessageCode.INCORRECT_ROLE
+            )
+        }
+
+        val content = contentService.createContent(
+            request = request,
+            memberId = authMember.memberId,
+            writerNickname = authMember.nickname,
+        )
+
+        return mapOf("id" to content.id)
     }
 
 }
