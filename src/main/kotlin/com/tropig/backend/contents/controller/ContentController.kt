@@ -247,5 +247,4 @@ class ContentController(
 
         return mapOf("id" to content.id)
     }
-
 }
