@@ -2,20 +2,25 @@ package com.tropig.backend.contents.service
 
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
+import com.tropig.backend.contents.entity.ContentTag
 import com.tropig.backend.contents.entity.ContentThumbnail
+import com.tropig.backend.contents.entity.RelatedContent
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
+import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.result.TagResult
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
+import com.tropig.backend.contents.repository.RelatedContentRepository
 import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
+import java.security.MessageDigest
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -23,6 +28,9 @@ class ContentService(
     private val contentRepository: ContentRepository,
     private val contentTagRepository: ContentTagRepository,
     private val contentThumbnailRepository: ContentThumbnailRepository,
+    private val tagRepository: TagRepository,
+    private val relatedContentRepository: RelatedContentRepository,
+    private val s3Service: S3Service,
 ) {
 
     fun findById(id: Long): Content? =
@@ -71,7 +79,7 @@ class ContentService(
         return contentRepository.countSearchContents(request)
     }
 
-    fun saveAllContentThumbnail(contentThumbnails: List<ContentThumbnail>) =
+    fun saveAllContentThumbnail(contentThumbnails: List<ContentThumbnail>): List<ContentThumbnail> =
         contentThumbnailRepository.saveAll(contentThumbnails)
 
     fun findThumbnailByContentId(contentId: Long): List<ContentThumbnail> =
@@ -92,5 +100,167 @@ class ContentService(
 
     fun findByAlias(alias: String): Content? =
         contentRepository.findByAliasAndStatusNot(alias, ContentsStatus.DELETED)
+
+
+    /**
+     * Content를 생성합니다.
+     * @param request 생성 요청
+     * @param memberId 작성자 ID
+     * @param writerNickname 작성자 닉네임
+     * @return 생성된 Content
+     */
+    @Transactional
+    fun createContent(
+        request: CreateContentRequest,
+        memberId: Long,
+        writerNickname: String,
+    ): Content {
+        // 1. Content 엔티티 생성 (임시 ID로 alias 생성)
+        val tempContent = Content(
+            alias = "", // 임시값, 저장 후 업데이트
+            title = request.title,
+            type = request.type,
+            memberId = memberId,
+            rule = request.rule,
+            genre = request.genre,
+            playerCountType = request.playerCountType,
+            termType = request.termType,
+            publishingInfo = request.publishingInfo,
+            status = request.status,
+            adult = request.adult,
+            publishedAt = request.publishedAt,
+            freeContent = request.freeContent,
+            nonFreeContent = null, // S3 업로드 후 업데이트
+            price = request.price,
+            level = request.level,
+            searchText = "", // 임시값, 나중에 업데이트
+        )
+
+        // 2. Content 저장하여 ID 획득
+        val savedContent = contentRepository.save(tempContent)
+
+        // 3. alias 생성 (memberId + contentId를 사용하여 5~10자 문자열)
+        val alias = generateAlias(memberId, savedContent.id)
+        savedContent.alias = alias
+        // alias를 먼저 저장하여 연관 작품 저장 시 사용 가능하도록 함
+        contentRepository.save(savedContent)
+
+        // 4. non_free_content가 있으면 S3에 업로드
+        val nonFreeContentS3Path = request.nonFreeContent?.let { content ->
+            val txtBytes = content.toByteArray(Charsets.UTF_8)
+            val fileName = "content_${savedContent.id}_${System.currentTimeMillis()}.txt"
+            val inputStream = txtBytes.inputStream()
+            s3Service.uploadFile(
+                inputStream = inputStream,
+                contentType = "text/plain",
+                originalFileName = fileName,
+                contentId = savedContent.id,
+            )
+        }
+
+        // 5. tag 정보 저장
+        request.tagIds?.let { tagIds ->
+            if (tagIds.isNotEmpty()) {
+                // 존재하는 tag만 필터링
+                val existingTagIds = tagRepository.findAllById(tagIds)
+                    .map { it.id }
+                    .toSet()
+
+                // ContentTag 저장
+                val contentTags = tagIds
+                    .filter { it in existingTagIds }
+                    .map { tagId ->
+                        ContentTag(
+                            contentId = savedContent.id,
+                            tagId = tagId,
+                        )
+                    }
+
+                if (contentTags.isNotEmpty()) {
+                    contentTagRepository.saveAll(contentTags)
+                }
+            }
+        }
+
+        // 6. 연관 작품 저장
+        request.relatedContentIds?.let { relatedIds ->
+            if (relatedIds.isNotEmpty()) {
+                // 연관 작품 조회: relatedIds 기준, status가 PUBLISHED이고, type은 SCENARIO인 것만
+                val existingContents = contentRepository.findAllById(relatedIds)
+                    .filter {
+                        it.status == ContentsStatus.PUBLISHED &&
+                        it.type == ContentType.SCENARIO
+                    }
+                val existingContentIds = existingContents.map { it.id }.toSet()
+
+                val relatedContents = relatedIds
+                    .filter { it in existingContentIds }
+                    .mapIndexed { index, relatedContentId ->
+                        RelatedContent(
+                            parentContentId = savedContent.id,
+                            contentId = relatedContentId,
+                            orderNo = index + 1,
+                            path = "/content/${savedContent.alias}", // 기본 경로
+                        )
+                    }
+
+                if (relatedContents.isNotEmpty()) {
+                    relatedContentRepository.saveAll(relatedContents)
+                }
+            }
+        }
+
+        // 7. search_text 생성 (writer.nickname, content.title, tag정보, 장르, rule을 띄워쓰기로 이어붙임)
+        val tagNames = request.tagIds?.let { tagIds ->
+            tagRepository.findAllById(tagIds)
+                .map { it.name }
+        } ?: emptyList()
+
+        val searchTextParts = mutableListOf<String>()
+        searchTextParts.add(writerNickname)
+        searchTextParts.add(savedContent.title)
+        searchTextParts.addAll(tagNames)
+        searchTextParts.add(request.genre.displayName)
+        searchTextParts.add(request.rule.displayName)
+
+        val searchText = searchTextParts.joinToString(" ")
+
+        // 8. Content 업데이트
+        savedContent.nonFreeContent = nonFreeContentS3Path
+        savedContent.searchText = searchText
+
+        return contentRepository.save(savedContent)
+    }
+
+    /**
+     * memberId와 contentId를 사용하여 5~10자의 alias를 생성합니다.
+     * 대소문자와 숫자만 사용합니다.
+     */
+    private fun generateAlias(memberId: Long, contentId: Long): String {
+        val input = "${memberId}_${contentId}_${System.currentTimeMillis()}"
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(input.toByteArray())
+
+        // Base62 인코딩 (대소문자, 숫자만 사용)
+        val base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        val sb = StringBuilder()
+
+        var value = hashBytes.fold(0L) { acc, byte -> (acc shl 8) or (byte.toLong() and 0xFF) }
+        if (value < 0) value = -value
+
+        while (value > 0) {
+            sb.append(base62Chars[(value % 62).toInt()])
+            value /= 62
+        }
+
+        // 5~10자로 조정
+        val alias = sb.toString().take(10)
+        return if (alias.length < 5) {
+            // 5자 미만이면 반복하여 5자 이상으로 만들기
+            (alias + alias + alias).take(5)
+        } else {
+            alias
+        }
+    }
 
 }
