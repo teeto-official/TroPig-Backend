@@ -38,6 +38,10 @@ class MemberService(
         return memberRepository.findByEmail(email)
     }
 
+    fun getUserById(id: Long): Member? {
+        return memberRepository.findMemberByIdAndDeletedAtIsNull(id)
+    }
+
     @Transactional
     fun createMember(request: SignUpRequest): Member {
         memberRepository.findByEmail(request.email)?.let {

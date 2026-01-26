@@ -23,9 +23,12 @@ import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
+import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
 import com.tropig.backend.payment.service.PaymentService
 import org.springframework.http.HttpStatus
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -37,6 +40,7 @@ class ContentController(
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
     private val creatorService: CreatorService,
+    private val memberService: MemberService,
     private val paymentContentService: PaymentContentService,
     private val tagService: TagService,
     private val s3Service: S3Service,
@@ -193,8 +197,8 @@ class ContentController(
         }
 
         // 2. 구매한 유저일 경우: PRIVATE, PUBLISHED 상태에서 조회 가능
-        val isPurchased = authMember?.let { 
-            paymentContentService.isContentPurchased(it.memberId, content.id) 
+        val isPurchased = authMember?.let {
+            paymentContentService.isContentPurchased(it.memberId, content.id)
         } ?: false
         if (isPurchased) {
             if (content.status in ContentsStatus.purchasedStatuses) {
@@ -337,4 +341,32 @@ class ContentController(
         contentService.deleteContent(contentId, authMember.memberId)
     }
 
+
+    @GetMapping("/random/scenario")
+    fun getRandomScenario(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
+        type: String? = null,
+    ): ContentDetailResponse {
+        val content = authMember?.let {
+            val member = memberService.getUserById(it.memberId)
+                ?: throw NotFoundException(
+                    message = "${MessageCode.NOT_FOUND_MEMBER} memberId = ${it.memberId}",
+                    code = MessageCode.NOT_FOUND_MEMBER
+                )
+
+            if (type == "GENRE" && member.favoriteGenres != null) {
+                contentService.getRandomGenreContent(member.favoriteGenres!!, it.adult)
+            } else if (type == "RULE" && member.favoriteRules != null) {
+                contentService.getRandomRuleContent(member.favoriteRules!!, it.adult)
+            } else {
+                contentService.getRandomContent(it.adult)
+            }
+        } ?: run {
+            contentService.getRandomContent(false)
+        }
+
+        return buildContentDetailResponse(content, authMember)
+    }
 }
