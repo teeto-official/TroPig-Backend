@@ -60,7 +60,7 @@ dependencies {
 	implementation(platform("software.amazon.awssdk:bom:2.20.0"))
 	implementation("software.amazon.awssdk:s3")
 
-	implementation("com.google.code.gson:gson:2.10.1")
+	implementation("com.google.code.gson:gson:2.11.0")
 }
 
 kotlin {

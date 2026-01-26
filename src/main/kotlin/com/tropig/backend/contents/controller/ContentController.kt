@@ -23,6 +23,7 @@ import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
+import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
 import com.tropig.backend.payment.service.PaymentService
 import org.springframework.http.HttpStatus
@@ -39,6 +40,7 @@ class ContentController(
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
     private val creatorService: CreatorService,
+    private val memberService: MemberService,
     private val paymentContentService: PaymentContentService,
     private val tagService: TagService,
     private val s3Service: S3Service,
@@ -346,7 +348,7 @@ class ContentController(
         @LoginMember authMember: AuthMember?,
         @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
         type: String? = null,
-    ) {
+    ): ContentDetailResponse {
         val content = authMember?.let {
             val member = memberService.getUserById(it.memberId)
                 ?: throw NotFoundException(
@@ -364,5 +366,7 @@ class ContentController(
         } ?: run {
             contentService.getRandomContent(false)
         }
+
+        return buildContentDetailResponse(content, authMember)
     }
 }
