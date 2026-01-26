@@ -7,7 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
-class WriterService(
+class CreatorService(
     private val memberRepository: MemberRepository,
 ) {
 

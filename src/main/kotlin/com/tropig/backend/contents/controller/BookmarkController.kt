@@ -12,7 +12,7 @@ import com.tropig.backend.contents.model.response.BookmarkContentResponse
 import com.tropig.backend.contents.service.BookmarkContentService
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.TagService
-import com.tropig.backend.member.service.WriterService
+import com.tropig.backend.member.service.CreatorService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 @RequestMapping("/api/bookmark")
 class BookmarkController(
     private val bookmarkContentService: BookmarkContentService,
-    private val writerService: WriterService,
+    private val creatorService: CreatorService,
     private val tagService: TagService,
     private val contentService: ContentService,
 ) {
@@ -59,7 +59,7 @@ class BookmarkController(
                 val contentIds = items.map { it.id }
                 val writerIds = items.map { it.memberId }.distinct()
 
-                val nickByMemberId = writerService.getWritersName(writerIds)
+                val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
                     .associateBy({ it.contentId }, { it.path })

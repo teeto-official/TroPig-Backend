@@ -16,7 +16,9 @@ import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
-import com.tropig.backend.member.service.WriterService
+import com.tropig.backend.member.service.CreatorService
+import com.tropig.backend.payment.service.PaymentContentService
+import com.tropig.backend.payment.service.PaymentService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -27,7 +29,8 @@ class ContentController(
     private val pickContentService: PickContentService,
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
-    private val writerService: WriterService,
+    private val creatorService: CreatorService,
+    private val paymentContentService: PaymentContentService,
     private val tagService: TagService,
     private val s3Service: S3Service,
 ) {
@@ -42,7 +45,7 @@ class ContentController(
         val isAdult = authMember?.adult ?: false
         val pickContents = pickContentService.getAllPickContent()
         val contents = contentService.getPickContentsByType(type, isAdult, pickContents.map { it.contentId })
-        val writerName = writerService.getWritersName(contents.map { it.writerId })
+        val writerName = creatorService.getWritersName(contents.map { it.writerId })
         val contentsMap = contents.associateBy { it.id }
 
         return pickContents.mapNotNull {
@@ -108,7 +111,7 @@ class ContentController(
                 val contentIds = items.map { it.id }
                 val writerIds = items.map { it.memberId }.distinct()
 
-                val nickByMemberId = writerService.getWritersName(writerIds)
+                val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
                 val favoriteCountsByContentId = favoriteContentService.getFavoriteCountByContentIds(contentIds)
@@ -191,16 +194,20 @@ class ContentController(
             MessageCode.NOT_FOUND_CONTENT
         )
 
-        val writer = writerService.getWriter(content.memberId)
+        val writer = creatorService.getWriter(content.memberId)
 
         val tags = tagService.findByContentId(content.id)
         val bookmark = authMember?.let {
             bookmarkContentService.existsBookmark(it.memberId, content.id)
         } ?: false
-        val purchased = authMember?.let {
-            // TODO: 구매 로직 추가 후, 체크 추가
-            content.nonFreeContent?.let { purchase ->
-                s3Service.getFileAsString(purchase)
+        val purchased = authMember?.let { member ->
+            val isPurchased = paymentContentService.isContentPurchased(member.memberId, content.id)
+            if (isPurchased) {
+                content.nonFreeContent?.let { purchase ->
+                    s3Service.getFileAsString(purchase)
+                }
+            } else {
+                null
             }
         }
 
