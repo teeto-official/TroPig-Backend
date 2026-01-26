@@ -47,7 +47,7 @@ data class UpdateContentRequest(
 
     @field:NotNull(message = "레벨은 필수입니다.")
     @field:Min(value = 1, message = "레벨은 1 이상이어야 합니다.")
-    @field:Max(value = 5, message = "레벨은 5 이하여야 합니다.")
+    @field:Max(value = 4, message = "레벨은 4 이하여야 합니다.")
     val level: Int,
 
     @field:Size(max = 8, message = "태그는 최대 8개까지 선택할 수 있습니다.")
