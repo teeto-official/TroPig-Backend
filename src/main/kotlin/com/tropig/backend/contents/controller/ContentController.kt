@@ -8,6 +8,7 @@ import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
+import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
@@ -15,6 +16,7 @@ import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
+import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
@@ -246,6 +248,46 @@ class ContentController(
         )
 
         return mapOf("id" to content.id)
+    }
+
+    @PutMapping("/{contentId}")
+    @RequireAuth
+    fun updateContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @PathVariable contentId: Long,
+        @RequestBody request: UpdateContentRequest,
+    ): Map<String, Long> {
+        // 1. CREATOR 권한 체크
+        if (authMember.role != Role.CREATOR) {
+            throw ContentException(
+                message = "콘텐츠를 수정할 권한이 없습니다. CREATOR 권한이 필요합니다.",
+                code = MessageCode.INCORRECT_ROLE
+            )
+        }
+
+        // 2. Content 조회 및 memberId 검증
+        val content = contentService.findById(contentId)
+            ?: throw ContentException(
+                message = "Content를 찾을 수 없습니다.",
+                code = MessageCode.NOT_FOUND_CONTENT
+            )
+
+        if (content.memberId != authMember.memberId) {
+            throw MemberException(
+                message = "본인이 작성한 작품만 수정할 수 있습니다.",
+                code = MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        val updatedContent = contentService.updateContent(
+            contentId = contentId,
+            request = request,
+            memberId = authMember.memberId,
+            writerNickname = authMember.nickname,
+        )
+
+        return mapOf("id" to updatedContent.id)
     }
 
 }

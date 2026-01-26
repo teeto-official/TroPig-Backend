@@ -44,4 +44,6 @@ interface ContentTagRepository: JpaRepository<ContentTag, Long> {
         """
     )
     fun findByContentId(contentId: Long): List<TagResultProjection>
+
+    fun deleteByContentId(contentId: Long)
 }

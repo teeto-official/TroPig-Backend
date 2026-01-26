@@ -9,6 +9,7 @@ import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
+import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.result.TagResult
@@ -230,6 +231,125 @@ class ContentService(
         savedContent.searchText = searchText
 
         return contentRepository.save(savedContent)
+    }
+
+    /**
+     * Content를 수정합니다.
+     * @param contentId 수정할 Content ID
+     * @param request 수정 요청
+     * @param memberId 작성자 ID
+     * @param writerNickname 작성자 닉네임
+     * @return 수정된 Content
+     */
+    @Transactional
+    fun updateContent(
+        contentId: Long,
+        request: UpdateContentRequest,
+        memberId: Long,
+        writerNickname: String,
+    ): Content {
+        // 1. Content 조회
+        val content = contentRepository.findById(contentId)
+            .orElseThrow { IllegalArgumentException("Content를 찾을 수 없습니다: $contentId") }
+
+        // 2. memberId 검증 (Controller에서도 체크하지만, Service에서도 한번 더 체크)
+        if (content.memberId != memberId) {
+            throw IllegalArgumentException("본인이 작성한 작품만 수정할 수 있습니다.")
+        }
+
+        // 3. Content 필드 업데이트 (alias는 수정하지 않음)
+        content.title = request.title
+        content.type = request.type
+        content.rule = request.rule
+        content.genre = request.genre
+        content.playerCountType = request.playerCountType
+        content.termType = request.termType
+        content.publishingInfo = request.publishingInfo
+        content.status = request.status
+        content.adult = request.adult
+        content.publishedAt = request.publishedAt
+        content.freeContent = request.freeContent
+        content.price = request.price
+        content.level = request.level
+
+        // 4. non_free_content 처리
+        // 기존 path가 있고, 새로운 nonFreeContent가 제공되면 S3에 업데이트
+        val nonFreeContentS3Path = if (request.nonFreeContent != null) {
+            content.nonFreeContent?.let {
+                // 기존 path가 있으면 해당 path를 사용하여 업데이트
+                val existingS3Key = s3Service.extractS3Key(it)
+                val txtBytes = request.nonFreeContent.toByteArray(Charsets.UTF_8)
+                val inputStream = txtBytes.inputStream()
+                
+                // 기존 key를 사용하여 파일 업데이트
+                s3Service.updateFile(
+                    inputStream = inputStream,
+                    contentType = "text/plain",
+                    s3Key = existingS3Key,
+                )
+                // 기존 path 반환 (동일한 path 사용)
+                it
+            } ?: run {
+                // 기존 path가 없으면 새로 업로드
+                val txtBytes = request.nonFreeContent.toByteArray(Charsets.UTF_8)
+                val fileName = "content_${contentId}_${System.currentTimeMillis()}.txt"
+                val inputStream = txtBytes.inputStream()
+                s3Service.uploadFile(
+                    inputStream = inputStream,
+                    contentType = "text/plain",
+                    originalFileName = fileName,
+                    contentId = contentId,
+                )
+            }
+        } else {
+            // nonFreeContent가 null이면 기존 값 유지
+            content.nonFreeContent
+        }
+        content.nonFreeContent = nonFreeContentS3Path
+
+        // 5. tag 정보 삭제 후 신규 저장
+        contentTagRepository.deleteByContentId(contentId)
+        
+        request.tagIds?.let { tagIds ->
+            if (tagIds.isNotEmpty()) {
+                // 존재하는 tag만 필터링
+                val existingTagIds = tagRepository.findAllById(tagIds)
+                    .map { it.id }
+                    .toSet()
+                
+                // ContentTag 저장
+                val contentTags = tagIds
+                    .filter { it in existingTagIds }
+                    .map { tagId ->
+                        ContentTag(
+                            contentId = contentId,
+                            tagId = tagId,
+                        )
+                    }
+                
+                if (contentTags.isNotEmpty()) {
+                    contentTagRepository.saveAll(contentTags)
+                }
+            }
+        }
+
+        // 6. search_text 생성 (writer.nickname, content.title, tag정보, 장르, rule을 띄워쓰기로 이어붙임)
+        val tagNames = request.tagIds?.let { tagIds ->
+            tagRepository.findAllById(tagIds)
+                .map { it.name }
+        } ?: emptyList()
+        
+        val searchTextParts = mutableListOf<String>()
+        searchTextParts.add(writerNickname)
+        searchTextParts.add(content.title)
+        searchTextParts.addAll(tagNames)
+        searchTextParts.add(request.genre.displayName)
+        searchTextParts.add(request.rule.displayName)
+        
+        content.searchText = searchTextParts.joinToString(" ")
+
+        // 7. Content 저장
+        return contentRepository.save(content)
     }
 
     /**
