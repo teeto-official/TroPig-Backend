@@ -16,4 +16,5 @@ enum class MessageCode {
     WITHDRAW_MEMBER,
     ADULT_CONTENT,
     OWN_CONTENT,
+    PURCHASE_REQUIRED,
 }
