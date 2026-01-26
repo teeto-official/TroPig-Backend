@@ -25,6 +25,10 @@ spring:
   cache:
     type: simple
 
+  mail:
+    username: test-smtp-username
+    password: test-smtp-password
+
 # Disable external API calls during tests
 toss:
   api:
@@ -59,3 +63,27 @@ jwt:
   secret: "your256bitSecretKeyPleaseChangeItThisIsTestTest"
   expiration: 3600000
   refresh-expiration: 86400000
+
+# Test environment variables (dummy values for testing)
+mail:
+  sender:
+    address: test@example.com
+    name: Test Sender
+  subjects:
+    sign_up: "가입을 환영합니다"
+    receipt: "구매 확정 안내"
+
+aws:
+  s3:
+    bucket: test-bucket
+    region: ap-northeast-2
+    access-key: test-access-key
+    secret-key: test-secret-key
+
+portone:
+  key:
+    api: test-portone-api-key
+    secret: test-portone-secret
+    secret-v2: test-portone-secret-v2
+  base-url: http://localhost:9999
+  store-id: test-store-id
