@@ -43,7 +43,7 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ContentException::class)
-    fun handleContentException(e: MemberException): ResponseEntity<ErrorResponse> {
+    fun handleContentException(e: ContentException): ResponseEntity<ErrorResponse> {
         logger.debug("ContentException: ${e.message}")
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(message = e.message!!, code = e.code))

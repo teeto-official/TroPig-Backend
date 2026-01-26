@@ -3,19 +3,22 @@ package com.tropig.backend.contents.controller
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
+import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
-import com.tropig.backend.contents.model.response.CountSearchContentResponse
-import com.tropig.backend.contents.model.response.PickContentResponse
-import com.tropig.backend.contents.model.response.SearchContentResponse
-import com.tropig.backend.contents.model.response.SearchTagResponse
+import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
-import com.tropig.backend.member.service.MemberService
+import com.tropig.backend.member.enums.Role
+import com.tropig.backend.member.service.CreatorService
+import com.tropig.backend.payment.service.PaymentContentService
+import com.tropig.backend.payment.service.PaymentService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -26,8 +29,10 @@ class ContentController(
     private val pickContentService: PickContentService,
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
-    private val memberService: MemberService,
+    private val creatorService: CreatorService,
+    private val paymentContentService: PaymentContentService,
     private val tagService: TagService,
+    private val s3Service: S3Service,
 ) {
 
     @GetMapping("/pick/{type}")
@@ -40,7 +45,7 @@ class ContentController(
         val isAdult = authMember?.adult ?: false
         val pickContents = pickContentService.getAllPickContent()
         val contents = contentService.getPickContentsByType(type, isAdult, pickContents.map { it.contentId })
-        val writerName = memberService.getWritersName(contents.map { it.writerId })
+        val writerName = creatorService.getWritersName(contents.map { it.writerId })
         val contentsMap = contents.associateBy { it.id }
 
         return pickContents.mapNotNull {
@@ -106,7 +111,7 @@ class ContentController(
                 val contentIds = items.map { it.id }
                 val writerIds = items.map { it.memberId }.distinct()
 
-                val nickByMemberId = memberService.getWritersName(writerIds)
+                val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
                 val favoriteCountsByContentId = favoriteContentService.getFavoriteCountByContentIds(contentIds)
@@ -156,6 +161,63 @@ class ContentController(
         }
 
         return SearchTagResponse(tags, genres, rules)
+    }
+
+    @GetMapping("/{alias}")
+    fun getContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @PathVariable
+        alias: String,
+    ): ContentDetailResponse {
+        val content = contentService.findByAlias(alias)?.let {
+            // 1. 작가이고 본인 작품일 경우 조회 가능 (작가는 항상 성인 인증이 되어 있음)
+            val isCreatorAndOwnContent = authMember?.role == Role.CREATOR && authMember.memberId == it.memberId
+            
+            // 2. 구입한 유저일 경우 조회 가능 (추후 추가)
+            // val isPurchased = authMember?.let { paymentService.isContentPurchased(it.memberId, it.id) } ?: false
+            
+            // 3. 성인 콘텐츠 조회 제한: adult가 false이고 콘텐츠가 adult인 경우 조회 불가
+            // 작가이고 본인 작품이 아닌 경우에만 체크 (작가는 항상 성인 인증이 되어 있으므로)
+            val isAdultContentBlocked = authMember?.adult == false && it.adult
+            
+            if (isAdultContentBlocked && !isCreatorAndOwnContent) {
+                throw ContentException(
+                    "성인 인증이 필요한 콘텐츠입니다.",
+                    MessageCode.NOT_FOUND_CONTENT
+                )
+            }
+            
+            it
+        } ?: throw NotFoundException(
+            "해당 시나리오/자료를 찾을 수 없습니다.",
+            MessageCode.NOT_FOUND_CONTENT
+        )
+
+        val writer = creatorService.getWriter(content.memberId)
+
+        val tags = tagService.findByContentId(content.id)
+        val bookmark = authMember?.let {
+            bookmarkContentService.existsBookmark(it.memberId, content.id)
+        } ?: false
+        val purchased = authMember?.let { member ->
+            val isPurchased = paymentContentService.isContentPurchased(member.memberId, content.id)
+            if (isPurchased) {
+                content.nonFreeContent?.let { purchase ->
+                    s3Service.getFileAsString(purchase)
+                }
+            } else {
+                null
+            }
+        }
+
+        return content.toDetailResponse(
+            writer,
+            tags,
+            purchased,
+            bookmark,
+        )
+
     }
 
 }

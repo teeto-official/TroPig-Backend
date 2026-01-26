@@ -9,9 +9,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -85,6 +89,51 @@ class S3Service(
                 if (!url.contains("http")) url
                 else throw IllegalArgumentException("잘못된 S3 URL 형식입니다: $url")
             }
+        }
+    }
+
+    /**
+     * S3에서 key로 파일을 가져와서 텍스트로 반환합니다.
+     * @param key S3 키 (또는 S3 URL)
+     * @return 파일 내용을 String으로 반환
+     * @throws IllegalArgumentException txt 파일이 아닌 경우
+     * @throws RuntimeException 파일을 가져오는데 실패한 경우
+     */
+    fun getFileAsString(key: String): String {
+        try {
+            // URL인 경우 키 추출
+            val s3Key = if (key.contains("amazonaws.com/")) {
+                extractS3Key(key)
+            } else {
+                key
+            }
+
+            // txt 파일인지 확인 (확장자 체크)
+            if (!s3Key.lowercase().endsWith(".txt")) {
+                throw IllegalArgumentException("txt 파일만 읽을 수 있습니다. 파일: $s3Key")
+            }
+
+            val getObjectRequest = GetObjectRequest.builder()
+                .bucket(s3Properties.bucket)
+                .key(s3Key)
+                .build()
+
+            val response: ResponseInputStream<GetObjectResponse> = s3Client.getObject(getObjectRequest)
+            
+            // Content-Type도 확인 (추가 검증)
+            val contentType = response.response().contentType()
+            if (contentType != null && !contentType.startsWith("text/")) {
+                logger.warn("Content-Type이 text가 아닙니다: $contentType, key=$s3Key")
+            }
+            
+            return response.use { inputStream ->
+                inputStream.readAllBytes().toString(StandardCharsets.UTF_8)
+            }
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("S3 파일 읽기 실패: key=$key", e)
+            throw RuntimeException("S3에서 파일을 가져오는데 실패했습니다: ${e.message}", e)
         }
     }
 

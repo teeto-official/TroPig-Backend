@@ -26,4 +26,22 @@ interface ContentTagRepository: JpaRepository<ContentTag, Long> {
         """
     )
     fun findByContentIdIn(contentIds: List<Long>): List<TagResultProjection>
+
+    @Query(
+        nativeQuery = true,
+        value = """
+            SELECT
+                t.id as tagId,
+                ct.content_id,
+                t.type,
+                t.name
+            FROM
+                tag t
+            INNER JOIN
+                content_tag ct ON t.id = ct.tag_id
+            WHERE
+                ct.content_id = :contentId
+        """
+    )
+    fun findByContentId(contentId: Long): List<TagResultProjection>
 }

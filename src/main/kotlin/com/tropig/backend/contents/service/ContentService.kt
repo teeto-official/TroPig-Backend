@@ -89,4 +89,8 @@ class ContentService(
             it.status = ContentsStatus.DELETED
         }
     }
+
+    fun findByAlias(alias: String): Content? =
+        contentRepository.findByAliasAndStatusNot(alias, ContentsStatus.DELETED)
+
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import software.amazon.awssdk.services.s3.endpoints.internal.Value.Bool
 
 @Repository
 interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, BookmarkContentCustomRepository {
@@ -55,7 +56,6 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
     fun getBookmarkInfoByContentIds(contentIds: List<Long>): List<BookmarkContentProjection>
 
     @Modifying
-    @Transactional
     @Query(
         """
     UPDATE BookmarkContent b
@@ -68,7 +68,6 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
     fun deleteBookmark(memberId: Long, contentId: Long): Int
 
     @Modifying
-    @Transactional
     @Query(
         value = """
         INSERT INTO bookmark_content (member_id, content_id, deleted, created_at, updated_at)
@@ -81,4 +80,6 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
         nativeQuery = true
     )
     fun upsertBookmark(memberId: Long, contentId: Long): Int
+
+    fun existsByMemberIdAndContentIdAndDeleted(memberId: Long, contentId: Long, deleted: Boolean): Boolean
 }

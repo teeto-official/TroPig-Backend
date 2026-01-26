@@ -148,11 +148,6 @@ class MemberService(
         return memberRepository.save(updatedUser)
     }
 
-    fun getWritersName(writerIds: List<Long>): Map<Long, String> {
-        return memberRepository.findByIdInAndRoleAndDeletedAtIsNull(writerIds, Role.CREATOR)
-            .associate { it.id to it.nickname }
-    }
-
     @Transactional
     fun deleteUser(id: Long): Member? {
         return memberRepository.findMemberByIdAndDeletedAtIsNull(id)?.let {
