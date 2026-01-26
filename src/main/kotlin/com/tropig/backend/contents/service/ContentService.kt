@@ -427,4 +427,46 @@ class ContentService(
     fun getRandomContent(isAdult: Boolean): Content {
         return contentRepository.findRandomContent(isAdult)
     }
+
+    /**
+     * non_free_content를 조회합니다.
+     * @param contentId 콘텐츠 ID
+     * @param memberId 회원 ID (null 가능)
+     * @param isContentPurchased 구매 이력 확인 함수
+     * @return S3에서 가져온 non_free_content 내용
+     * @throws NotFoundException 콘텐츠를 찾을 수 없는 경우
+     * @throws ContentException 구매가 필요한 경우
+     */
+    fun getNonFreeContent(
+        contentId: Long,
+        memberId: Long?,
+        isContentPurchased: (Long, Long) -> Boolean,
+    ): String {
+        // 1. Content 조회
+        val content = findById(contentId)
+            ?: throw NotFoundException(
+                "콘텐츠를 찾을 수 없습니다.",
+                MessageCode.NOT_FOUND_CONTENT
+            )
+
+        // 2. nonFreeContent가 null인 경우
+        if (content.nonFreeContent == null) {
+            return ""
+        }
+
+        // 3. 구매 이력 확인
+        val hasPurchaseHistory = memberId?.let { isContentPurchased(it, contentId) } ?: false
+
+        // 4. 구매 이력이 있으면 조회 가능
+        // 5. 구매 이력이 없고 price가 0이면 조회 가능
+        if (hasPurchaseHistory || content.price == 0.0) {
+            return s3Service.getFileAsString(content.nonFreeContent!!)
+        }
+
+        // 6. 구매 이력이 없고 price가 0 초과면 예외 발생
+        throw ContentException(
+            "구매가 필요한 콘텐츠입니다.",
+            MessageCode.PURCHASE_REQUIRED
+        )
+    }
 }

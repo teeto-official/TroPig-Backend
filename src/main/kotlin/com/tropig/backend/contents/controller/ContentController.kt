@@ -369,4 +369,22 @@ class ContentController(
 
         return buildContentDetailResponse(content, authMember)
     }
+
+    @GetMapping("/{contentId}/hidden")
+    fun getNonFreeContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @PathVariable contentId: Long,
+    ): NonFreeContentResponse {
+        val memberId = authMember?.memberId
+        val content = contentService.getNonFreeContent(
+            contentId = contentId,
+            memberId = memberId,
+            isContentPurchased = { memberId, contentId ->
+                paymentContentService.isContentPurchased(memberId, contentId)
+            }
+        )
+
+        return NonFreeContentResponse(content = content)
+    }
 }
