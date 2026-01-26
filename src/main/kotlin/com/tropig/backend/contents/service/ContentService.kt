@@ -1,5 +1,8 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentTag
@@ -280,7 +283,7 @@ class ContentService(
                 val existingS3Key = s3Service.extractS3Key(it)
                 val txtBytes = request.nonFreeContent.toByteArray(Charsets.UTF_8)
                 val inputStream = txtBytes.inputStream()
-                
+
                 // 기존 key를 사용하여 파일 업데이트
                 s3Service.updateFile(
                     inputStream = inputStream,
@@ -309,14 +312,14 @@ class ContentService(
 
         // 5. tag 정보 삭제 후 신규 저장
         contentTagRepository.deleteByContentId(contentId)
-        
+
         request.tagIds?.let { tagIds ->
             if (tagIds.isNotEmpty()) {
                 // 존재하는 tag만 필터링
                 val existingTagIds = tagRepository.findAllById(tagIds)
                     .map { it.id }
                     .toSet()
-                
+
                 // ContentTag 저장
                 val contentTags = tagIds
                     .filter { it in existingTagIds }
@@ -326,7 +329,7 @@ class ContentService(
                             tagId = tagId,
                         )
                     }
-                
+
                 if (contentTags.isNotEmpty()) {
                     contentTagRepository.saveAll(contentTags)
                 }
@@ -338,14 +341,14 @@ class ContentService(
             tagRepository.findAllById(tagIds)
                 .map { it.name }
         } ?: emptyList()
-        
+
         val searchTextParts = mutableListOf<String>()
         searchTextParts.add(writerNickname)
         searchTextParts.add(content.title)
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre.displayName)
         searchTextParts.add(request.rule.displayName)
-        
+
         content.searchText = searchTextParts.joinToString(" ")
 
         // 7. Content 저장
@@ -381,6 +384,24 @@ class ContentService(
         } else {
             alias
         }
+    }
+
+    @Transactional
+    fun deleteContent(contentId: Long, memberId: Long): Content {
+        val content = findById(contentId) ?: throw NotFoundException(
+            "콘텐츠를 찾을 수 없습니다.",
+            MessageCode.NOT_FOUND_CONTENT
+        )
+
+        if (content.memberId != memberId) {
+            throw ContentException(
+                "본인의 콘텐츠만 삭제할 수 있습니다.",
+                MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        content.status = ContentsStatus.DELETED
+        return save(content)
     }
 
 }
