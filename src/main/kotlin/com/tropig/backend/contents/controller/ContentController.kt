@@ -25,7 +25,6 @@ import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
-import com.tropig.backend.payment.service.PaymentService
 import org.springframework.http.HttpStatus
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
@@ -368,5 +367,23 @@ class ContentController(
         }
 
         return buildContentDetailResponse(content, authMember)
+    }
+
+    @GetMapping("/{contentId}/purchased")
+    fun getPurchasedContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @PathVariable contentId: Long,
+    ): PurchasedContentResponse {
+        val memberId = authMember?.memberId
+        val content = contentService.getNonFreeContent(
+            contentId = contentId,
+            memberId = memberId,
+            isContentPurchased = { memberId, contentId ->
+                paymentContentService.isContentPurchased(memberId, contentId)
+            }
+        )
+
+        return PurchasedContentResponse(content = content)
     }
 }
