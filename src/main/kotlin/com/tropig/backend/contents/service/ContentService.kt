@@ -233,7 +233,6 @@ class ContentService(
                             parentContentId = savedContent.id,
                             contentId = relatedContentId,
                             orderNo = index + 1,
-                            path = "/content/${savedContent.alias}", // 기본 경로
                         )
                     }
 
@@ -394,6 +393,33 @@ class ContentService(
 
                 if (contentTags.isNotEmpty()) {
                     contentTagRepository.saveAll(contentTags)
+                }
+            }
+        }
+
+        request.relatedContentIds?.let { relatedIds ->
+            if (relatedIds.isNotEmpty()) {
+                relatedContentRepository.deleteByParentContentId(contentId)
+                // 연관 작품 조회: relatedIds 기준, status가 PUBLISHED이고, type은 SCENARIO인 것만
+                val existingContents = contentRepository.findAllById(relatedIds)
+                    .filter {
+                        it.status == ContentsStatus.PUBLISHED &&
+                                it.type == ContentType.SCENARIO
+                    }
+                val existingContentIds = existingContents.map { it.id }.toSet()
+
+                val relatedContents = relatedIds
+                    .filter { it in existingContentIds }
+                    .mapIndexed { index, relatedContentId ->
+                        RelatedContent(
+                            parentContentId = contentId,
+                            contentId = relatedContentId,
+                            orderNo = index + 1,
+                        )
+                    }
+
+                if (relatedContents.isNotEmpty()) {
+                    relatedContentRepository.saveAll(relatedContents)
                 }
             }
         }

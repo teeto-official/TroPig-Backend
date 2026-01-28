@@ -36,5 +36,6 @@ data class CreateContentRequest(
     @field:Size(max = 8, message = "태그는 최대 8개까지 선택할 수 있습니다.")
     val tagIds: List<Long>? = null,
 
+    @field:Size(max = 10, message = "연관 시나리오는 최대 10개까지 등록할 수 있습니다.")
     val relatedContentIds: List<Long>? = null,
 )
