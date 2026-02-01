@@ -60,7 +60,7 @@ class MemberService(
         }
 
         val nickname = generateSequence { makeNickname() }
-            .first { !memberRepository.existsByNickname(it) }
+            .first { !memberRepository.existsByNicknameAndIdNot(it, 0) }
 
         return memberRepository.save(request.toEntity(nickname))
     }
@@ -119,16 +119,15 @@ class MemberService(
     @Transactional
     fun updateUser(member: Member, request: UpdateMemberRequest): Member {
         request.nickname?.let {
-            if (memberRepository.existsByNickname(it)) {
+            if (memberRepository.existsByNicknameAndIdNot(it, member.id)) {
                 throw IllegalArgumentException(
                     "이미 존재하는 닉네임입니다.",
                     MessageCode.ALREADY_EXISTS
                 )
             }
         }
-        val updatedUser = member.copy(
-            nickname = request.nickname ?: member.nickname,
-        ).apply {
+        member.apply {
+            request.nickname?.let { this.nickname = it }
             request.bio?.let { this.bio = it }
 
             if (request.favoriteRules.isNotEmpty()) {
@@ -146,10 +145,9 @@ class MemberService(
                     this.marketingAt = null
                 }
             }
-
         }
         
-        return memberRepository.save(updatedUser)
+        return memberRepository.save(member)
     }
 
     @Transactional
