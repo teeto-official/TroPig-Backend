@@ -1,0 +1,177 @@
+name: Sync .env to Lightsail
+
+on:
+  workflow_dispatch:  # 수동 실행만 (GitHub Secrets 변경 시 사용)
+    inputs:
+      environment:
+        description: '배포 환경 선택'
+        required: true
+        type: choice
+        options:
+          - development
+          - prod
+  # push 트리거 제거: cicd-dev.yml과 충돌 방지
+  # GitHub Secrets 변경 시에만 수동으로 실행하세요
+
+jobs:
+  sync-env:
+    runs-on: ubuntu-latest
+    # 환경 자동 선택: develop -> development, main -> prod
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'development' || 'prod') }}
+    steps:
+      - name: Display Environment
+        run: |
+          echo "🌍 배포 환경: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'development' || 'prod') }}"
+          echo "📦 브랜치: ${{ github.ref_name }}"
+          
+      - name: Validate Secrets
+        run: |
+          ENV_NAME="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'development' || 'prod') }}"
+          echo "🔍 [$ENV_NAME] Environment Secrets 검증 중..."
+          echo ""
+          
+          # LIGHTSAIL_HOST 검증
+          if [ -z "${{ secrets.LIGHTSAIL_HOST }}" ]; then
+            echo "❌ LIGHTSAIL_HOST secret이 설정되지 않았습니다."
+            echo ""
+            echo "📋 확인 사항:"
+            echo "  1. GitHub 리포지토리 → Settings → Secrets and variables → Actions"
+            echo "  2. Environments 탭 → '$ENV_NAME' 환경 선택"
+            echo "  3. Secrets 섹션에서 'LIGHTSAIL_HOST' 등록 확인"
+            echo "  4. Secret 이름이 정확히 'LIGHTSAIL_HOST'인지 확인 (대소문자 구분)"
+            exit 1
+          else
+            echo "✅ LIGHTSAIL_HOST: 설정됨"
+          fi
+          
+          # LIGHTSAIL_USER 검증
+          if [ -z "${{ secrets.LIGHTSAIL_USER }}" ]; then
+            echo "❌ LIGHTSAIL_USER secret이 설정되지 않았습니다."
+            echo ""
+            echo "📋 확인 사항:"
+            echo "  1. Environments → '$ENV_NAME' → Secrets에서 'LIGHTSAIL_USER' 등록 확인"
+            exit 1
+          else
+            echo "✅ LIGHTSAIL_USER: 설정됨"
+          fi
+          
+          # LIGHTSAIL_SSH_KEY 검증
+          if [ -z "${{ secrets.LIGHTSAIL_SSH_KEY }}" ]; then
+            echo "❌ LIGHTSAIL_SSH_KEY secret이 설정되지 않았습니다."
+            echo ""
+            echo "📋 확인 사항:"
+            echo "  1. Environments → '$ENV_NAME' → Secrets에서 'LIGHTSAIL_SSH_KEY' 등록 확인"
+            echo "  2. SSH Private Key 전체 내용이 포함되어 있는지 확인"
+            exit 1
+          else
+            echo "✅ LIGHTSAIL_SSH_KEY: 설정됨"
+          fi
+          
+          echo ""
+          echo "✅ [$ENV_NAME] 모든 필수 Secrets 검증 완료"
+          
+      - name: Create .env file from GitHub Secrets
+        run: |
+          cat > .env << EOF
+          # Spring Profile
+          SPRING_PROFILES_ACTIVE=${{ secrets.PROFILES_ACTIVE }}
+          
+          # JWT Configuration
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          
+          # Database Configuration (Spring Boot 형식)
+          SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+          
+          # Redis Configuration
+          SPRING_DATA_REDIS_HOST=redis
+          SPRING_DATA_REDIS_PORT=6379
+          
+          # AWS SES Configuration
+          SES_SMTP_USERNAME=${{ secrets.SES_SMTP_USERNAME }}
+          SES_SMTP_PASSWORD=${{ secrets.SES_SMTP_PASSWORD }}
+          MAIL_ADDRESS=${{ secrets.MAIL_ADDRESS }}
+          MAIL_NAME=${{ secrets.MAIL_NAME }}
+          
+          # AWS S3 Configuration
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          AWS_S3_REGION=${{ secrets.AWS_S3_REGION }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
+          # PortOne Configuration
+          PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }}
+          PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
+          PORTONE_SECRET_V2=${{ secrets.PORTONE_SECRET_V2 }}
+          PORTONE_BASE_URL=${{ secrets.PORTONE_BASE_URL }}
+          PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
+          PORTONE_PLATFORM_DEFAULT_CONTRACT_ID=${{ secrets.PORTONE_PLATFORM_DEFAULT_CONTRACT_ID }}
+          
+          # Legacy format (호환성)
+          DB_URL=${{ secrets.DB_URL }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          PROFILES_ACTIVE=${{ secrets.PROFILES_ACTIVE }}
+          EOF
+          
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/lightsail_key
+          chmod 600 ~/.ssh/lightsail_key
+          
+          # SSH known_hosts 설정 (실패해도 계속 진행)
+          if [ -n "${{ secrets.LIGHTSAIL_HOST }}" ]; then
+            ssh-keyscan -H "${{ secrets.LIGHTSAIL_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+          
+      - name: Copy .env to Lightsail
+        run: |
+          scp -i ~/.ssh/lightsail_key \
+            -o StrictHostKeyChecking=no \
+            .env ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/tmp/.env
+          
+      - name: Deploy .env file to Lightsail
+        run: |
+          ssh -i ~/.ssh/lightsail_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'ENDSSH'
+            sudo mkdir -p /opt/dev
+            sudo cp /tmp/.env /opt/dev/.env
+            sudo chmod 600 /opt/dev/.env
+            rm -f /tmp/.env
+            echo "✅ .env 파일이 배포되었습니다: /opt/dev/.env"
+          ENDSSH
+          
+      - name: Restart Docker containers (optional)
+        run: |
+          ssh -i ~/.ssh/lightsail_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'ENDSSH'
+            # docker-compose.yml이 있는 디렉토리 찾기
+            COMPOSE_DIR=""
+            if [ -f ~/TroPig-Backend/docker-compose.yml ]; then
+              COMPOSE_DIR=~/TroPig-Backend
+            elif [ -f /opt/dev/docker-compose.yml ]; then
+              COMPOSE_DIR=/opt/dev
+            fi
+            
+            if [ -n "$COMPOSE_DIR" ]; then
+              cd "$COMPOSE_DIR"
+              echo "🔄 Docker Compose 재기동 중..."
+              docker-compose down
+              docker-compose up -d
+              echo "✅ Docker 컨테이너가 재기동되었습니다."
+            else
+              echo "⚠️  docker-compose.yml 파일을 찾을 수 없습니다. .env 파일만 배포되었습니다."
+              echo "수동으로 Docker를 재기동하세요: docker-compose down && docker-compose up -d"
+            fi
+          ENDSSH
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/lightsail_key
+          rm -f .env
