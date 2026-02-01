@@ -35,6 +35,15 @@ class CacheConfig {
                     "nicknameComponent" -> Caffeine.newBuilder()
                         .expireAfterWrite(30, TimeUnit.MINUTES)   // TTL 30분 (닉네임 리스트는 자주 변경되지 않음)
 
+                    // 크리에이터 수익/작품 조회 관련 캐시
+                    "creatorContentsByMember" -> Caffeine.newBuilder()
+                        .expireAfterWrite(30, TimeUnit.MINUTES)   // TTL 30분 (작품 리스트)
+                        .maximumSize(5_000)
+
+                    "revenueSummaryByMember" -> Caffeine.newBuilder()
+                        .expireAfterWrite(10, TimeUnit.MINUTES)   // TTL 10분 (전체 수익/출금 금액)
+                        .maximumSize(10_000)
+
 
                     else -> {
                         // 디버깅: 예상하지 못한 캐시 이름이 들어오는 경우 로그 출력
