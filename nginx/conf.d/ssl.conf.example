@@ -1,28 +1,43 @@
-# IP + 도메인 화이트리스트 설정
-# IP 주소와 도메인을 모두 검증하는 설정
+# HTTPS 설정 (SSL 인증서 발급 후 활성화)
+# 사용 방법:
+# 1. certbot으로 SSL 인증서 발급
+# 2. 이 파일을 ssl.conf로 복사
+# 3. nginx reload
 
-# 이 파일을 사용하려면:
-# 1. ip-and-domain-whitelist.conf로 이름 변경
-# 2. nginx.conf의 http 블록에 whitelist-domains.conf include
-# 3. 실제 IP와 도메인으로 수정
-
-upstream backend {
-    server app:8080;
-}
-
-# whitelist-domains.conf에서 정의한 map 변수 사용
-# nginx.conf의 http 블록에 다음을 추가:
-# include /etc/nginx/whitelist-domains.conf;
-
+# HTTP → HTTPS 리다이렉트
 server {
     listen 80;
-    server_name localhost dev.triquest.me;
+    server_name dev.triquest.me;
 
-    # Let's Encrypt 인증서 발급용 (certbot)
+    # Let's Encrypt 인증서 발급용
     location /.well-known/acme-challenge/ {
         root /var/www/html;
-        allow all;
     }
+
+    # 나머지 모든 요청은 HTTPS로 리다이렉트
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+# HTTPS 서버
+server {
+    listen 443 ssl http2;
+    server_name dev.triquest.me;
+
+    # SSL 인증서 경로
+    ssl_certificate /etc/letsencrypt/live/dev.triquest.me/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.triquest.me/privkey.pem;
+
+    # SSL 설정 (보안 강화)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # HSTS (선택)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     # Health check endpoint (화이트리스트 제외)
     location /health {
@@ -37,8 +52,6 @@ server {
     # API endpoints (IP + 도메인 화이트리스트)
     location /api {
         # IP 또는 도메인이 허용되면 접근 허용
-        # $whitelist_ip는 nginx.conf의 geo 모듈에서 정의
-        # $allowed_origin은 whitelist-domains.conf에서 정의
         set $access_granted 0;
 
         # IP가 화이트리스트에 있으면 허용
@@ -77,12 +90,10 @@ server {
         proxy_set_header Origin $http_origin;
     }
 
-    # Actuator endpoints (IP만 체크)
+    # Actuator endpoints
     location /actuator {
         allow 127.0.0.1;
         allow 10.0.0.0/8;
-        allow 172.16.0.0/12;
-        allow 192.168.0.0/16;
         deny all;
 
         proxy_pass http://backend;
@@ -92,9 +103,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Swagger UI (개발 환경 - 모든 IP 허용)
+    # Swagger UI
     location /swagger-ui {
-        # 개발 환경에서는 모든 IP 허용
         allow all;
 
         proxy_pass http://backend;
@@ -104,7 +114,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # /swagger 경로 추가 (일부 Swagger 버전)
     location /swagger {
         allow all;
 
@@ -116,7 +125,6 @@ server {
     }
 
     location /v3/api-docs {
-        # 개발 환경에서는 모든 IP 허용
         allow all;
 
         proxy_pass http://backend;
