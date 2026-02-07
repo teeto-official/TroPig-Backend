@@ -74,6 +74,17 @@ jobs:
           target: "/opt/dev"
           overwrite: true
 
+      # Nginx 설정 파일들 업로드
+      - name: Upload nginx configuration to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "nginx/*"
+          target: "/opt/dev"
+          overwrite: true
+
       - name: Create .env on Lightsail
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -125,7 +136,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /opt/***
-            docker compose -f /opt/***/docker-compose.yml pull
-            docker compose -f /opt/***/docker-compose.yml up -d --force-recreate
-            docker compose -f /opt/***/docker-compose.yml ps
+            cd /opt/dev
+            docker compose -f /opt/dev/docker-compose.yml pull
+            docker compose -f /opt/dev/docker-compose.yml up -d --force-recreate
+            docker compose -f /opt/dev/docker-compose.yml ps
+
+            # Nginx 설정 reload
+            docker exec nginx nginx -t && docker exec nginx nginx -s reload || echo "Nginx reload failed"
