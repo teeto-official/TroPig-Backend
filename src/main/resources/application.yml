@@ -20,6 +20,18 @@ spring:
       platform: postgresql
       mode: never  # 자동 초기화 비활성화
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
   cache:
     type: caffeine
     caffeine:
@@ -85,3 +97,5 @@ portone:
     secret-v2: ${PORTONE_SECRET_V2}
   base-url: ${PORTONE_BASE_URL:https://api.portone.io}
   store-id: ${PORTONE_STORE_ID}
+  identity-verification:
+    channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
