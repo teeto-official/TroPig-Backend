@@ -131,11 +131,11 @@ class MemberService(
             request.bio?.let { this.bio = it }
 
             if (request.favoriteRules.isNotEmpty()) {
-                this.favoriteRules = request.favoriteRules.joinToString()
+                this.favoriteRules = request.favoriteRules.joinToString(",")
             }
 
             if (request.favoriteGenres.isNotEmpty()) {
-                this.favoriteGenres = request.favoriteGenres.joinToString()
+                this.favoriteGenres = request.favoriteGenres.joinToString(",")
             }
 
             request.isMarketing?.let {
