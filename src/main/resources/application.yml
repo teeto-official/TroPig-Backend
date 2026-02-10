@@ -99,3 +99,8 @@ portone:
   store-id: ${PORTONE_STORE_ID}
   identity-verification:
     channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
+  partner:
+    platform-id: ${PORTONE_PLATFORM_ID}
+
+encryption:
+  secret-key: ${ENCRYPTION_SECRET_KEY}
