@@ -72,6 +72,15 @@ class ContentService(
         }
     }
 
+    @Cacheable(value = ["getNewestContents"], key = "#type.name() + '_' + #isAdult")
+    fun getNewestContents(type: ContentType, isAdult: Boolean): List<Content> =
+        if (isAdult) {
+            contentRepository.findTop20ByTypeAndStatusOrderByPublishedAtDesc(type, ContentsStatus.PUBLISHED)
+        } else {
+            contentRepository.findTop20ByTypeAndStatusAndAdultOrderByPublishedAtDesc(type, ContentsStatus.PUBLISHED, false)
+        }
+
+
     fun getThumbnailPath(contentIds: List<Long>): List<ContentThumbnail> {
         return contentThumbnailRepository.findByContentIdIn(contentIds)
     }

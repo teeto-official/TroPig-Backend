@@ -17,4 +17,10 @@ data class TagDto(
     val tagId: Long,
     val type: String,
     val name: String,
-)
+) {
+    fun toTagResult(contentId: Long) = TagResult(
+        tagId = tagId,
+        contentId = contentId,
+        type = type,
+    )
+}

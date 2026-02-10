@@ -22,4 +22,12 @@ interface ContentRepository: JpaRepository<Content, Long>, ContentCustomReposito
     fun findByIdAndStatus(id: Long, status: ContentsStatus): Content?
 
     fun findByMemberIdAndStatusIn(memberId: Long, status: List<ContentsStatus>): List<Content>
+
+    fun findTop20ByTypeAndStatusOrderByPublishedAtDesc(type: ContentType, status: ContentsStatus): List<Content>
+
+    fun findTop20ByTypeAndStatusAndAdultOrderByPublishedAtDesc(
+        type: ContentType,
+        status: ContentsStatus,
+        adult: Boolean
+    ): List<Content>
 }
