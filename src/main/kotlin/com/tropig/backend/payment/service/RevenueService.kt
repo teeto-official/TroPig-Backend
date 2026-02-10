@@ -4,6 +4,7 @@ import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.entity.Content
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.service.ContentService
@@ -76,10 +77,11 @@ class RevenueService(
     /**
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
-    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId")
-    fun getCreatorContents(memberId: Long): List<Content> {
-        return contentRepository.findByMemberIdAndStatusIn(
+    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId + '-' + #type.name()")
+    fun getCreatorContents(memberId: Long, type: ContentType): List<Content> {
+        return contentRepository.findByMemberIdAndTypeAndStatusIn(
             memberId = memberId,
+            type = type,
             status = ContentsStatus.purchasedStatuses,
         )
     }

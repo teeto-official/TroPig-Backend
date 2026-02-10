@@ -85,6 +85,10 @@ class ContentService(
         return contentThumbnailRepository.findByContentIdIn(contentIds)
     }
 
+    @Cacheable(value = ["getDraftContent"], key = "#memberId")
+    fun getDraftContent(memberId: Long): List<Content> =
+        contentRepository.findByMemberIdAndStatus(memberId, ContentsStatus.DRAFT)
+
     fun searchContents(
         request: SearchContentRequestDto,
     ): CursorSlice<Content> {
