@@ -46,7 +46,7 @@ class RevenueController(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
     ): RevenueSummaryResponse {
-        val contents = revenueService.getCreatorContents(authMember.memberId)
+        val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
             return RevenueSummaryResponse(
                 totalRevenue = 0L,
