@@ -87,6 +87,17 @@ class RevenueService(
     }
 
     /**
+     * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
+     */
+    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId + '-' + #type.name()")
+    fun getAllCreatorContents(memberId: Long): List<Content> {
+        return contentRepository.findByMemberIdAndStatusIn(
+            memberId = memberId,
+            status = ContentsStatus.purchasedStatuses,
+        )
+    }
+
+    /**
      * 전체 수익 조회
      * - 본인이 등록한 작품 기준 전체 수익
      * - 출금완료 내역(creator_withdrawal)에 대해서는 차감

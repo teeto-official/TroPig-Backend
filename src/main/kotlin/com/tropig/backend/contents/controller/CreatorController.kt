@@ -7,13 +7,16 @@ import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
-import com.tropig.backend.contents.model.response.CreatorContentResponse
+import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.payment.service.RevenueService
@@ -27,6 +30,7 @@ class CreatorController(
     private val contentService: ContentService,
     private val revenueService: RevenueService,
     private val tagService: TagService,
+    private val s3Service: S3Service,
 ) {
 
     @PostMapping
@@ -36,7 +40,7 @@ class CreatorController(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @RequestBody request: CreateContentRequest,
-    ): Map<String, Long> {
+    ): Long {
         // CREATOR 권한 체크
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
@@ -51,7 +55,7 @@ class CreatorController(
             writerNickname = authMember.nickname,
         )
 
-        return mapOf("id" to content.id)
+        return content.id
     }
 
     @PutMapping("/{contentId}")
@@ -61,7 +65,7 @@ class CreatorController(
         @LoginMember authMember: AuthMember,
         @PathVariable contentId: Long,
         @RequestBody request: UpdateContentRequest,
-    ): Map<String, Long> {
+    ): Long {
         // 1. CREATOR 권한 체크
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
@@ -91,7 +95,7 @@ class CreatorController(
             writerNickname = authMember.nickname,
         )
 
-        return mapOf("id" to updatedContent.id)
+        return updatedContent.id
     }
 
     @RequireAuth
@@ -172,5 +176,56 @@ class CreatorController(
                 freeContent = it.freeContent,
             )
         }
+    }
+
+    @RequireAuth
+    @GetMapping("/creator/{alias}")
+    fun getContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @PathVariable
+        alias: String,
+    ): CreatorContentDetailResponse {
+        // 1. 콘텐츠 존재 확인
+        val content = contentService.findByAlias(alias)
+            ?: throw NotFoundException(
+                "해당 콘텐츠를 찾을 수 없습니다.",
+                MessageCode.NOT_FOUND_CONTENT
+            )
+
+        // 2. CREATOR 권한 확인
+        if (authMember.role != Role.CREATOR) {
+            throw ContentException(
+                message = "창작자 권한이 필요합니다.",
+                code = MessageCode.INCORRECT_ROLE
+            )
+        }
+
+        // 3. 본인 콘텐츠 확인
+        if (content.memberId != authMember.memberId) {
+            throw ContentException(
+                message = "본인이 작성한 콘텐츠만 조회할 수 있습니다.",
+                code = MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        // 4. 삭제되지 않은 콘텐츠 확인 (DRAFT, PRIVATE, PUBLISHED만 조회 가능)
+        if (content.status !in ContentsStatus.authorStatuses) {
+            throw ContentException(
+                message = "삭제된 콘텐츠입니다.",
+                code = MessageCode.NOT_FOUND_CONTENT
+            )
+        }
+
+        // 5. 데이터 조회 및 반환
+        val tags = tagService.findByContentId(content.id)
+        val nonFreeContent = content.nonFreeContent?.let { path ->
+            s3Service.getFileAsString(path)
+        }
+
+        return content.toCreatorContentDetailResponse(
+            tags = tags,
+            nonFreeContent = nonFreeContent,
+        )
     }
 }
