@@ -2,13 +2,11 @@ package com.tropig.backend.contents.controller
 
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
-import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
-import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
@@ -16,16 +14,13 @@ import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
-import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
-import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
-import org.springframework.http.HttpStatus
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import org.springframework.security.core.annotation.AuthenticationPrincipal

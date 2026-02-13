@@ -29,6 +29,7 @@ import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
+import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -150,7 +151,7 @@ class ContentService(
             publishingInfo = request.publishingInfo,
             status = request.status,
             adult = request.adult,
-            publishedAt = request.publishedAt,
+            publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
             freeContent = request.freeContent,
             nonFreeContent = null, // S3 업로드 후 업데이트
             price = request.price,
