@@ -72,6 +72,32 @@ class ContentController(
         }.sortedBy { it.orderNo }
     }
 
+    @GetMapping("/newest/{type}")
+    fun getNewestContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember?,
+        @PathVariable
+        type: ContentType
+    ): List<PickContentResponse> {
+        val isAdult = authMember?.adult ?: false
+        val contents = contentService.getNewestContents(type, isAdult)
+        val writerName = creatorService.getWritersName(contents.map { it.memberId })
+        val contentIds = contents.map { it.id }
+        val tags = tagService.findTagNamesByContentIds(contentIds)
+        val thumbnails = contentService.getThumbnailPath(contentIds).associateBy { it.contentId }
+
+        return contents.map {
+            PickContentResponse(
+                title = it.title,
+                alias = it.alias,
+                thumbnailPath = thumbnails[it.id]?.path,
+                writer = writerName[it.memberId] ?: "",
+                tags = tags[it.id]?.map { tag -> tag.toTagResult(it.id) } ?: emptyList(),
+                orderNo = 0
+            )
+        }
+    }
+
     @PostMapping("/search/count")
     fun countSearchContent(
         @AuthenticationPrincipal
