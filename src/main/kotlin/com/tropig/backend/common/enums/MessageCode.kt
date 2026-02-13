@@ -17,4 +17,5 @@ enum class MessageCode {
     ADULT_CONTENT,
     OWN_CONTENT,
     PURCHASE_REQUIRED,
+    INVALID_PARAMS,
 }
