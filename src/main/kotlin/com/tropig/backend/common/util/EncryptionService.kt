@@ -53,7 +53,7 @@ class EncryptionService(
     fun validateConfiguration() {
         try {
             // Force lazy initialization to validate key early
-            val _ = secretKey
+            val unusedKey = secretKey
             logger.info("Encryption service initialized successfully with AES-256-GCM")
 
             // Test encryption/decryption

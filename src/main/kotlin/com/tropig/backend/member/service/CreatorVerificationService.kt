@@ -1,10 +1,10 @@
 package com.tropig.backend.member.service
 
 import com.tropig.backend.common.enums.MessageCode
-import com.tropig.backend.common.enums.Role
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.util.EncryptionService
 import com.tropig.backend.member.entity.MemberAccount
+import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.model.request.ChangeAccountRequest
 import com.tropig.backend.member.model.request.CreatorVerificationRequest
 import com.tropig.backend.member.model.response.*
@@ -12,10 +12,10 @@ import com.tropig.backend.member.repository.MemberAccountRepository
 import com.tropig.backend.member.repository.MemberAuthInfoRepository
 import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.partner.client.PortOnePartnerClient
-import com.tropig.backend.partner.model.BankAccount
-import com.tropig.backend.partner.model.ContactInfo
-import com.tropig.backend.partner.model.CreatePartnerRequest
-import com.tropig.backend.partner.model.PartnerType
+import com.tropig.backend.partner.client.BankAccount
+import com.tropig.backend.partner.client.ContactInfo
+import com.tropig.backend.partner.client.CreatePartnerRequest
+import com.tropig.backend.partner.client.PartnerType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

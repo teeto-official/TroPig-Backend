@@ -6,7 +6,7 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.exception.PaymentException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.member.enums.Role
-import com.tropig.backend.partner.client.CreateManualTransferRequest
+import com.tropig.backend.partner.client.PlatformCreateManualTransferRequest
 import com.tropig.backend.partner.client.PortOnePlatformApiException
 import com.tropig.backend.partner.client.PortOnePlatformClient
 import com.tropig.backend.partner.repository.PartnerRepository
@@ -98,7 +98,7 @@ class SettlementService(
         }
         
         // 5. PortOne API로 정산 처리
-        val transferRequest = CreateManualTransferRequest(
+        val transferRequest = PlatformCreateManualTransferRequest(
             partnerId = partner.portonePartnerId,
             settlementAmount = request.settlementAmount,
             settlementTaxFreeAmount = 0L, // 기본값 0

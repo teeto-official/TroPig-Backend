@@ -1,7 +1,6 @@
 package com.tropig.backend.partner.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tropig.backend.partner.model.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity

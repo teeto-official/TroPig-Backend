@@ -3,7 +3,7 @@ package com.tropig.backend.member.controller
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
-import com.tropig.backend.member.entity.AuthMember
+import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.member.model.request.ChangeAccountRequest
 import com.tropig.backend.member.model.request.CreatorVerificationRequest
 import com.tropig.backend.member.model.response.ChangeAccountResult

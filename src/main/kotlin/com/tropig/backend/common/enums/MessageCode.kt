@@ -54,6 +54,10 @@ enum class MessageCode {
     PORTONE_PARTNER_UPDATE_FAILED,
     PORTONE_API_ERROR,
 
+    // Settlement & Payment
+    PARTNER_REGISTRATION_FAILED,
+    PAYMENT_ERROR,
+
     // Generic
     MEMBER_NOT_FOUND,
 }

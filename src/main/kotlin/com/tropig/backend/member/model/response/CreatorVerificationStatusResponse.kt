@@ -1,6 +1,6 @@
 package com.tropig.backend.member.model.response
 
-import com.tropig.backend.common.enums.Role
+import com.tropig.backend.member.enums.Role
 import java.time.LocalDateTime
 
 /**

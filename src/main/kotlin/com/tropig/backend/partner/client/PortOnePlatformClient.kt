@@ -8,6 +8,115 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 
+// PortOne Platform API Request/Response DTOs
+data class PlatformCreatePartnerRequest(
+    val id: String,
+    val name: String,
+    val contact: PlatformContactInfo,
+    val account: PlatformAccountInfo,
+    val defaultContractId: String,
+    val type: PlatformPartnerType,
+    val tags: List<String> = emptyList()
+)
+
+data class PlatformContactInfo(
+    val email: String,
+    val phoneNumber: String
+)
+
+data class PlatformAccountInfo(
+    val bankCode: String,
+    val accountNumber: String,
+    val accountHolderName: String
+)
+
+data class PlatformPartnerType(
+    val individual: PlatformIndividualType? = null
+)
+
+data class PlatformIndividualType(
+    val residentRegistrationNumber: String? = null
+)
+
+data class PlatformAccountHolderResponse(
+    val holderName: String,
+    val responseJson: String
+)
+
+data class PlatformCreatePartnerResponse(
+    val id: String,
+    val graphqlId: String?,
+    val name: String,
+    val status: String,
+    val createdAt: String?,
+    val responseJson: String
+)
+
+data class PlatformCreateManualTransferRequest(
+    val partnerId: String,
+    val settlementAmount: Long,
+    val settlementTaxFreeAmount: Long? = null,
+    val settlementDate: String,
+    val memo: String? = null
+)
+
+data class PlatformCreateManualTransferResponse(
+    val id: String,
+    val partnerId: String,
+    val settlementAmount: Long,
+    val status: String,
+    val createdAt: String?,
+    val responseJson: String
+)
+
+// PortOne Partner API Request/Response DTOs (for PortOnePartnerClient)
+data class CreatePartnerRequest(
+    val id: String,
+    val name: String,
+    val contact: ContactInfo,
+    val account: BankAccount,
+    val type: PartnerType,
+    val defaultContractId: String? = null
+)
+
+data class ContactInfo(
+    val email: String
+)
+
+data class BankAccount(
+    val bank: String,
+    val accountNumber: String,
+    val holder: String
+)
+
+enum class PartnerType {
+    BUSINESS,
+    NON_WHT_PAYER,
+    WHT_PAYER
+}
+
+data class PartnerResponse(
+    val id: String,
+    val graphqlId: String,
+    val name: String,
+    val contact: ContactInfo,
+    val account: BankAccount,
+    val type: PartnerType,
+    val defaultContractId: String?,
+    val memo: String?,
+    val tags: List<String>,
+    val userDefinedProperties: Map<String, Any>
+)
+
+data class BankAccountHolderResponse(
+    val accountHolder: String,
+    val bank: String,
+    val accountNumber: String,
+    val verified: Boolean
+)
+
+class PortOnePlatformApiException(message: String) : RuntimeException(message)
+
 @Component
 class PortOnePlatformClient(
     private val restTemplate: RestTemplate,
@@ -25,29 +134,29 @@ class PortOnePlatformClient(
         accountNumber: String,
         birthdate: String? = null,
         businessRegistrationNumber: String? = null,
-    ): AccountHolderResponse {
+    ): PlatformAccountHolderResponse {
         val uriBuilder = UriComponentsBuilder
             .fromHttpUrl("$baseUrl/platform/bank-accounts/$bank/$accountNumber/holder")
-        
+
         birthdate?.let { uriBuilder.queryParam("birthdate", it) }
         businessRegistrationNumber?.let { uriBuilder.queryParam("businessRegistrationNumber", it) }
-        
+
         val url = uriBuilder.toUriString()
         val headers = createHeaders()
-        
+
         val response = restTemplate.exchange(
             url,
             HttpMethod.GET,
             HttpEntity(null, headers),
             String::class.java
         )
-        
+
         if (!response.statusCode.is2xxSuccessful) {
             throw PortOnePlatformApiException("예금주 조회 실패: ${response.statusCode} ${response.body}")
         }
-        
+
         val responseBody = objectMapper.readTree(response.body)
-        return AccountHolderResponse(
+        return PlatformAccountHolderResponse(
             holderName = responseBody["holderName"]?.asText()
                 ?: throw PortOnePlatformApiException("예금주명을 찾을 수 없습니다"),
             responseJson = response.body!!
@@ -58,7 +167,7 @@ class PortOnePlatformClient(
      * 파트너 생성
      * POST /platform/partners
      */
-    fun createPartner(request: CreatePartnerRequest): CreatePartnerResponse {
+    fun createPartner(request: PlatformCreatePartnerRequest): PlatformCreatePartnerResponse {
         val url = "$baseUrl/platform/partners"
         val headers = createHeaders()
         
@@ -105,7 +214,7 @@ class PortOnePlatformClient(
         }
         
         val responseBody = objectMapper.readTree(response.body)
-        return CreatePartnerResponse(
+        return PlatformCreatePartnerResponse(
             id = responseBody["id"]?.asText()
                 ?: throw PortOnePlatformApiException("파트너 ID를 찾을 수 없습니다"),
             graphqlId = responseBody["graphqlId"]?.asText(),
@@ -120,7 +229,7 @@ class PortOnePlatformClient(
      * 수기 정산건 생성
      * POST /platform/transfers/manual
      */
-    fun createManualTransfer(request: CreateManualTransferRequest): CreateManualTransferResponse {
+    fun createManualTransfer(request: PlatformCreateManualTransferRequest): PlatformCreateManualTransferResponse {
         val url = "$baseUrl/platform/transfers/manual"
         val headers = createHeaders()
         
@@ -150,7 +259,7 @@ class PortOnePlatformClient(
         }
         
         val responseBody = objectMapper.readTree(response.body)
-        return CreateManualTransferResponse(
+        return PlatformCreateManualTransferResponse(
             id = responseBody["id"]?.asText()
                 ?: throw PortOnePlatformApiException("정산 ID를 찾을 수 없습니다"),
             partnerId = responseBody["partnerId"]?.asText() ?: "",
@@ -168,69 +277,3 @@ class PortOnePlatformClient(
         }
     }
 }
-
-// Request DTOs
-data class CreatePartnerRequest(
-    val id: String,
-    val name: String,
-    val contact: ContactInfo,
-    val account: AccountInfo,
-    val defaultContractId: String,
-    val type: PartnerType,
-    val tags: List<String> = emptyList()
-)
-
-data class ContactInfo(
-    val email: String,
-    val phoneNumber: String
-)
-
-data class AccountInfo(
-    val bankCode: String,
-    val accountNumber: String,
-    val accountHolderName: String
-)
-
-data class PartnerType(
-    val individual: IndividualType? = null
-)
-
-data class IndividualType(
-    val residentRegistrationNumber: String? = null
-)
-
-// Response DTOs
-data class AccountHolderResponse(
-    val holderName: String,
-    val responseJson: String
-)
-
-data class CreatePartnerResponse(
-    val id: String,
-    val graphqlId: String?,
-    val name: String,
-    val status: String,
-    val createdAt: String?,
-    val responseJson: String
-)
-
-// Transfer (정산) Request DTOs
-data class CreateManualTransferRequest(
-    val partnerId: String,
-    val settlementAmount: Long,
-    val settlementTaxFreeAmount: Long? = null,
-    val settlementDate: String, // yyyy-MM-dd 형식
-    val memo: String? = null
-)
-
-// Transfer (정산) Response DTOs
-data class CreateManualTransferResponse(
-    val id: String,
-    val partnerId: String,
-    val settlementAmount: Long,
-    val status: String,
-    val createdAt: String?,
-    val responseJson: String
-)
-
-class PortOnePlatformApiException(message: String) : RuntimeException(message)
