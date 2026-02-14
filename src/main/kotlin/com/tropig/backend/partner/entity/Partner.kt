@@ -1,13 +1,16 @@
 package com.tropig.backend.partner.entity
 
+import com.tropig.backend.partner.enums.PartnerStatus
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Entity
 @Table(name = "partner")
+@EntityListeners(AuditingEntityListener::class)
 data class Partner(
     @Column(nullable = false)
     val memberId: Long,
@@ -21,8 +24,9 @@ data class Partner(
     @Column(nullable = false)
     val email: String,
 
-    @Column(nullable = true)
-    var status: String = "PENDING", // PENDING, ACTIVE, INACTIVE, FAILED
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: PartnerStatus = PartnerStatus.PENDING,
 
     @Column(nullable = true)
     var failureReason: String? = null,
@@ -35,5 +39,5 @@ data class Partner(
     val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
 
     @LastModifiedDate
-    val updatedAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+    var updatedAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
 }

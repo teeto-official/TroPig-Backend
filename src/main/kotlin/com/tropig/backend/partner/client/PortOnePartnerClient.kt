@@ -168,11 +168,3 @@ class PortOnePartnerClient(
         }
     }
 }
-
-/**
- * PortOne Partner API 예외
- */
-class PortOnePartnerException(
-    message: String,
-    cause: Throwable? = null
-) : RuntimeException(message, cause)

@@ -6,6 +6,7 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.exception.PaymentException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.member.enums.Role
+import com.tropig.backend.partner.enums.PartnerStatus
 import com.tropig.backend.partner.client.PlatformCreateManualTransferRequest
 import com.tropig.backend.partner.client.PortOnePlatformApiException
 import com.tropig.backend.partner.client.PortOnePlatformClient
@@ -57,7 +58,7 @@ class SettlementService(
                 MessageCode.NOT_FOUND_MEMBER
             )
         
-        if (partner.status != "ACTIVE") {
+        if (partner.status != PartnerStatus.ACTIVE) {
             throw PaymentException(
                 "파트너가 ACTIVE 상태가 아닙니다. 현재 상태: ${partner.status}",
                 MessageCode.PARTNER_REGISTRATION_FAILED
