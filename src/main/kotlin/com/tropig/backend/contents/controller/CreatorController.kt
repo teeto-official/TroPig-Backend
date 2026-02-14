@@ -9,11 +9,11 @@ import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
-import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
+import com.tropig.backend.contents.model.request.UpdateContentStatusRequest
 import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.S3Service
@@ -117,6 +117,37 @@ class CreatorController(
         // 2. content.member_id가 authMember.member_id와 같은지 확인 (ContentService에서 처리)
         // 3. status만 DELETED로 변경 (ContentService에서 처리)
         contentService.deleteContent(contentId, authMember.memberId)
+    }
+
+    @RequireAuth
+    @PatchMapping("/{contentId}/status")
+    fun updateContentStatus(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @PathVariable contentId: Long,
+        @RequestBody request: UpdateContentStatusRequest,
+    ): Long {
+        if (authMember.role != Role.CREATOR) {
+            throw ContentException(
+                message = "콘텐츠 상태를 변경할 권한이 없습니다. CREATOR 권한이 필요합니다.",
+                code = MessageCode.INCORRECT_ROLE
+            )
+        }
+
+        if (request.status !in listOf(ContentsStatus.PRIVATE, ContentsStatus.PUBLISHED)) {
+            throw IllegalArgumentException(
+                message = "변경 가능한 상태는 비공개 또는 공개만 가능합니다. (입력값: ${request.status})",
+                code = MessageCode.INVALID_PARAMS
+            )
+        }
+
+        val updatedContent = contentService.updateContentStatus(
+            contentId = contentId,
+            memberId = authMember.memberId,
+            status = request.status,
+        )
+
+        return updatedContent.id
     }
 
     @RequireAuth
