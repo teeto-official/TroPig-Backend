@@ -1,0 +1,54 @@
+services:
+  app:
+    image: ghcr.io/teeto-official/tropig-backend:develop   # 예: ghcr.io/owner/repo:latest 또는 dockerhub-user/app:latest
+    container_name: dev-api-1
+    ports:
+      - "8080:8080"
+    # GitHub Actions가 생성하는 /opt/dev/.env를 컨테이너 환경변수로 주입
+    env_file:
+      - /opt/dev/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/whitelist-ips.conf:/etc/nginx/whitelist-ips.conf:ro
+      - ./nginx/whitelist-domains.conf:/etc/nginx/whitelist-domains.conf:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - nginx
+    command: certonly --webroot --webroot-path=/var/www/html --email teeto.team.official@gmail.com --agree-tos --no-eff-email -d dev.triquest.me
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  certbot-etc:
+  certbot-var:
+  web-root:

@@ -2,7 +2,7 @@ plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
 	kotlin("plugin.serialization") version "1.9.22"
-	id("org.springframework.boot") version "3.5.5"
+	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("org.jetbrains.kotlin.plugin.jpa") version "1.9.0"
 }
@@ -37,7 +37,7 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     
     // swagger
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
 	// Cache
 	implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -55,6 +55,12 @@ dependencies {
 
 	// EMAIL
 	implementation("org.springframework.boot:spring-boot-starter-mail")
+
+	// AWS S3
+	implementation(platform("software.amazon.awssdk:bom:2.20.0"))
+	implementation("software.amazon.awssdk:s3")
+
+	implementation("com.google.code.gson:gson:2.11.0")
 }
 
 kotlin {

@@ -3,7 +3,7 @@ spring:
     active: ${PROFILES_ACTIVE:local}
 
   datasource:
-    url: jdbc:postgresql://postgresql-dev-service.tropig-dev.svc.cluster.local:5432/tropig_dev
+    url: ${DB_URL}
     username: ${DB_USERNAME:tropig_user}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -46,11 +46,15 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:
     com.tropig.backend: DEBUG
-    org.springframework.web: DEBUG
+    org.springframework.web: INFO
+    org.springframework.web.servlet.resource: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
@@ -66,3 +70,18 @@ mail:
   subjects:
     sign_up: "가입을 환영합니다"
     receipt: "구매 확정 안내"
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_S3_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+portone:
+  key:
+    api: ${PORTONE_API_KEY}
+    secret: ${PORTONE_SECRET}
+    secret-v2: ${PORTONE_SECRET_V2}
+  base-url: ${PORTONE_BASE_URL:https://api.portone.io}
+  store-id: ${PORTONE_STORE_ID}

@@ -22,6 +22,8 @@ class SecurityConfig(
         http
             .csrf { it.disable() }
             .cors { } // swagger / localhost 호출시 필수
+            .formLogin { it.disable() } // JWT 기반 인증 사용으로 formLogin 비활성화
+            .httpBasic { it.disable() } // HTTP Basic 인증 비활성화
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it.requestMatchers(

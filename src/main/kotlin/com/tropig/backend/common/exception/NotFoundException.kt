@@ -4,5 +4,5 @@ import com.tropig.backend.common.enums.MessageCode
 
 class NotFoundException(
     message: String,
-    code: MessageCode,
+    val code: MessageCode,
 ): RuntimeException(message)

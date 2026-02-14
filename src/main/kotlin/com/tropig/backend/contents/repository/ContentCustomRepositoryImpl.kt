@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.repository
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
@@ -36,6 +38,76 @@ class ContentCustomRepositoryImpl(
             common = common,
             filterAppender = request.filterAppender()
         )
+    }
+
+    override fun findRandomGenreContent(genres: List<Genre>, isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            AND c.genre IN (:genres)
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+            "genres" to genres
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
+    }
+
+    override fun findRandomRuleContent(rules: List<Rule>, isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            AND c.rule IN (:rules)
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+            "rules" to rules
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
+    }
+
+    override fun findRandomContent(isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
     }
 
     private data class CommonSearchReq(
@@ -170,8 +242,8 @@ class ContentCustomRepositoryImpl(
         val sql = StringBuilder(
             """
             SELECT
-                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN 1 END) AS scenario_count,
-                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN 1 END) AS resource_count
+                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN c.id END) AS scenario_count,
+                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN c.id END) AS resource_count
             FROM content c
             """.trimIndent()
         )
@@ -208,6 +280,12 @@ class ContentCustomRepositoryImpl(
         val q = em.createNativeQuery(sql, Content::class.java)
         params.forEach { (k, v) -> q.setParameter(k, v) }
         return q.resultList as List<Content>
+    }
+
+    private fun execute(sql: String, params: Map<String, Any?>): Content {
+        val q = em.createNativeQuery(sql, Content::class.java)
+        params.forEach { (k, v) -> q.setParameter(k, v) }
+        return q.singleResult as Content
     }
 
     private fun executeCountPair(sql: String, params: Map<String, Any?>): Pair<Long, Long> {
