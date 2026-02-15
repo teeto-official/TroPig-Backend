@@ -242,8 +242,8 @@ class ContentCustomRepositoryImpl(
         val sql = StringBuilder(
             """
             SELECT
-                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN 1 END) AS scenario_count,
-                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN 1 END) AS resource_count
+                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN c.id END) AS scenario_count,
+                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN c.id END) AS resource_count
             FROM content c
             """.trimIndent()
         )

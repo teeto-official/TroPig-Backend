@@ -29,6 +29,7 @@ import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
+import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -150,7 +151,7 @@ class ContentService(
             publishingInfo = request.publishingInfo,
             status = request.status,
             adult = request.adult,
-            publishedAt = request.publishedAt,
+            publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
             freeContent = request.freeContent,
             nonFreeContent = null, // S3 업로드 후 업데이트
             price = request.price,
@@ -405,6 +406,22 @@ class ContentService(
     }
 
     @Transactional
+    fun updateContentStatus(contentId: Long, memberId: Long, status: ContentsStatus): Content {
+        val content = findById(contentId)
+            ?.takeIf { it.status != ContentsStatus.DELETED }
+            ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
+
+        if (content.memberId != memberId) {
+            throw ContentException(
+                "본인의 콘텐츠만 상태를 변경할 수 있습니다.",
+                MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        content.status = status
+        return save(content)
+    }
+
     fun deleteContent(contentId: Long, memberId: Long): Content {
         val content = findById(contentId) ?: throw NotFoundException(
             "콘텐츠를 찾을 수 없습니다.",

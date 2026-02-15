@@ -7,6 +7,7 @@ import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
 import com.tropig.backend.contents.enums.TermType
 import jakarta.validation.constraints.*
+import java.time.LocalDateTime
 
 data class CreateContentRequest(
     @field:NotBlank(message = "제목은 필수입니다.")
@@ -35,7 +36,7 @@ data class CreateContentRequest(
     @field:NotNull(message = "성인 여부는 필수입니다.")
     val adult: Boolean,
 
-    val publishedAt: java.time.LocalDateTime? = null,
+    val publishedAt: LocalDateTime? = null,
 
     val freeContent: String? = null,
 
