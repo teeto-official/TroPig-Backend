@@ -136,7 +136,7 @@ class CreatorController(
 
         if (request.status !in listOf(ContentsStatus.PRIVATE, ContentsStatus.PUBLISHED)) {
             throw IllegalArgumentException(
-                message = "변경 가능한 상태는 비공개 또는 공개만 가능합니다. (입력값: ${request.status})",
+                message = "변경 가능한 상태는 비공개 또는 공개만 가능합니다. (입력값: contentId: ${contentId}, status: ${request.status})",
                 code = MessageCode.INVALID_PARAMS
             )
         }
