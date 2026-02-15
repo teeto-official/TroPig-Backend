@@ -10,10 +10,13 @@ import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.member.entity.Member
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ContentDetailResponse(
+    val id: Long,
+    val alias: String,
     val type: ContentType,
     val writer: WriterInfo,
     val publishedAt: LocalDateTime?,
@@ -28,6 +31,7 @@ data class ContentDetailResponse(
     val freeContent: String?,
     val nonFreeContent: String? = null,
     val isBookmark: Boolean,
+    val price: Double,
 )
 
 fun Content.toDetailResponse(
@@ -50,6 +54,8 @@ fun Content.toDetailResponse(
         WriterInfo()
     }
     return ContentDetailResponse(
+        id = id,
+        alias = alias,
         type = type,
         writer = writerInfo,
         publishedAt = publishedAt,
@@ -64,6 +70,7 @@ fun Content.toDetailResponse(
         freeContent = freeContent,
         nonFreeContent = purchasedContent,
         isBookmark = isBookmark,
+        price = price,
     )
 }
 
