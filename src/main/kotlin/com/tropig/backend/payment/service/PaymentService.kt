@@ -91,6 +91,7 @@ class PaymentService(
             memberId = memberId,
             contentId = request.contentId,
             paymentId = savedPayment.id,
+            portonePaymentId = paymentId,
             amount = content.price.toLong(),
             status = PurchaseStatus.PENDING
         )
@@ -110,9 +111,9 @@ class PaymentService(
     @Transactional
     fun confirmPurchase(memberId: Long, request: ConfirmPurchaseRequest): PurchaseResponse {
         // 1. Payment 조회
-        val payment = paymentRepository.findByPortonePaymentId(request.paymentId)
+        val payment = paymentRepository.findByPortonePaymentId(request.portonePaymentId)
             ?: throw NotFoundException(
-                "결제를 찾을 수 없습니다: ${request.paymentId}",
+                "결제를 찾을 수 없습니다: ${request.portonePaymentId}",
                 MessageCode.NOT_FOUND_PAYMENT_INFO,
             )
         
@@ -131,7 +132,7 @@ class PaymentService(
         )
         
         val confirmResponse = try {
-            portOnePaymentClient.confirmPayment(request.paymentId, confirmRequest)
+            portOnePaymentClient.confirmPayment(request.portonePaymentId, confirmRequest)
         } catch (e: PortOneApiException) {
             // 결제 실패 처리
             payment.status = PaymentStatus.FAILED
@@ -172,7 +173,7 @@ class PaymentService(
             amount = updatedPayment.amount,
             status = updatedPurchase.status,
             paymentStatus = updatedPayment.status,
-            portonePaymentId = updatedPayment.portonePaymentId,
+            portonePaymentId = updatedPurchase.portonePaymentId,
             createdAt = updatedPurchase.createdAt,
             updatedAt = updatedPurchase.updatedAt
         )
@@ -213,7 +214,7 @@ class PaymentService(
             amount = purchase.amount,
             status = purchase.status,
             paymentStatus = payment.status,
-            portonePaymentId = payment.portonePaymentId,
+            portonePaymentId = purchase.portonePaymentId,
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )
