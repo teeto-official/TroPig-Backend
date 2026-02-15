@@ -156,6 +156,7 @@ class PaymentService(
 
         // 6. 포트원 결제 승인 (READY → PAID)
         val confirmResponse = try {
+            portOnePaymentClient.confirmPayment(request.portonePaymentId, confirmRequest)
             portOnePaymentClient.confirmPayment(request.portonePaymentId, storeId, request.paymentToken)
         } catch (e: PortOneApiException) {
             payment.status = PaymentStatus.FAILED
@@ -189,8 +190,9 @@ class PaymentService(
             amount = updatedPayment.amount,
             status = savedPurchase.status,
             paymentStatus = updatedPayment.status,
-            createdAt = savedPurchase.createdAt,
-            updatedAt = savedPurchase.updatedAt
+            portonePaymentId = updatedPurchase.portonePaymentId,
+            createdAt = updatedPurchase.createdAt,
+            updatedAt = updatedPurchase.updatedAt
         )
     }
 
@@ -254,9 +256,40 @@ class PaymentService(
             amount = purchase.amount,
             status = purchase.status,
             paymentStatus = payment.status,
+            portonePaymentId = purchase.portonePaymentId,
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )
+    }
+
+    /**
+     * 회원의 구매 내역 목록 조회
+     */
+    fun getPurchasesByMember(memberId: Long): List<PurchaseResponse> {
+        val purchases = purchaseRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
+        val paymentIds = purchases.map { it.paymentId }.distinct()
+        val payments = paymentRepository.findAllById(paymentIds).associateBy { it.id }
+
+        return purchases.map { purchase ->
+            val payment = payments[purchase.paymentId]
+                ?: throw NotFoundException(
+                    "결제 정보를 찾을 수 없습니다: ${purchase.paymentId}",
+                    MessageCode.NOT_FOUND_PAYMENT_INFO
+                )
+
+            PurchaseResponse(
+                id = purchase.id,
+                memberId = purchase.memberId,
+                contentId = purchase.contentId,
+                paymentId = purchase.paymentId,
+                amount = purchase.amount,
+                status = purchase.status,
+                paymentStatus = payment.status,
+                portonePaymentId = purchase.portonePaymentId,
+                createdAt = purchase.createdAt,
+                updatedAt = purchase.updatedAt
+            )
+        }
     }
     
     /**
