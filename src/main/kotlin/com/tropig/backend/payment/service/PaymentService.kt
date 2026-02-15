@@ -1,7 +1,6 @@
 package com.tropig.backend.payment.service
 
 import com.tropig.backend.common.enums.MessageCode
-import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.exception.PaymentException
 import com.tropig.backend.contents.enums.ContentsStatus
@@ -218,36 +217,6 @@ class PaymentService(
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )
-    }
-    
-    /**
-     * 회원의 구매 내역 목록 조회
-     */
-    fun getPurchasesByMember(memberId: Long): List<PurchaseResponse> {
-        val purchases = purchaseRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
-        val paymentIds = purchases.map { it.paymentId }.distinct()
-        val payments = paymentRepository.findAllById(paymentIds).associateBy { it.id }
-        
-        return purchases.map { purchase ->
-            val payment = payments[purchase.paymentId]
-                ?: throw NotFoundException(
-                    "결제 정보를 찾을 수 없습니다: ${purchase.paymentId}",
-                    MessageCode.NOT_FOUND_PAYMENT_INFO
-                )
-            
-            PurchaseResponse(
-                id = purchase.id,
-                memberId = purchase.memberId,
-                contentId = purchase.contentId,
-                paymentId = purchase.paymentId,
-                amount = purchase.amount,
-                status = purchase.status,
-                paymentStatus = payment.status,
-                portonePaymentId = payment.portonePaymentId,
-                createdAt = purchase.createdAt,
-                updatedAt = purchase.updatedAt
-            )
-        }
     }
     
     /**
