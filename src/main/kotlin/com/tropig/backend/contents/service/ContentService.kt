@@ -406,6 +406,22 @@ class ContentService(
     }
 
     @Transactional
+    fun updateContentStatus(contentId: Long, memberId: Long, status: ContentsStatus): Content {
+        val content = findById(contentId)
+            ?.takeIf { it.status != ContentsStatus.DELETED }
+            ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
+
+        if (content.memberId != memberId) {
+            throw ContentException(
+                "본인의 콘텐츠만 상태를 변경할 수 있습니다.",
+                MessageCode.NOT_OWN_CONTENT
+            )
+        }
+
+        content.status = status
+        return save(content)
+    }
+
     fun deleteContent(contentId: Long, memberId: Long): Content {
         val content = findById(contentId) ?: throw NotFoundException(
             "콘텐츠를 찾을 수 없습니다.",
