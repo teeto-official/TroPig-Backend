@@ -9,9 +9,14 @@ import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.common.model.SearchContext
+import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CreateContentRequest
+import com.tropig.backend.contents.model.request.SearchContentRequest
+import com.tropig.backend.contents.model.request.SimpleSearchContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentStatusRequest
 import com.tropig.backend.contents.model.response.*
@@ -19,6 +24,7 @@ import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.enums.Role
+import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.service.RevenueService
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -30,6 +36,7 @@ class CreatorController(
     private val contentService: ContentService,
     private val revenueService: RevenueService,
     private val tagService: TagService,
+    private val creatorService: CreatorService,
     private val s3Service: S3Service,
 ) {
 
@@ -258,5 +265,46 @@ class CreatorController(
             tags = tags,
             nonFreeContent = nonFreeContent,
         )
+    }
+
+    @RequireAuth
+    @PostMapping("/search/related")
+    fun getSearchRelatedContent(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: SimpleSearchContentRequest,
+    ): CursorSlice<SimpleSearchContentResponse> {
+        val isAdult = authMember.adult
+
+        val dto = request.toDto(isAdult)
+        val contents = contentService.searchContents(dto)
+
+        return contents.mapWith(
+            buildContext = { items ->
+                val contentIds = items.map { it.id }
+                val writerIds = items.map { it.memberId }.distinct()
+
+                val nickByMemberId = creatorService.getWritersName(writerIds)
+                val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
+                val thumbnailPaths = contentService.getThumbnailPath(contentIds)
+                    .associateBy({ it.contentId }, { it.path })
+
+                SearchContext(
+                    nickByMemberId = nickByMemberId,
+                    tagsByContentId = tagsByContentId,
+                    bookmarkInfo = emptyMap(),
+                    favoriteCounts = emptyMap(),
+                    thumbnailPaths = thumbnailPaths,
+                )
+            }
+        ) { content, ctx ->
+            SimpleSearchContentResponse(
+                id = content.id,
+                title = content.title,
+                rule = content.rule,
+                writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
+                thumbnailPath = ctx.thumbnailPaths[content.id],
+            )
+        }
     }
 }
