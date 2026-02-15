@@ -19,9 +19,6 @@ data class Purchase(
     val paymentId: Long, // Payment 엔티티 참조
 
     @Column(nullable = false)
-    val portonePaymentId: String, // 포트원 결제 ID
-
-    @Column(nullable = false)
     val amount: Long, // 구매 금액
 
     @Column(nullable = false)

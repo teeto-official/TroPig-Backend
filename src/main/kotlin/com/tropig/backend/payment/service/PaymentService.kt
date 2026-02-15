@@ -156,7 +156,6 @@ class PaymentService(
 
         // 6. 포트원 결제 승인 (READY → PAID)
         val confirmResponse = try {
-            portOnePaymentClient.confirmPayment(request.portonePaymentId, confirmRequest)
             portOnePaymentClient.confirmPayment(request.portonePaymentId, storeId, request.paymentToken)
         } catch (e: PortOneApiException) {
             payment.status = PaymentStatus.FAILED
@@ -190,9 +189,8 @@ class PaymentService(
             amount = updatedPayment.amount,
             status = savedPurchase.status,
             paymentStatus = updatedPayment.status,
-            portonePaymentId = updatedPurchase.portonePaymentId,
-            createdAt = updatedPurchase.createdAt,
-            updatedAt = updatedPurchase.updatedAt
+            createdAt = savedPurchase.createdAt,
+            updatedAt = savedPurchase.updatedAt
         )
     }
 
@@ -256,7 +254,6 @@ class PaymentService(
             amount = purchase.amount,
             status = purchase.status,
             paymentStatus = payment.status,
-            portonePaymentId = purchase.portonePaymentId,
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )
@@ -285,7 +282,6 @@ class PaymentService(
                 amount = purchase.amount,
                 status = purchase.status,
                 paymentStatus = payment.status,
-                portonePaymentId = purchase.portonePaymentId,
                 createdAt = purchase.createdAt,
                 updatedAt = purchase.updatedAt
             )
