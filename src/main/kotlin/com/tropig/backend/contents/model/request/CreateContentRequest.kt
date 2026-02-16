@@ -6,6 +6,7 @@ import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
 import com.tropig.backend.contents.enums.TermType
+import com.tropig.backend.contents.model.serialize.PublishingInfo
 import jakarta.validation.constraints.*
 import java.time.LocalDateTime
 
@@ -28,7 +29,7 @@ data class CreateContentRequest(
     @field:NotNull(message = "기간 타입은 필수입니다.")
     val termType: TermType,
 
-    val publishingInfo: String? = null,
+    val publishingInfo: List<PublishingInfo>? = null,
 
     @field:NotNull(message = "상태는 필수입니다.")
     val status: ContentsStatus,

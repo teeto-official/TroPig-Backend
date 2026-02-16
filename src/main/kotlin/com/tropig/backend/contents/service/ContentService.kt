@@ -20,6 +20,7 @@ import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.result.TagResult
+import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
@@ -148,7 +149,7 @@ class ContentService(
             genre = request.genre,
             playerCountType = request.playerCountType,
             termType = request.termType,
-            publishingInfo = request.publishingInfo,
+            publishingInfo = request.publishingInfo?.toJson(),
             status = request.status,
             adult = request.adult,
             publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
@@ -286,7 +287,7 @@ class ContentService(
         content.genre = request.genre
         content.playerCountType = request.playerCountType
         content.termType = request.termType
-        content.publishingInfo = request.publishingInfo
+        content.publishingInfo = request.publishingInfo?.toString()
         content.status = request.status
         content.adult = request.adult
         content.publishedAt = request.publishedAt
