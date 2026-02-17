@@ -74,6 +74,17 @@ jobs:
           target: "/opt/dev"
           overwrite: true
 
+      # Nginx 디렉토리 권한 정리 (Docker가 root로 생성한 경우 대비)
+      - name: Fix nginx directory permissions
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            sudo rm -rf /opt/dev/nginx
+            mkdir -p /opt/dev/nginx/conf.d
+
       # Nginx 설정 파일들 업로드
       - name: Upload nginx configuration to Lightsail
         uses: appleboy/scp-action@v0.1.7

@@ -1,0 +1,153 @@
+# IP 화이트리스트 설정
+# 특정 IP/CIDR 블록만 API 접근 허용
+
+upstream backend {
+    server app:8080;
+}
+
+# 화이트리스트 IP 주소 정의 (geo 모듈 사용)
+geo $whitelist_ip {
+    default 0;
+
+    # 허용할 IP 주소 (예시 - 실제 IP로 변경)
+    127.0.0.1 1;              # 로컬호스트
+    10.0.0.0/8 1;             # 내부 네트워크 (10.x.x.x)
+    172.16.0.0/12 1;          # 내부 네트워크 (172.16-31.x.x)
+    192.168.0.0/16 1;         # 내부 네트워크 (192.168.x.x)
+
+    # 특정 공인 IP 허용 (예시)
+    # 203.0.113.0/24 1;       # 회사 IP 대역
+    # 198.51.100.50 1;        # 특정 서버 IP
+}
+
+# 화이트리스트 도메인 정의 (referer 또는 host 기반)
+map $http_referer $whitelist_domain {
+    default 0;
+
+    # 허용할 도메인 (예시 - 실제 도메인으로 변경)
+    "~*^https?://localhost" 1;
+    "~*^https?://tropig\.com" 1;
+    "~*^https?://.*\.tropig\.com" 1;
+    "~*^https?://your-frontend-domain\.com" 1;
+}
+
+# Host 헤더 기반 화이트리스트 (더 정확함)
+map $http_host $allowed_host {
+    default 0;
+
+    "localhost" 1;
+    "api.tropig.com" 1;
+    "*.tropig.com" 1;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+
+    # Health check endpoint (화이트리스트 제외)
+    location /health {
+        access_log off;
+        proxy_pass http://backend/actuator/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Actuator endpoints (내부 IP만 허용)
+    location /actuator {
+        # IP 화이트리스트 체크
+        if ($whitelist_ip = 0) {
+            return 403;
+        }
+
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API endpoints (IP + 도메인 화이트리스트)
+    location /api {
+        # IP 또는 도메인 화이트리스트 체크
+        set $access_allowed 0;
+
+        # IP가 화이트리스트에 있으면 허용
+        if ($whitelist_ip = 1) {
+            set $access_allowed 1;
+        }
+
+        # 도메인이 화이트리스트에 있으면 허용
+        if ($whitelist_domain = 1) {
+            set $access_allowed 1;
+        }
+
+        # 화이트리스트에 없으면 403 반환
+        if ($access_allowed = 0) {
+            return 403 '{"error": "Access denied", "message": "Your IP or domain is not whitelisted"}';
+        }
+
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # CORS headers (필요시 수정)
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
+
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+    }
+
+    # Swagger UI (개발 환경에서만 내부 IP 허용)
+    location /swagger-ui {
+        # IP 화이트리스트 체크
+        if ($whitelist_ip = 0) {
+            return 403;
+        }
+
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /v3/api-docs {
+        # IP 화이트리스트 체크
+        if ($whitelist_ip = 0) {
+            return 403;
+        }
+
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # All other requests
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
