@@ -83,19 +83,27 @@ class MemberController(
     @PostMapping("/refresh")
     fun refreshToken(
         @RequestHeader("Authorization") authorizationHeader: String?,
-    ): TokenResponse {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw IllegalArgumentException("Invalid authorization header")
+    ): ResponseEntity<Any> {
+        return try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(mapOf("error" to "Invalid authorization header"))
+            }
+            val refreshToken = authorizationHeader.substring("Bearer ".length)
+            val memberId = memberService.validateRefreshToken(refreshToken)
+            val member = memberService.getUserById(memberId) ?: throw NotFoundException(
+                message = "회원 정보를 찾을 수 없습니다.",
+                code = MessageCode.NOT_FOUND_MEMBER
+            )
+
+            ResponseEntity.ok(memberService.refreshToken(member))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(mapOf("error" to (e.message ?: "Invalid token")))
+        } catch (e: NotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to (e.message ?: "Member not found")))
         }
-
-        val refreshToken = authorizationHeader.substring("Bearer ".length)
-        val memberId = memberService.validateRefreshToken(refreshToken)
-        val member = memberService.getUserById(memberId) ?: throw NotFoundException(
-            message = "회원 정보를 찾을 수 없습니다.",
-            code = MessageCode.NOT_FOUND_MEMBER
-        )
-
-        return memberService.refreshToken(member)
     }
 
     @RequireAuth
