@@ -92,15 +92,14 @@ aws:
 
 portone:
   key:
-    api: ${PORTONE_API_KEY}
-    secret: ${PORTONE_SECRET}
     secret-v2: ${PORTONE_SECRET_V2}
   base-url: ${PORTONE_BASE_URL:https://api.portone.io}
   store-id: ${PORTONE_STORE_ID}
   identity-verification:
     channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
-  partner:
-    platform-id: ${PORTONE_PLATFORM_ID}
+  channels:
+    kcp: ${PORTONE_KCP_CHANNEL_KEY}
+    kakao-pay: ${PORTONE_KAKAO_PAY_CHANNEL_KEY}
 
 encryption:
   secret-key: ${ENCRYPTION_SECRET_KEY}

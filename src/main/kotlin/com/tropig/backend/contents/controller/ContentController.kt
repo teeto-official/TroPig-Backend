@@ -42,7 +42,6 @@ class ContentController(
 
     @GetMapping("/pick/{type}")
     fun getPickContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @PathVariable
         type: ContentType
@@ -69,7 +68,6 @@ class ContentController(
 
     @GetMapping("/newest/{type}")
     fun getNewestContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @PathVariable
         type: ContentType
@@ -95,7 +93,6 @@ class ContentController(
 
     @PostMapping("/search/count")
     fun countSearchContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @RequestBody request: CountSearchContentRequest,
     ): CountSearchContentResponse {
@@ -115,7 +112,6 @@ class ContentController(
 
     @PostMapping("/search/{type}")
     fun searchContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @PathVariable
         type: ContentType,
@@ -196,7 +192,6 @@ class ContentController(
 
     @GetMapping("/{alias}")
     fun getContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @PathVariable
         alias: String,
@@ -256,9 +251,14 @@ class ContentController(
         val bookmark = authMember?.let {
             bookmarkContentService.existsBookmark(it.memberId, content.id)
         } ?: false
+
         val purchased = authMember?.let { member ->
             val isPurchased = paymentContentService.isContentPurchased(member.memberId, content.id)
             if (isPurchased) {
+                content.nonFreeContent?.let { purchase ->
+                    s3Service.getFileAsString(purchase)
+                }
+            } else if (content.price == 0.00) {
                 content.nonFreeContent?.let { purchase ->
                     s3Service.getFileAsString(purchase)
                 }
@@ -277,7 +277,6 @@ class ContentController(
 
     @GetMapping("/random/scenario")
     fun getRandomScenario(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
         type: String? = null,
@@ -305,7 +304,6 @@ class ContentController(
 
     @GetMapping("/{contentId}/purchased")
     fun getPurchasedContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember?,
         @PathVariable contentId: Long,
     ): PurchasedContentResponse {

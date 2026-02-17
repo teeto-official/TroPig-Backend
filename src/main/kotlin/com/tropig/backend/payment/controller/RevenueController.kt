@@ -27,7 +27,6 @@ class RevenueController(
     @GetMapping("/{type}/list")
     @Operation(summary = "수익 리스트 조회", description = "CREATOR가 등록한 작품의 구매 완료 수익 리스트를 조회합니다.")
     fun getRevenueList(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable type: ContentType,
     ): List<RevenueItemResponse> {
@@ -43,7 +42,6 @@ class RevenueController(
     @GetMapping("/summary")
     @Operation(summary = "전체 수익 조회", description = "CREATOR가 등록한 작품의 전체 수익과 출금 완료 금액, 잔여 수익을 조회합니다.")
     fun getRevenueSummary(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
     ): RevenueSummaryResponse {
         val contents = revenueService.getAllCreatorContents(authMember.memberId)

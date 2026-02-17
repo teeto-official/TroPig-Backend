@@ -132,12 +132,12 @@ jobs:
             AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             
             # PortOne Configuration
-            PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }}
-            PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
             PORTONE_SECRET_V2=${{ secrets.PORTONE_SECRET_V2 }}
             PORTONE_BASE_URL=${{ secrets.PORTONE_BASE_URL }}
             PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
             PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY=${{ secrets.PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY }}
+            PORTONE_KCP_CHANNEL_KEY=${{ secrets.PORTONE_KCP_CHANNEL_KEY }}
+            PORTONE_KAKAO_PAY_CHANNEL_KEY=$${{ PORTONE_KAKAO_PAY_CHANNEL_KEY }}
             
             # Encryption
             ENCRYPTION_SECRET_KEY=${{ secrets.ENCRYPTION_SECRET_KEY }}

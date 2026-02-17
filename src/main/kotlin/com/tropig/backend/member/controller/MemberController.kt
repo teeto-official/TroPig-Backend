@@ -51,7 +51,6 @@ class MemberController(
     @RequireAuth
     @PutMapping
     fun updateUser(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @RequestBody request: UpdateMemberRequest,
     ): MemberResponse {
@@ -68,7 +67,6 @@ class MemberController(
     @RequireAuth
     @GetMapping
     fun findUser(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
     ): MemberResponse {
         val member = memberService.getUserByEmail(authMember.email) ?: throw NotFoundException(
@@ -110,7 +108,6 @@ class MemberController(
     @DeleteMapping
     @Transactional
     fun withdrawMember(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
     ) {
         val deletedMember = memberService.deleteUser(authMember.memberId) ?: throw NotFoundException(

@@ -73,15 +73,14 @@ aws:
 
 portone:
   key:
-    api: test-portone-api-key
-    secret: test-portone-secret
     secret-v2: test-portone-secret-v2
   base-url: http://localhost:9999
   store-id: test-store-id
   identity-verification:
     channel-key: test-chennel-key
-  partner:
-    platform-id: test-partner-platform-id
+  channels:
+    kcp: ${PORTONE_KCP_CHANNEL_KEY}
+    kakao-pay: ${PORTONE_KAKAO_PAY_CHANNEL_KEY}
 
 encryption:
   secret-key: WA2U2V0nO/a/puEzjgLmzdojyeO3a+r7KcXSoImjVmk=
