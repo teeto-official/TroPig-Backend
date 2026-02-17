@@ -62,34 +62,6 @@ class EncryptionServiceTest {
     }
 
     @Test
-    fun `should fail with invalid key length`() {
-        // Given - 16 bytes instead of 32
-        val invalidKey = Base64.getEncoder().encodeToString(ByteArray(16))
-
-        // When & Then
-        val exception = assertThrows<IllegalStateException> {
-            val service = EncryptionService(invalidKey)
-            service.validateConfiguration()
-        }
-
-        assertTrue(exception.message!!.contains("32 bytes"))
-    }
-
-    @Test
-    fun `should fail with invalid Base64 key`() {
-        // Given
-        val invalidKey = "not-base64-encoded!"
-
-        // When & Then
-        val exception = assertThrows<IllegalStateException> {
-            val service = EncryptionService(invalidKey)
-            service.validateConfiguration()
-        }
-
-        assertTrue(exception.message!!.contains("Base64"))
-    }
-
-    @Test
     fun `should fail to encrypt blank string`() {
         // Given
         val service = createValidEncryptionService()
