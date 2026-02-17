@@ -1,13 +1,32 @@
 package com.tropig.backend.payment.repository
 
 import com.tropig.backend.payment.entity.CreatorSettlement
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
 interface CreatorSettlementRepository : JpaRepository<CreatorSettlement, Long> {
 
     fun findByMemberId(memberId: Long): List<CreatorSettlement>
+
+    @Query(
+        "SELECT cs FROM CreatorSettlement cs WHERE cs.memberId = :memberId ORDER BY cs.createdAt DESC, cs.id DESC"
+    )
+    fun findByMemberIdOrderByCreatedAtDesc(memberId: Long, pageable: Pageable): List<CreatorSettlement>
+
+    @Query(
+        "SELECT cs FROM CreatorSettlement cs WHERE cs.memberId = :memberId " +
+            "AND (cs.createdAt < :cursorCreatedAt OR (cs.createdAt = :cursorCreatedAt AND cs.id < :cursorId)) " +
+            "ORDER BY cs.createdAt DESC, cs.id DESC"
+    )
+    fun findByMemberIdWithCursor(
+        memberId: Long,
+        cursorCreatedAt: java.time.LocalDateTime,
+        cursorId: Long,
+        pageable: Pageable,
+    ): List<CreatorSettlement>
 }
 
 

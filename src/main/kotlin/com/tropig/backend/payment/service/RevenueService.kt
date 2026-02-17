@@ -11,8 +11,13 @@ import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
+import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
+import com.tropig.backend.payment.model.response.WithdrawalItemResponse
+import com.tropig.backend.payment.enums.WithdrawalStatus
+import com.tropig.backend.common.model.CursorSlice
+import org.springframework.data.domain.PageRequest
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
@@ -132,6 +137,42 @@ class RevenueService(
             totalRevenue = totalRevenue,
             withdrawnAmount = withdrawnAmount,
             availableRevenue = availableRevenue,
+        )
+    }
+
+    fun getWithdrawalList(memberId: Long, request: WithdrawalListRequest): CursorSlice<WithdrawalItemResponse> {
+        val pageable = PageRequest.of(0, request.size + 1)
+
+        val settlements = if (request.cursorCreatedAt != null) {
+            creatorSettlementRepository.findByMemberIdWithCursor(
+                memberId = memberId,
+                cursorCreatedAt = request.cursorCreatedAt,
+                cursorId = request.cursorId,
+                pageable = pageable,
+            )
+        } else {
+            creatorSettlementRepository.findByMemberIdOrderByCreatedAtDesc(
+                memberId = memberId,
+                pageable = pageable,
+            )
+        }
+
+        val hasNext = settlements.size > request.size
+        val items = settlements.take(request.size)
+
+        val lastItem = items.lastOrNull()
+
+        return CursorSlice(
+            items = items.map { settlement ->
+                WithdrawalItemResponse(
+                    amount = settlement.amount,
+                    createdAt = settlement.createdAt,
+                    withdrawalStatus = WithdrawalStatus.COMPLETED,
+                )
+            },
+            hasNext = hasNext,
+            nextCursorId = lastItem?.id,
+            nextCursorDateAt = lastItem?.createdAt,
         )
     }
 }
