@@ -2,6 +2,7 @@ package com.tropig.backend.member.entity
 
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
 import java.time.Period
 import java.time.format.DateTimeFormatter
@@ -43,12 +44,29 @@ data class MemberAuthInfo(
     val di: String, // Site-specific ID (encrypted for privacy)
 
     @Column(name = "verified_at", nullable = false)
-    val verifiedAt: LocalDateTime,
+    var verifiedAt: LocalDateTime,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(nullable = false)
+    val creator: Boolean = false,
+
+    @Column(name = "auth_creator_at")
+    val authCreatorAt: LocalDateTime? = null,
+
+    @Column(name = "auth_user_at")
+    val authUserAt: LocalDateTime? = null,
+
+    @Column(name = "bank_account", length = 255)
+    val bankAccount: String? = null,
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    val updatedAt: LocalDateTime? = null
 ) {
+
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
