@@ -4,7 +4,6 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
-import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.service.RevenueService
@@ -12,9 +11,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 
 @ApiController
 @RequestMapping("/api/revenue")
@@ -24,14 +21,13 @@ class RevenueController(
 ) {
 
     @RequireAuth
-    @GetMapping("/{type}/list")
-    @Operation(summary = "수익 리스트 조회", description = "CREATOR가 등록한 작품의 구매 완료 수익 리스트를 조회합니다.")
+    @GetMapping("/list")
+    @Operation(summary = "수익금 - 수익 목록 조회", description = "창작자가 등록한 작품의 구매 완료 수익 리스트를 조회합니다.")
     fun getRevenueList(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-        @PathVariable type: ContentType,
     ): List<RevenueItemResponse> {
-        val contents = revenueService.getCreatorContents(authMember.memberId, type)
+        val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
             return emptyList()
         }

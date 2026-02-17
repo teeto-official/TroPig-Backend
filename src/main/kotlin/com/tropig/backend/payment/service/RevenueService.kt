@@ -7,7 +7,6 @@ import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
-import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
@@ -16,6 +15,7 @@ import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
+import com.tropig.backend.member.repository.MemberRepository
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
@@ -25,6 +25,7 @@ class RevenueService(
     private val purchaseRepository: PurchaseRepository,
     private val paymentRepository: PaymentRepository,
     private val creatorSettlementRepository: CreatorSettlementRepository,
+    private val memberRepository: MemberRepository,
 ) {
 
     private fun validateCreator(role: Role) {
@@ -44,8 +45,13 @@ class RevenueService(
     fun getRevenueItems(authMember: AuthMember, contents: List<Content>): List<RevenueItemResponse> {
         validateCreator(authMember.role)
 
-        val contentById = contents.associateBy { it.id }
-        val contentIds = contents.map { it.id }
+        val paidContents = contents.filter { it.price > 0 }
+        if (paidContents.isEmpty()) {
+            return emptyList()
+        }
+
+        val contentById = paidContents.associateBy { it.id }
+        val contentIds = paidContents.map { it.id }
 
         val purchases = purchaseRepository.findByContentIdInAndStatus(
             contentIds = contentIds,
@@ -56,20 +62,19 @@ class RevenueService(
             return emptyList()
         }
 
-        val paymentIds = purchases.map { it.paymentId }.distinct()
-        val payments = paymentRepository.findAllById(paymentIds)
-            .filter { it.status == PaymentStatus.PAID }
-            .associateBy { it.id }
+        val purchaserIds = purchases.map { it.memberId }.distinct()
+        val purchaserById = memberRepository.findAllById(purchaserIds).associateBy { it.id }
 
         return purchases.mapNotNull { purchase ->
             val content = contentById[purchase.contentId] ?: return@mapNotNull null
-            val payment = payments[purchase.paymentId] ?: return@mapNotNull null
+            val purchaser = purchaserById[purchase.memberId] ?: return@mapNotNull null
 
             RevenueItemResponse(
                 title = content.title,
-                price = payment.amount,
-                paymentCreatedAt = payment.createdAt,
-                paymentId = payment.id,
+                purchasedAt = purchase.createdAt,
+                purchaserNickname = purchaser.nickname,
+                amount = purchase.amount,
+
             )
         }
     }
@@ -89,7 +94,7 @@ class RevenueService(
     /**
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
-    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId + '-' + #type.name()")
+    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId")
     fun getAllCreatorContents(memberId: Long): List<Content> {
         return contentRepository.findByMemberIdAndStatusIn(
             memberId = memberId,
