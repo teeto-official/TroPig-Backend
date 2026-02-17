@@ -254,7 +254,6 @@ class PaymentService(
             amount = purchase.amount,
             status = purchase.status,
             paymentStatus = payment.status,
-            portonePaymentId = purchase.portonePaymentId,
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )

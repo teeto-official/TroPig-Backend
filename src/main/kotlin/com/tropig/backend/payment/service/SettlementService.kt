@@ -66,7 +66,7 @@ class SettlementService(
         }
         
         // 3. 정산 가능 금액 확인
-        val contents = revenueService.getCreatorContents(authMember.memberId)
+        val contents = revenueService.getAllCreatorContents(authMember.memberId)
         val revenueSummary = revenueService.getRevenueSummary(authMember, contents)
         
         if (request.settlementAmount > revenueSummary.availableRevenue) {
@@ -155,7 +155,7 @@ class SettlementService(
             )
         }
         
-        val contents = revenueService.getCreatorContents(authMember.memberId)
+        val contents = revenueService.getAllCreatorContents(authMember.memberId)
         return revenueService.getRevenueSummary(authMember, contents)
     }
 }
