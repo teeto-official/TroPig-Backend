@@ -100,6 +100,26 @@ class MemberService(
         )
     }
 
+    fun validateRefreshToken(token: String): Long {
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw IllegalArgumentException("유효하지 않은 refresh token입니다.")
+        }
+        return jwtTokenProvider.getUserIdFromToken(token)
+    }
+
+    fun refreshToken(member: Member): TokenResponse {
+        val now = Date()
+        val token = jwtTokenProvider.getToken(member, now)
+
+        return TokenResponse(
+            token.first,
+            token.second,
+            Instant.ofEpochMilli(token.third)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime()
+        )
+    }
+
     private fun loginMember(request: SignInRequest): Member {
         val member = memberRepository.findBySnsIdAndSnsProviderAndEmail(
             request.snsId,
