@@ -60,8 +60,9 @@ class MemberController(
             code = MessageCode.NOT_FOUND_MEMBER
         )
 
+        val memberAuthInfo = memberService.findMemberAuthInfo(memberId = member.id)
         val updatedMember = memberService.updateUser(member, request)
-        return MemberResponse.from(updatedMember)
+        return MemberResponse.from(updatedMember, memberAuthInfo)
     }
 
     @RequireAuth
@@ -74,7 +75,9 @@ class MemberController(
             message = "회원 정보를 찾을 수 없습니다.",
             code = MessageCode.NOT_FOUND_MEMBER
         )
-        return MemberResponse.from(member)
+
+        val memberAuthInfo = memberService.findMemberAuthInfo(authMember.memberId)
+        return MemberResponse.from(member, memberAuthInfo)
     }
 
     @RequireAuth

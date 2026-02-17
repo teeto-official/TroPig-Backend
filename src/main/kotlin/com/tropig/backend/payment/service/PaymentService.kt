@@ -258,7 +258,7 @@ class PaymentService(
             updatedAt = purchase.updatedAt
         )
     }
-    
+
     /**
      * 콘텐츠 구매 여부 확인
      */
