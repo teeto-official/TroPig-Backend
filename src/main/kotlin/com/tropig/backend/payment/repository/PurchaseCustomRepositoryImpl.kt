@@ -120,7 +120,7 @@ class PurchaseCustomRepositoryImpl(
     @Suppress("UNCHECKED_CAST")
     private fun loadContents(contentIds: List<Long>): Map<Long, Content> {
         if (contentIds.isEmpty()) return emptyMap()
-        val q = em.createQuery("SELECT c FROM Content c WHERE c.id IN :ids", Content::class.java)
+        val q = em.createQuery("SELECT c FROM Content c WHERE c.id IN (:ids)", Content::class.java)
         q.setParameter("ids", contentIds)
         val contents = q.resultList as List<Content>
         return contents.associateBy { it.id }
