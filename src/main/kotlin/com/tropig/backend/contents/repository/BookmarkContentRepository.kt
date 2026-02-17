@@ -2,12 +2,10 @@ package com.tropig.backend.contents.repository
 
 import com.tropig.backend.contents.entity.BookmarkContent
 import com.tropig.backend.contents.model.result.projection.BookmarkContentProjection
-import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import software.amazon.awssdk.services.s3.endpoints.internal.Value.Bool
 
 @Repository
 interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, BookmarkContentCustomRepository {
