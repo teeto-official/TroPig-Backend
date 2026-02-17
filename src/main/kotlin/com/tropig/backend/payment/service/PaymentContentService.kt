@@ -1,6 +1,9 @@
 package com.tropig.backend.payment.service
 
+import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.payment.enums.PurchaseStatus
+import com.tropig.backend.payment.model.request.PurchasedContentListRequest
+import com.tropig.backend.payment.model.result.PurchasedContentProjection
 import com.tropig.backend.payment.repository.PurchaseRepository
 import org.springframework.stereotype.Service
 
@@ -20,5 +23,12 @@ class PaymentContentService(
             contentId = contentId,
             status = PurchaseStatus.COMPLETED
         )
+    }
+
+    fun getPurchasedContents(
+        memberId: Long,
+        request: PurchasedContentListRequest,
+    ): CursorSlice<PurchasedContentProjection> {
+        return purchaseRepository.findPurchasedContents(memberId, request)
     }
 }

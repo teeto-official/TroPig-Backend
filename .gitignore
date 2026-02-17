@@ -1,6 +1,8 @@
 README.md
 .gradle
 .env*
+application-local.yml
+application-dev.yml
 *.http
 build/
 !gradle/wrapper/gradle-wrapper.jar

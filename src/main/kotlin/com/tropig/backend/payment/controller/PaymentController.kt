@@ -4,10 +4,20 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.contents.model.result.BookmarkContentInfo
+import com.tropig.backend.contents.model.result.TagDto
+import com.tropig.backend.contents.service.BookmarkContentService
+import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.TagService
+import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
 import com.tropig.backend.payment.model.request.CreatePurchaseRequest
+import com.tropig.backend.payment.model.request.PurchasedContentListRequest
 import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
+import com.tropig.backend.payment.model.response.PurchasedContentListResponse
+import com.tropig.backend.payment.service.PaymentContentService
 import com.tropig.backend.payment.service.PaymentService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -22,6 +32,11 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Payment", description = "결제 API")
 class PaymentController(
     private val paymentService: PaymentService,
+    private val paymentContentService: PaymentContentService,
+    private val creatorService: CreatorService,
+    private val tagService: TagService,
+    private val bookmarkContentService: BookmarkContentService,
+    private val contentService: ContentService,
 ) {
     @RequireAuth
     @PostMapping("/purchase")
@@ -60,17 +75,6 @@ class PaymentController(
     }
 
     @RequireAuth
-    @GetMapping("/purchase")
-    @Operation(summary = "구매 내역 목록 조회", description = "회원의 모든 구매 내역을 조회합니다.")
-    fun getPurchases(
-        @AuthenticationPrincipal
-        @LoginMember authMember: AuthMember
-    ): ResponseEntity<List<PurchaseResponse>> {
-        val response = paymentService.getPurchasesByMember(authMember.memberId)
-        return ResponseEntity.ok(response)
-    }
-
-    @RequireAuth
     @GetMapping("/content/{contentId}/purchased")
     @Operation(summary = "콘텐츠 구매 여부 확인", description = "특정 콘텐츠의 구매 여부를 확인합니다.")
     fun isContentPurchased(
@@ -81,4 +85,62 @@ class PaymentController(
         val purchased = paymentService.isContentPurchased(authMember.memberId, contentId)
         return ResponseEntity.ok(mapOf("purchased" to purchased))
     }
+
+    @RequireAuth
+    @GetMapping("/purchase")
+    @Operation(summary = "구매한 컨텐츠 목록 조회", description = "회원이 구매한 컨텐츠 목록을 조회합니다.")
+    fun getPurchasedContents(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: PurchasedContentListRequest,
+    ): CursorSlice<PurchasedContentListResponse> {
+        val memberId = authMember.memberId
+        val contents = paymentContentService.getPurchasedContents(memberId, request)
+
+        return contents.mapWith(
+            buildContext = { items ->
+                val contentIds = items.map { it.content.id }
+                val writerIds = items.map { it.content.memberId }.distinct()
+
+                val nickByMemberId = creatorService.getWritersName(writerIds)
+                val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
+                val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
+                val thumbnailPaths = contentService.getThumbnailPath(contentIds)
+                    .associateBy({ it.contentId }, { it.path })
+
+                PurchasedContentContext(
+                    nickByMemberId = nickByMemberId,
+                    tagsByContentId = tagsByContentId,
+                    bookmarkInfo = bookmarksInfo,
+                    thumbnailPaths = thumbnailPaths,
+                )
+            }
+        ) { item, ctx ->
+            val content = item.content
+            PurchasedContentListResponse(
+                id = content.id,
+                alias = content.alias,
+                title = content.title,
+                type = content.type,
+                rule = content.rule,
+                genre = content.genre,
+                writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
+                playerCountType = content.playerCountType,
+                thumbnailPath = ctx.thumbnailPaths[content.id],
+                tags = ctx.tagsByContentId[content.id].orEmpty(),
+                isBookmark = ctx.bookmarkInfo[content.id]?.bookmarked ?: false,
+                publishedAt = content.publishedAt!!,
+                freeContent = content.freeContent,
+                purchasedAt = item.purchasedAt,
+                purchaseAmount = item.purchaseAmount,
+            )
+        }
+    }
 }
+
+private data class PurchasedContentContext(
+    val nickByMemberId: Map<Long, String>,
+    val tagsByContentId: Map<Long, List<TagDto>>,
+    val bookmarkInfo: Map<Long, BookmarkContentInfo>,
+    val thumbnailPaths: Map<Long, String?>,
+)
