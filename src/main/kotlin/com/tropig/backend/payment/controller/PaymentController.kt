@@ -14,6 +14,7 @@ import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
 import com.tropig.backend.payment.model.request.CreatePurchaseRequest
 import com.tropig.backend.payment.model.request.PurchasedContentListRequest
+import com.tropig.backend.payment.model.request.FailPurchaseRequest
 import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
 import com.tropig.backend.payment.model.response.PurchasedContentListResponse
@@ -60,6 +61,18 @@ class PaymentController(
     ): ResponseEntity<PurchaseResponse> {
         val response = paymentService.confirmPurchase(authMember.memberId, request)
         return ResponseEntity.ok(response)
+    }
+
+    @RequireAuth
+    @PostMapping("/purchase/fail")
+    @Operation(summary = "결제 실패 처리", description = "결제 실패 시 Payment 상태를 FAILED로 업데이트합니다.")
+    fun failPurchase(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @Valid @RequestBody request: FailPurchaseRequest
+    ): ResponseEntity<Void> {
+        paymentService.failPurchase(authMember.memberId, request)
+        return ResponseEntity.ok().build()
     }
 
     @RequireAuth

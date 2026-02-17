@@ -66,55 +66,67 @@ class PortOnePaymentClient(
     
     /**
      * 결제 승인 (POST /payments/{paymentId}/confirm)
+     * confirm 모드에서 READY 상태의 결제를 PAID로 전환
      */
-    fun confirmPayment(paymentId: String, request: ConfirmPaymentRequest): ConfirmPaymentResponse {
+    fun confirmPayment(paymentId: String, storeId: String, paymentToken: String): PaymentQueryResponse {
         val url = "$baseUrl/payments/$paymentId/confirm"
         val headers = createHeaders()
-        
+
         val body = mapOf(
-            "storeId" to request.storeId,
-            "receiptId" to request.receiptId
+            "storeId" to storeId,
+            "paymentToken" to paymentToken
         )
-        
+
         val response = restTemplate.exchange(
             url,
             HttpMethod.POST,
             HttpEntity(body, headers),
             String::class.java
         )
-        
+
         if (!response.statusCode.is2xxSuccessful) {
             throw PortOneApiException("결제 승인 실패: ${response.statusCode} ${response.body}")
         }
-        
+
         val responseBody = objectMapper.readTree(response.body)
-        return ConfirmPaymentResponse(
+        return PaymentQueryResponse(
             paymentId = paymentId,
             status = responseBody["payment"]?.get("status")?.asText() ?: "UNKNOWN",
             amount = responseBody["payment"]?.get("amount")?.get("total")?.asLong() ?: 0L,
+            method = responseBody["payment"]?.get("method")?.get("type")?.asText(),
+            txId = responseBody["payment"]?.get("id")?.asText(),
             responseJson = response.body!!
         )
     }
-    
+
     /**
      * 결제 조회 (GET /payments/{paymentId})
+     * 포트원에 결제 상태를 조회하여 검증에 사용
      */
-    fun getPayment(paymentId: String, storeId: String): JsonNode {
+    fun getPayment(paymentId: String, storeId: String): PaymentQueryResponse {
         val url = "$baseUrl/payments/$paymentId?storeId=$storeId"
         val headers = createHeaders()
-        
+
         val response = restTemplate.exchange(
             url,
             HttpMethod.GET,
             HttpEntity(null, headers),
             String::class.java
         )
-        
+
         if (!response.statusCode.is2xxSuccessful) {
             throw PortOneApiException("결제 조회 실패: ${response.statusCode} ${response.body}")
         }
-        
-        return objectMapper.readTree(response.body)
+
+        val responseBody = objectMapper.readTree(response.body)
+        return PaymentQueryResponse(
+            paymentId = paymentId,
+            status = responseBody["status"]?.asText() ?: "UNKNOWN",
+            amount = responseBody["amount"]?.get("total")?.asLong() ?: 0L,
+            method = responseBody["method"]?.get("type")?.asText(),
+            txId = responseBody["id"]?.asText(),
+            responseJson = response.body!!
+        )
     }
     
     /**
@@ -181,15 +193,12 @@ data class CreatePaymentResponse(
     val responseJson: String
 )
 
-data class ConfirmPaymentRequest(
-    val storeId: String,
-    val receiptId: String
-)
-
-data class ConfirmPaymentResponse(
+data class PaymentQueryResponse(
     val paymentId: String,
     val status: String,
     val amount: Long,
+    val method: String?,
+    val txId: String?,
     val responseJson: String
 )
 

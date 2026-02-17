@@ -5,7 +5,6 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.exception.PaymentException
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
-import com.tropig.backend.payment.client.ConfirmPaymentRequest
 import com.tropig.backend.payment.client.PortOneApiException
 import com.tropig.backend.payment.client.PortOnePaymentClient
 import com.tropig.backend.payment.entity.Payment
@@ -14,6 +13,7 @@ import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
 import com.tropig.backend.payment.model.request.CreatePurchaseRequest
+import com.tropig.backend.payment.model.request.FailPurchaseRequest
 import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
 import com.tropig.backend.payment.repository.PaymentRepository
@@ -21,7 +21,6 @@ import com.tropig.backend.payment.repository.PurchaseRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 
 @Service
 class PaymentService(
@@ -76,6 +75,7 @@ class PaymentService(
         // 5. Payment 엔티티 저장 (결제는 프론트엔드에서 PortOne SDK로 시작됨)
         val payment = Payment(
             memberId = memberId,
+            contentId = content.id,
             portonePaymentId = paymentId,
             amount = content.price.toLong(),
             status = PaymentStatus.PENDING,
@@ -85,19 +85,8 @@ class PaymentService(
             portoneResponse = null // 결제 생성 시점에는 아직 PortOne 응답 없음
         )
         val savedPayment = paymentRepository.save(payment)
-        
-        // 6. Purchase 엔티티 저장
-        val purchase = Purchase(
-            memberId = memberId,
-            contentId = request.contentId,
-            paymentId = savedPayment.id,
-            amount = content.price.toLong(),
-            status = PurchaseStatus.PENDING
-        )
-        val savedPurchase = purchaseRepository.save(purchase)
-        
+
         return CreatePurchaseResponse(
-            purchaseId = savedPurchase.id,
             paymentId = savedPayment.id,
             portonePaymentId = paymentId,
             amount = content.price.toLong()
@@ -110,9 +99,9 @@ class PaymentService(
     @Transactional
     fun confirmPurchase(memberId: Long, request: ConfirmPurchaseRequest): PurchaseResponse {
         // 1. Payment 조회
-        val payment = paymentRepository.findByPortonePaymentId(request.paymentId)
+        val payment = paymentRepository.findByPortonePaymentId(request.portonePaymentId)
             ?: throw NotFoundException(
-                "결제를 찾을 수 없습니다: ${request.paymentId}",
+                "결제를 찾을 수 없습니다: ${request.portonePaymentId}",
                 MessageCode.NOT_FOUND_PAYMENT_INFO,
             )
         
@@ -123,61 +112,113 @@ class PaymentService(
                 MessageCode.NOT_OWN_PAYMENT_INFO
             )
         }
-        
-        // 3. 포트원 결제 승인
-        val confirmRequest = ConfirmPaymentRequest(
-            storeId = storeId,
-            receiptId = request.receiptId
-        )
-        
-        val confirmResponse = try {
-            portOnePaymentClient.confirmPayment(request.paymentId, confirmRequest)
+
+        // 3. 이미 결제 완료된 건이면 기존 Purchase 반환
+        if (payment.status == PaymentStatus.PAID) {
+            val existingPurchase = purchaseRepository.findByMemberIdAndPaymentId(memberId, payment.id)
+                ?: throw NotFoundException(
+                    "구매 내역을 찾을 수 없습니다.",
+                    MessageCode.NOT_FOUND_PURCHASE_INFO,
+                )
+            return PurchaseResponse(
+                id = existingPurchase.id,
+                memberId = existingPurchase.memberId,
+                contentId = existingPurchase.contentId,
+                paymentId = payment.id,
+                amount = payment.amount,
+                status = existingPurchase.status,
+                paymentStatus = payment.status,
+                createdAt = existingPurchase.createdAt,
+                updatedAt = existingPurchase.updatedAt
+            )
+        }
+
+        // 4. 포트원 결제 조회
+        val queryResponse = try {
+            portOnePaymentClient.getPayment(request.portonePaymentId, storeId)
         } catch (e: PortOneApiException) {
-            // 결제 실패 처리
             payment.status = PaymentStatus.FAILED
             payment.failureReason = e.message
             paymentRepository.save(payment)
-            
-            // Purchase 상태도 업데이트
-            val purchase = purchaseRepository.findByMemberIdAndPaymentId(memberId, payment.id)
-            purchase?.let {
-                it.status = PurchaseStatus.CANCELLED
-                purchaseRepository.save(it)
-            }
-            
             throw e
         }
-        
-        // 4. Payment 상태 업데이트
+
+        // 5. 결제 금액 검증 (승인 전에 금액 위변조 확인)
+        if (queryResponse.amount != payment.amount) {
+            payment.status = PaymentStatus.FAILED
+            payment.failureReason = "결제 금액 불일치: 예상=${payment.amount}, 실제=${queryResponse.amount}"
+            paymentRepository.save(payment)
+            throw PaymentException(
+                "결제 금액이 일치하지 않습니다. 예상: ${payment.amount}원, 실제: ${queryResponse.amount}원",
+                MessageCode.PAYMENT_ERROR
+            )
+        }
+
+        // 6. 포트원 결제 승인 (READY → PAID)
+        val confirmResponse = try {
+            portOnePaymentClient.confirmPayment(request.portonePaymentId, storeId, request.paymentToken)
+        } catch (e: PortOneApiException) {
+            payment.status = PaymentStatus.FAILED
+            payment.failureReason = e.message
+            paymentRepository.save(payment)
+            throw e
+        }
+
+        // 7. Payment 상태 업데이트
         payment.status = PaymentStatus.PAID
-        payment.method = confirmResponse.status
+        payment.method = confirmResponse.method
+        payment.receiptId = request.txId
         payment.portoneResponse = confirmResponse.responseJson
         val updatedPayment = paymentRepository.save(payment)
-        
-        // 5. Purchase 상태 업데이트
-        val purchase = purchaseRepository.findByMemberIdAndPaymentId(memberId, payment.id)
-            ?: throw NotFoundException(
-                "구매 내역을 찾을 수 없습니다.",
-                MessageCode.NOT_FOUND_PURCHASE_INFO,
-            )
-        
-        purchase.status = PurchaseStatus.COMPLETED
-        val updatedPurchase = purchaseRepository.save(purchase)
-        
+
+        // 8. Purchase 엔티티 저장
+        val purchase = Purchase(
+            memberId = memberId,
+            contentId = payment.contentId,
+            paymentId = payment.id,
+            amount = payment.amount,
+            status = PurchaseStatus.COMPLETED
+        )
+        val savedPurchase = purchaseRepository.save(purchase)
+
         return PurchaseResponse(
-            id = updatedPurchase.id,
-            memberId = updatedPurchase.memberId,
-            contentId = updatedPurchase.contentId,
+            id = savedPurchase.id,
+            memberId = savedPurchase.memberId,
+            contentId = savedPurchase.contentId,
             paymentId = updatedPayment.id,
             amount = updatedPayment.amount,
-            status = updatedPurchase.status,
+            status = savedPurchase.status,
             paymentStatus = updatedPayment.status,
-            portonePaymentId = updatedPayment.portonePaymentId,
-            createdAt = updatedPurchase.createdAt,
-            updatedAt = updatedPurchase.updatedAt
+            createdAt = savedPurchase.createdAt,
+            updatedAt = savedPurchase.updatedAt
         )
     }
-    
+
+    /**
+     * 결제 실패 처리
+     */
+    @Transactional
+    fun failPurchase(memberId: Long, request: FailPurchaseRequest) {
+        val payment = paymentRepository.findByPortonePaymentId(request.portonePaymentId)
+            ?: throw NotFoundException(
+                "결제를 찾을 수 없습니다: ${request.portonePaymentId}",
+                MessageCode.NOT_FOUND_PAYMENT_INFO,
+            )
+
+        if (payment.memberId != memberId) {
+            throw PaymentException(
+                "본인의 결제만 처리할 수 있습니다.",
+                MessageCode.NOT_OWN_PAYMENT_INFO
+            )
+        }
+
+        payment.status = PaymentStatus.FAILED
+        payment.failureReason = listOfNotNull(request.code, request.message)
+            .joinToString(": ")
+            .ifEmpty { "결제 실패" }
+        paymentRepository.save(payment)
+    }
+
     /**
      * 구매 내역 조회
      */
@@ -189,14 +230,14 @@ class PaymentService(
                     MessageCode.NOT_FOUND_PURCHASE_INFO,
                 )
             }
-        
+
         if (purchase.memberId != memberId) {
             throw PaymentException(
                 "본인의 구매 내역만 조회할 수 있습니다.",
                 MessageCode.NOT_OWN_PAYMENT_INFO,
             )
         }
-        
+
         val payment = paymentRepository.findById(purchase.paymentId)
             .orElseThrow {
                 NotFoundException(
@@ -204,7 +245,7 @@ class PaymentService(
                     code = MessageCode.NOT_FOUND_PAYMENT_INFO
                 )
             }
-        
+
         return PurchaseResponse(
             id = purchase.id,
             memberId = purchase.memberId,
@@ -213,7 +254,6 @@ class PaymentService(
             amount = purchase.amount,
             status = purchase.status,
             paymentStatus = payment.status,
-            portonePaymentId = payment.portonePaymentId,
             createdAt = purchase.createdAt,
             updatedAt = purchase.updatedAt
         )
@@ -231,6 +271,6 @@ class PaymentService(
     }
     
     private fun generateOrderId(memberId: Long, contentId: Long): String {
-        return "order-${memberId}-${contentId}-${UUID.randomUUID().toString().substring(0, 8)}"
+        return "payment-content-${contentId}-${System.currentTimeMillis()}"
     }
 }

@@ -12,7 +12,6 @@ data class PurchaseResponse(
     val amount: Long,
     val status: PurchaseStatus,
     val paymentStatus: PaymentStatus,
-    val portonePaymentId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )

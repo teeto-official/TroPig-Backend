@@ -12,6 +12,9 @@ data class Payment(
     @Column(nullable = false)
     val memberId: Long,
 
+    @Column(nullable = false)
+    val contentId: Long,
+
     @Column(nullable = false, unique = true)
     val portonePaymentId: String, // 포트원 결제 ID
 
@@ -33,6 +36,9 @@ data class Payment(
 
     @Column(nullable = true)
     val storeId: String? = null, // 스토어 ID
+
+    @Column(nullable = true)
+    var receiptId: String? = null, // 포트원 트랜잭션 ID
 
     @Column(nullable = true, columnDefinition = "TEXT")
     var portoneResponse: String? = null, // 포트원 응답 전체 (JSON)

@@ -43,6 +43,14 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("com.github.ben-manes.caffeine:caffeine")
 
+	// Retry logic for resilient external API calls
+	implementation("org.springframework.retry:spring-retry")
+	implementation("org.springframework:spring-aspects")
+
+	// Redis (for session management)
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("io.lettuce:lettuce-core")
+
 	// JWT
 	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
 	implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
@@ -60,7 +68,10 @@ dependencies {
 	implementation(platform("software.amazon.awssdk:bom:2.20.0"))
 	implementation("software.amazon.awssdk:s3")
 
+	// JSON
 	implementation("com.google.code.gson:gson:2.11.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 
 kotlin {
