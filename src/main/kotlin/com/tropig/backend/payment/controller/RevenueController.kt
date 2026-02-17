@@ -5,14 +5,18 @@ import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.enums.ContentType
+import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
+import com.tropig.backend.payment.model.response.WithdrawalItemResponse
 import com.tropig.backend.payment.service.RevenueService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -56,6 +60,17 @@ class RevenueController(
         }
 
         return revenueService.getRevenueSummary(authMember, contents)
+    }
+
+    @RequireAuth
+    @GetMapping("/withdrawal/list")
+    @Operation(summary = "출금 리스트 조회", description = "CREATOR의 출금 신청 내역을 조회합니다.")
+    fun getWithdrawalList(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: WithdrawalListRequest,
+    ): CursorSlice<WithdrawalItemResponse> {
+        return revenueService.getWithdrawalList(authMember.memberId, request)
     }
 }
 
