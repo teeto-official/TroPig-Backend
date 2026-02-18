@@ -4,6 +4,8 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.service.RevenueService
@@ -26,13 +28,14 @@ class RevenueController(
     fun getRevenueList(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-    ): List<RevenueItemResponse> {
+        request: RevenueListRequest,
+    ): CursorSlice<RevenueItemResponse> {
         val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
-            return emptyList()
+            return CursorSlice(items = emptyList(), hasNext = false)
         }
 
-        return revenueService.getRevenueItems(authMember, contents)
+        return revenueService.getRevenueItems(authMember, contents, request)
     }
 
     @RequireAuth

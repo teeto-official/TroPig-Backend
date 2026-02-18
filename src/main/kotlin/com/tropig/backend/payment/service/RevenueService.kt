@@ -10,8 +10,11 @@ import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
+import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
+import com.tropig.backend.common.model.CursorSlice
+import org.springframework.data.domain.PageRequest
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
@@ -42,30 +45,49 @@ class RevenueService(
      * - 본인이 등록한 PUBLISHED, PRIVATE 작품
      * - 해당 작품에 대해 구매완료(PurchaseStatus.COMPLETED & PaymentStatus.PAID) 이력 기준
      */
-    fun getRevenueItems(authMember: AuthMember, contents: List<Content>): List<RevenueItemResponse> {
+    fun getRevenueItems(
+        authMember: AuthMember,
+        contents: List<Content>,
+        request: RevenueListRequest,
+    ): CursorSlice<RevenueItemResponse> {
         validateCreator(authMember.role)
 
         val paidContents = contents.filter { it.price > 0 }
         if (paidContents.isEmpty()) {
-            return emptyList()
+            return CursorSlice(items = emptyList(), hasNext = false)
         }
 
         val contentById = paidContents.associateBy { it.id }
         val contentIds = paidContents.map { it.id }
+        val pageable = PageRequest.of(0, request.size + 1)
 
-        val purchases = purchaseRepository.findByContentIdInAndStatus(
-            contentIds = contentIds,
-            status = PurchaseStatus.COMPLETED,
-        )
-
-        if (purchases.isEmpty()) {
-            return emptyList()
+        val purchases = if (request.cursorCreatedAt != null) {
+            purchaseRepository.findByContentIdInAndStatusWithCursor(
+                contentIds = contentIds,
+                status = PurchaseStatus.COMPLETED,
+                cursorCreatedAt = request.cursorCreatedAt,
+                cursorId = request.cursorId,
+                pageable = pageable,
+            )
+        } else {
+            purchaseRepository.findByContentIdInAndStatusOrderByCreatedAtDesc(
+                contentIds = contentIds,
+                status = PurchaseStatus.COMPLETED,
+                pageable = pageable,
+            )
         }
 
-        val purchaserIds = purchases.map { it.memberId }.distinct()
+        if (purchases.isEmpty()) {
+            return CursorSlice(items = emptyList(), hasNext = false)
+        }
+
+        val hasNext = purchases.size > request.size
+        val pagedPurchases = purchases.take(request.size)
+
+        val purchaserIds = pagedPurchases.map { it.memberId }.distinct()
         val purchaserById = memberRepository.findAllById(purchaserIds).associateBy { it.id }
 
-        return purchases.mapNotNull { purchase ->
+        val items = pagedPurchases.mapNotNull { purchase ->
             val content = contentById[purchase.contentId] ?: return@mapNotNull null
             val purchaser = purchaserById[purchase.memberId] ?: return@mapNotNull null
 
@@ -74,9 +96,17 @@ class RevenueService(
                 purchasedAt = purchase.createdAt,
                 purchaserNickname = purchaser.nickname,
                 amount = purchase.amount,
-
             )
         }
+
+        val lastPurchase = pagedPurchases.lastOrNull()
+
+        return CursorSlice(
+            items = items,
+            hasNext = hasNext,
+            nextCursorId = lastPurchase?.id,
+            nextCursorDateAt = lastPurchase?.createdAt,
+        )
     }
 
     /**
