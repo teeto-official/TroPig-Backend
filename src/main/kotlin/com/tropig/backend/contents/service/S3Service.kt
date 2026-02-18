@@ -53,7 +53,9 @@ class S3Service(
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
     }
 
-    private val DEFAULT_PATH = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
+    val baseUrl = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
+
+    fun toUrl(key: String?): String? = key?.let { baseUrl + it.trimStart('/') }
 
     /**
      * S3에서 파일을 삭제합니다.
@@ -150,10 +152,11 @@ class S3Service(
         inputStream: InputStream,
         contentType: String,
         originalFileName: String,
-        contentId: Long,
+        id: Long,
+        isMember: Boolean = false,
     ): String {
         val fileBytes = inputStream.readAllBytes()
-        return uploadFileBytes(fileBytes, contentType, originalFileName, contentId)
+        return uploadFileBytes(fileBytes, contentType, originalFileName, id, isMember)
     }
 
     /**
@@ -219,6 +222,7 @@ class S3Service(
         contentType: String,
         originalFileName: String,
         contentId: Long,
+        isMember: Boolean,
     ): String {
         // 파일 타입 검증
         if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
@@ -237,7 +241,7 @@ class S3Service(
 
         // 파일명 생성 (UUID + 원본 파일명)
         val fileName = "${UUID.randomUUID()}-${originalFileName}"
-        val s3Key = "$contentId/$fileName"
+        val s3Key = if (isMember) "member/$contentId/$fileName" else "public/$contentId/$fileName"
 
         try {
             // S3에 업로드

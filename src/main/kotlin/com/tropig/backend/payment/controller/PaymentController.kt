@@ -10,6 +10,7 @@ import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.service.BookmarkContentService
 import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
@@ -43,6 +44,7 @@ class PaymentController(
     private val tagService: TagService,
     private val bookmarkContentService: BookmarkContentService,
     private val contentService: ContentService,
+    private val s3Service: S3Service,
 ) {
     @RequireAuth
     @PostMapping("/purchase")
@@ -140,7 +142,7 @@ class PaymentController(
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
+                    .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
 
                 PurchasedContentContext(
                     nickByMemberId = nickByMemberId,

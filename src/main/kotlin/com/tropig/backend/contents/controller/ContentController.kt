@@ -85,7 +85,7 @@ class ContentController(
             PickContentResponse(
                 title = it.title,
                 alias = it.alias,
-                thumbnailPath = thumbnails[it.id]?.path,
+                thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writer = writerName[it.memberId] ?: "",
                 tags = tags[it.id]?.map { tag -> tag.toTagResult(it.id) } ?: emptyList(),
                 orderNo = 0
@@ -147,7 +147,7 @@ class ContentController(
                 val bookmarksInfo = bookmarkContentService.getBookmarkInfo(memberId, contentIds)
                 val favoriteCountsByContentId = favoriteContentService.getFavoriteCountByContentIds(contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
+                    .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
 
                 SearchContext(
                     nickByMemberId = nickByMemberId,
@@ -272,6 +272,7 @@ class ContentController(
             tags,
             purchased,
             bookmark,
+            writerProfileUrl = s3Service.toUrl(writer?.profile),
         )
     }
 

@@ -67,7 +67,7 @@ class ContentService(
                 id = it.id,
                 title = it.title,
                 alias = it.alias,
-                thumbnailPath = thumbnails[it.id]?.path,
+                thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writerId = it.memberId,
                 tags = tags[it.id] ?: emptyList()
             )
@@ -178,7 +178,7 @@ class ContentService(
                 inputStream = inputStream,
                 contentType = "text/plain",
                 originalFileName = fileName,
-                contentId = savedContent.id,
+                id = savedContent.id,
             )
         }
 
@@ -321,7 +321,7 @@ class ContentService(
                     inputStream = inputStream,
                     contentType = "text/plain",
                     originalFileName = fileName,
-                    contentId = contentId,
+                    id = contentId,
                 )
             }
         } else {

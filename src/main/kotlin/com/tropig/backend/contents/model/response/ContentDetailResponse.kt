@@ -39,6 +39,7 @@ fun Content.toDetailResponse(
     tags: List<TagDto>,
     purchasedContent: String?,
     isBookmark: Boolean,
+    writerProfileUrl: String? = null,
 ): ContentDetailResponse {
     val writerInfo = writer?.let {
         it.deletedAt?.let {
@@ -47,7 +48,7 @@ fun Content.toDetailResponse(
             WriterInfo(
                 writerId = writer.id,
                 nickname = writer.nickname,
-                profilePath = writer.profile
+                profilePath = writerProfileUrl
             )
         }
     } ?: run {

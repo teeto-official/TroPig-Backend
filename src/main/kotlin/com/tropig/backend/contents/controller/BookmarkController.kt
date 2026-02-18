@@ -11,6 +11,7 @@ import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.response.BookmarkContentResponse
 import com.tropig.backend.contents.service.BookmarkContentService
 import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.service.CreatorService
 import io.swagger.v3.oas.annotations.Parameter
@@ -27,6 +28,7 @@ class BookmarkController(
     private val creatorService: CreatorService,
     private val tagService: TagService,
     private val contentService: ContentService,
+    private val s3Service: S3Service,
 ) {
 
     @RequireAuth
@@ -62,7 +64,7 @@ class BookmarkController(
                 val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
+                    .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
 
                 SearchContext(
                     nickByMemberId = nickByMemberId,
