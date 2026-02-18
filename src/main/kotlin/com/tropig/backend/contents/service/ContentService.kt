@@ -287,7 +287,7 @@ class ContentService(
         content.genre = request.genre
         content.playerCountType = request.playerCountType
         content.termType = request.termType
-        content.publishingInfo = request.publishingInfo?.toString()
+        content.publishingInfo = request.publishingInfo?.toJson()
         content.status = request.status
         content.adult = request.adult
         content.publishedAt = request.publishedAt
