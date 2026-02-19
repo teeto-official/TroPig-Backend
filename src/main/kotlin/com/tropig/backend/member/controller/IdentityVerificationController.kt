@@ -62,7 +62,7 @@ class IdentityVerificationController(
         ]
     )
     fun requestVerification(
-        @AuthenticationPrincipal @LoginMember authMember: AuthMember,
+        @LoginMember authMember: AuthMember,
         @Valid @RequestBody request: VerificationRequestDto
     ): ResponseEntity<VerificationRequestResult> {
         val result = identityVerificationService.requestVerification(authMember.memberId, request)
@@ -102,7 +102,7 @@ class IdentityVerificationController(
         ]
     )
     fun confirmVerification(
-        @AuthenticationPrincipal @LoginMember authMember: AuthMember,
+        @LoginMember authMember: AuthMember,
         @Valid @RequestBody request: VerificationConfirmDto
     ): ResponseEntity<VerificationResult> {
         val result = identityVerificationService.confirmVerification(authMember.memberId, request)
@@ -138,7 +138,7 @@ class IdentityVerificationController(
         ]
     )
     fun resendOtp(
-        @AuthenticationPrincipal @LoginMember authMember: AuthMember,
+        @LoginMember authMember: AuthMember,
         @Valid @RequestBody request: VerificationResendDto
     ): ResponseEntity<VerificationResendResult> {
         val result = identityVerificationService.resendOtp(authMember.memberId, request)
@@ -166,7 +166,7 @@ class IdentityVerificationController(
         ]
     )
     fun getVerificationStatus(
-        @AuthenticationPrincipal @LoginMember authMember: AuthMember
+        @LoginMember authMember: AuthMember
     ): ResponseEntity<VerificationStatusResponse> {
         val result = identityVerificationService.getVerificationStatus(authMember.memberId)
         return ResponseEntity.ok(result)

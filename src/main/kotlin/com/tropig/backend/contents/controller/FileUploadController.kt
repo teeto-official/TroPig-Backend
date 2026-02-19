@@ -34,7 +34,6 @@ class FileUploadController(
     @PostMapping("/uploads/{contentId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @Transactional
     fun uploadFileWithRollback(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @ModelAttribute form: UploadFilesForm,
         @PathVariable contentId: Long

@@ -41,7 +41,7 @@ class MockIdentityVerificationController(
         description = "KCP 테스트 환경에서 PASS 앱 없이 본인인증을 시뮬레이션합니다. local 프로파일에서만 동작합니다."
     )
     fun mockComplete(
-        @AuthenticationPrincipal @LoginMember authMember: AuthMember
+        @LoginMember authMember: AuthMember
     ): ResponseEntity<VerificationResult> {
         val memberId = authMember.memberId
 
