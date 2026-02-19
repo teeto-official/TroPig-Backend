@@ -15,10 +15,6 @@ interface PurchaseRepository : JpaRepository<Purchase, Long>, PurchaseCustomRepo
     fun findByMemberIdAndPaymentId(memberId: Long, paymentId: Long): Purchase?
     fun findByContentIdInAndStatus(contentIds: List<Long>, status: PurchaseStatus): List<Purchase>
 
-    @Query(
-        "SELECT p FROM Purchase p WHERE p.contentId IN :contentIds AND p.status = :status " +
-            "ORDER BY p.createdAt DESC, p.id DESC"
-    )
     fun findByContentIdInAndStatusOrderByCreatedAtDesc(
         contentIds: List<Long>,
         status: PurchaseStatus,

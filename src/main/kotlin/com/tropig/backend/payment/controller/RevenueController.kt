@@ -10,10 +10,13 @@ import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.service.RevenueService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import java.time.LocalDateTime
 
 @ApiController
 @RequestMapping("/api/revenue")
@@ -28,8 +31,16 @@ class RevenueController(
     fun getRevenueList(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-        request: RevenueListRequest,
+        @Parameter(name = "cursorId", description = "커서 revenueId", `in` = ParameterIn.QUERY)
+        cursorId: Long? = null,
+        @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
+        cursorCreatedAt: LocalDateTime? = null,
+        @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
+        size: Int = 15,
     ): CursorSlice<RevenueItemResponse> {
+        val request =  RevenueListRequest(
+            cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        )
         val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
             return CursorSlice(items = emptyList(), hasNext = false)

@@ -58,7 +58,7 @@ class RevenueService(
         }
 
         val contentById = paidContents.associateBy { it.id }
-        val contentIds = paidContents.map { it.id }
+        val contentIds = contentById.keys.toList()
         val pageable = PageRequest.of(0, request.size + 1)
 
         val purchases = if (request.cursorCreatedAt != null) {
@@ -92,6 +92,7 @@ class RevenueService(
             val purchaser = purchaserById[purchase.memberId] ?: return@mapNotNull null
 
             RevenueItemResponse(
+                id = purchase.id,
                 title = content.title,
                 purchasedAt = purchase.createdAt,
                 purchaserNickname = purchaser.nickname,
