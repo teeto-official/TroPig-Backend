@@ -34,7 +34,6 @@ class BookmarkController(
     @RequireAuth
     @GetMapping("/{type}")
     fun getBookmarkList(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "type", description = "시나리오/자료", `in` = ParameterIn.PATH)
         @PathVariable
@@ -93,7 +92,6 @@ class BookmarkController(
     @RequireAuth
     @PostMapping("/{contentId}")
     fun insertBookmark(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "contentId", description = "시나리오/자료 id", `in` = ParameterIn.PATH)
         @PathVariable
@@ -105,7 +103,6 @@ class BookmarkController(
     @RequireAuth
     @DeleteMapping("/{contentId}")
     fun deleteBookmark(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "contentId", description = "시나리오/자료 id", `in` = ParameterIn.PATH)
         @PathVariable

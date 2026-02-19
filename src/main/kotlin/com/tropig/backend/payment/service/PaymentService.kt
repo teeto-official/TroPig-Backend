@@ -3,12 +3,14 @@ package com.tropig.backend.payment.service
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.exception.PaymentException
+import com.tropig.backend.config.PortOneProperties
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.payment.client.PortOneApiException
 import com.tropig.backend.payment.client.PortOnePaymentClient
 import com.tropig.backend.payment.entity.Payment
 import com.tropig.backend.payment.entity.Purchase
+import com.tropig.backend.payment.enums.PaymentChannel
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
@@ -18,7 +20,6 @@ import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -28,9 +29,14 @@ class PaymentService(
     private val paymentRepository: PaymentRepository,
     private val purchaseRepository: PurchaseRepository,
     private val contentRepository: ContentRepository,
-    @Value("\${portone.store-id}")
-    private val storeId: String,
+    private val portOneProperties: PortOneProperties,
 ) {
+    private val storeId get() = portOneProperties.storeId
+
+    private fun resolveChannelKey(channel: PaymentChannel): String = when (channel) {
+        PaymentChannel.KCP -> portOneProperties.channels.kcp
+        PaymentChannel.KAKAO_PAY -> portOneProperties.channels.kakaoPay
+    }
     
     /**
      * 구매 요청 생성 (결제 생성)
@@ -80,7 +86,7 @@ class PaymentService(
             amount = content.price.toLong(),
             status = PaymentStatus.PENDING,
             currency = "KRW",
-            channelKey = request.channel.channelKey,
+            channelKey = resolveChannelKey(request.channel),
             storeId = storeId,
             portoneResponse = null // 결제 생성 시점에는 아직 PortOne 응답 없음
         )
@@ -133,7 +139,7 @@ class PaymentService(
             )
         }
 
-        // 4. 포트원 결제 조회
+        // 4. 포트원 결제 조회 (자동 승인 모드: GET으로 상태 확인)
         val queryResponse = try {
             portOnePaymentClient.getPayment(request.portonePaymentId, storeId)
         } catch (e: PortOneApiException) {
@@ -143,7 +149,18 @@ class PaymentService(
             throw e
         }
 
-        // 5. 결제 금액 검증 (승인 전에 금액 위변조 확인)
+        // 5. 결제 상태 검증 (자동 승인 모드에서는 이미 PAID여야 함)
+        if (queryResponse.status != "PAID") {
+            payment.status = PaymentStatus.FAILED
+            payment.failureReason = "결제 미완료 상태: ${queryResponse.status}"
+            paymentRepository.save(payment)
+            throw PaymentException(
+                "결제가 완료되지 않았습니다. 현재 상태: ${queryResponse.status}",
+                MessageCode.PAYMENT_ERROR
+            )
+        }
+
+        // 6. 결제 금액 검증 (금액 위변조 확인)
         if (queryResponse.amount != payment.amount) {
             payment.status = PaymentStatus.FAILED
             payment.failureReason = "결제 금액 불일치: 예상=${payment.amount}, 실제=${queryResponse.amount}"
@@ -154,21 +171,11 @@ class PaymentService(
             )
         }
 
-        // 6. 포트원 결제 승인 (READY → PAID)
-        val confirmResponse = try {
-            portOnePaymentClient.confirmPayment(request.portonePaymentId, storeId, request.paymentToken)
-        } catch (e: PortOneApiException) {
-            payment.status = PaymentStatus.FAILED
-            payment.failureReason = e.message
-            paymentRepository.save(payment)
-            throw e
-        }
-
         // 7. Payment 상태 업데이트
         payment.status = PaymentStatus.PAID
-        payment.method = confirmResponse.method
+        payment.method = queryResponse.method
         payment.receiptId = request.txId
-        payment.portoneResponse = confirmResponse.responseJson
+        payment.portoneResponse = queryResponse.responseJson
         val updatedPayment = paymentRepository.save(payment)
 
         // 8. Purchase 엔티티 저장

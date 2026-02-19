@@ -27,7 +27,6 @@ class SettlementController(
     @PostMapping
     @Operation(summary = "정산 요청", description = "파트너 정산을 요청합니다.")
     fun createSettlement(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Valid @RequestBody request: CreateSettlementRequest
     ): ResponseEntity<SettlementResponse> {
@@ -39,7 +38,6 @@ class SettlementController(
     @GetMapping("/available")
     @Operation(summary = "정산 가능 금액 조회", description = "현재 정산 가능한 금액을 조회합니다.")
     fun getAvailableSettlementAmount(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember
     ): ResponseEntity<RevenueSummaryResponse> {
         val response = settlementService.getAvailableSettlementAmount(authMember)

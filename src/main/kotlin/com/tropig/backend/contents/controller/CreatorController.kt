@@ -44,7 +44,6 @@ class CreatorController(
     @RequireAuth
     @ResponseStatus(HttpStatus.CREATED)
     fun createContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @RequestBody request: CreateContentRequest,
     ): Long {
@@ -68,7 +67,6 @@ class CreatorController(
     @PutMapping("/{contentId}")
     @RequireAuth
     fun updateContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable contentId: Long,
         @RequestBody request: UpdateContentRequest,
@@ -108,7 +106,6 @@ class CreatorController(
     @RequireAuth
     @DeleteMapping("/{contentId}")
     fun deleteContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable
         contentId: Long,
@@ -129,7 +126,6 @@ class CreatorController(
     @RequireAuth
     @PatchMapping("/{contentId}/status")
     fun updateContentStatus(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable contentId: Long,
         @RequestBody request: UpdateContentStatusRequest,
@@ -160,7 +156,6 @@ class CreatorController(
     @RequireAuth
     @GetMapping("/creator/{type}/{status}")
     fun getCreatorContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable type: ContentType,
         @PathVariable status: ContentsStatus,
@@ -219,7 +214,6 @@ class CreatorController(
     @RequireAuth
     @GetMapping("/creator/{alias}")
     fun getContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @PathVariable
         alias: String,
@@ -270,7 +264,6 @@ class CreatorController(
     @RequireAuth
     @PostMapping("/search/related")
     fun getSearchRelatedContent(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @RequestBody request: SimpleSearchContentRequest,
     ): CursorSlice<SimpleSearchContentResponse> {
