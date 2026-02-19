@@ -142,6 +142,8 @@ jobs:
             # Encryption
             ENCRYPTION_SECRET_KEY=${{ secrets.ENCRYPTION_SECRET_KEY }}
             
+            INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
+            
             EOF
 
       - name: Restart dev containers (pull & recreate)
