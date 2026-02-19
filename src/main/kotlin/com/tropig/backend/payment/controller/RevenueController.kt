@@ -4,10 +4,13 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
+import com.tropig.backend.payment.model.response.WithdrawalItemResponse
 import com.tropig.backend.payment.service.RevenueService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -64,6 +67,25 @@ class RevenueController(
         }
 
         return revenueService.getRevenueSummary(authMember, contents)
+    }
+
+    @RequireAuth
+    @GetMapping("/withdrawal/list")
+    @Operation(summary = "출금 리스트 조회", description = "CREATOR의 출금 신청 내역을 조회합니다.")
+    fun getWithdrawalList(
+        @AuthenticationPrincipal
+        @LoginMember authMember: AuthMember,
+        @Parameter(name = "cursorId", description = "커서 bookmarkId", `in` = ParameterIn.QUERY)
+        cursorId: Long? = null,
+        @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
+        cursorCreatedAt: LocalDateTime? = null,
+        @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
+        size: Int = 15,
+    ): CursorSlice<WithdrawalItemResponse> {
+        val request = WithdrawalListRequest(
+            cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        )
+        return revenueService.getWithdrawalList(authMember.memberId, request)
     }
 }
 
