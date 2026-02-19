@@ -287,7 +287,7 @@ class CreatorController(
                 val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
+                    .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
 
                 SearchContext(
                     nickByMemberId = nickByMemberId,

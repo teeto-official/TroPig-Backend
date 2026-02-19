@@ -7,6 +7,7 @@ import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.model.request.SignInRequest
@@ -18,6 +19,7 @@ import com.tropig.backend.member.service.MemberService
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*
 class MemberController(
     private val memberService: MemberService,
     private val contentService: ContentService,
+    private val s3Service: S3Service,
 ) {
     @PostMapping("/sign-up")
     fun createUser(
@@ -49,11 +52,11 @@ class MemberController(
     }
 
     @RequireAuth
-    @PutMapping
+    @PutMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun updateUser(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-        @RequestBody request: UpdateMemberRequest,
+        @ModelAttribute request: UpdateMemberRequest,
     ): MemberResponse {
         val member = memberService.getUserByEmail(authMember.email) ?: throw NotFoundException(
             message = "회원 정보를 찾을 수 없습니다.",
@@ -63,6 +66,7 @@ class MemberController(
         val memberAuthInfo = memberService.findMemberAuthInfo(memberId = member.id)
         val updatedMember = memberService.updateUser(member, request)
         return MemberResponse.from(updatedMember, memberAuthInfo)
+            .let { it.copy(profile = s3Service.toUrl(it.profile)) }
     }
 
     @RequireAuth
@@ -78,6 +82,7 @@ class MemberController(
 
         val memberAuthInfo = memberService.findMemberAuthInfo(authMember.memberId)
         return MemberResponse.from(member, memberAuthInfo)
+            .let { it.copy(profile = s3Service.toUrl(it.profile)) }
     }
 
     @PostMapping("/refresh")
