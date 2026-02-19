@@ -11,9 +11,6 @@ interface CreatorSettlementRepository : JpaRepository<CreatorSettlement, Long> {
 
     fun findByMemberId(memberId: Long): List<CreatorSettlement>
 
-    @Query(
-        "SELECT cs FROM CreatorSettlement cs WHERE cs.memberId = :memberId ORDER BY cs.createdAt DESC, cs.id DESC"
-    )
     fun findByMemberIdOrderByCreatedAtDesc(memberId: Long, pageable: Pageable): List<CreatorSettlement>
 
     @Query(

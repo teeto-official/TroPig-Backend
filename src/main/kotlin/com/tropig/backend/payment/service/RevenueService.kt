@@ -7,7 +7,6 @@ import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
-import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
@@ -94,7 +93,7 @@ class RevenueService(
     /**
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
-    @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId + '-' + #type.name()")
+    @Cacheable(cacheNames = ["creatorAllContentsByMember"], key = "#memberId")
     fun getAllCreatorContents(memberId: Long): List<Content> {
         return contentRepository.findByMemberIdAndStatusIn(
             memberId = memberId,
@@ -165,6 +164,7 @@ class RevenueService(
         return CursorSlice(
             items = items.map { settlement ->
                 WithdrawalItemResponse(
+                    id = settlement.id,
                     amount = settlement.amount,
                     createdAt = settlement.createdAt,
                     withdrawalStatus = WithdrawalStatus.COMPLETED,

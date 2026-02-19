@@ -12,13 +12,14 @@ import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.model.response.WithdrawalItemResponse
 import com.tropig.backend.payment.service.RevenueService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
 
 @ApiController
 @RequestMapping("/api/revenue")
@@ -66,8 +67,16 @@ class RevenueController(
     fun getWithdrawalList(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-        @RequestBody request: WithdrawalListRequest,
+        @Parameter(name = "cursorId", description = "커서 bookmarkId", `in` = ParameterIn.QUERY)
+        cursorId: Long? = null,
+        @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
+        cursorCreatedAt: LocalDateTime? = null,
+        @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
+        size: Int = 15,
     ): CursorSlice<WithdrawalItemResponse> {
+        val request = WithdrawalListRequest(
+            cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        )
         return revenueService.getWithdrawalList(authMember.memberId, request)
     }
 }
