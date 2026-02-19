@@ -147,7 +147,7 @@ class RevenueService(
                 memberId = memberId,
                 cursorCreatedAt = request.cursorCreatedAt,
                 cursorId = request.cursorId,
-                size = request.size,
+                size = request.size + 1,
             )
         } else {
             creatorSettlementRepository.findByMemberIdOrderByCreatedAtDesc(
