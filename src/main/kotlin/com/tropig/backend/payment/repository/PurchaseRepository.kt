@@ -24,13 +24,13 @@ interface PurchaseRepository : JpaRepository<Purchase, Long>, PurchaseCustomRepo
     @Query(
         "SELECT p FROM Purchase p WHERE p.contentId IN :contentIds AND p.status = :status " +
             "AND (p.createdAt < :cursorCreatedAt OR (p.createdAt = :cursorCreatedAt AND p.id < :cursorId)) " +
-            "ORDER BY p.createdAt DESC, p.id DESC"
+            "ORDER BY p.createdAt DESC, p.id DESC LIMIT :size"
     )
     fun findByContentIdInAndStatusWithCursor(
         contentIds: List<Long>,
         status: PurchaseStatus,
         cursorCreatedAt: LocalDateTime,
         cursorId: Long,
-        pageable: Pageable,
+        size: Int,
     ): List<Purchase>
 }

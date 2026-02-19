@@ -67,7 +67,7 @@ class RevenueService(
                 status = PurchaseStatus.COMPLETED,
                 cursorCreatedAt = request.cursorCreatedAt,
                 cursorId = request.cursorId,
-                pageable = pageable,
+                size = request.size + 1,
             )
         } else {
             purchaseRepository.findByContentIdInAndStatusOrderByCreatedAtDesc(
