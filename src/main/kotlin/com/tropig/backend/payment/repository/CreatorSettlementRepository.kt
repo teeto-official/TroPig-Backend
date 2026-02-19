@@ -11,18 +11,19 @@ interface CreatorSettlementRepository : JpaRepository<CreatorSettlement, Long> {
 
     fun findByMemberId(memberId: Long): List<CreatorSettlement>
 
+
     fun findByMemberIdOrderByCreatedAtDesc(memberId: Long, pageable: Pageable): List<CreatorSettlement>
 
     @Query(
         "SELECT cs FROM CreatorSettlement cs WHERE cs.memberId = :memberId " +
             "AND (cs.createdAt < :cursorCreatedAt OR (cs.createdAt = :cursorCreatedAt AND cs.id < :cursorId)) " +
-            "ORDER BY cs.createdAt DESC, cs.id DESC"
+            "ORDER BY cs.createdAt DESC, cs.id DESC LIMIT :size"
     )
     fun findByMemberIdWithCursor(
         memberId: Long,
         cursorCreatedAt: java.time.LocalDateTime,
         cursorId: Long,
-        pageable: Pageable,
+        size: Int
     ): List<CreatorSettlement>
 }
 

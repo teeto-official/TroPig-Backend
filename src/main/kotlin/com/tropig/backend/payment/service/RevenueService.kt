@@ -147,7 +147,7 @@ class RevenueService(
                 memberId = memberId,
                 cursorCreatedAt = request.cursorCreatedAt,
                 cursorId = request.cursorId,
-                pageable = pageable,
+                size = request.size,
             )
         } else {
             creatorSettlementRepository.findByMemberIdOrderByCreatedAtDesc(
