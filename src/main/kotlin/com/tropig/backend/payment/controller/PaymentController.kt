@@ -3,6 +3,7 @@ package com.tropig.backend.payment.controller
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
+import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
@@ -21,12 +22,16 @@ import com.tropig.backend.payment.model.response.PurchasedContentListResponse
 import com.tropig.backend.payment.service.PaymentContentService
 import com.tropig.backend.payment.service.PaymentService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 
 @ApiController
 @RequestMapping("/api/payment")
@@ -105,8 +110,24 @@ class PaymentController(
     fun getPurchasedContents(
         @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
-        @RequestBody request: PurchasedContentListRequest,
+        @Parameter(name = "cursorId", description = "커서 bookmarkId", `in` = ParameterIn.QUERY)
+        cursorId: Long? = null,
+        @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
+        cursorCreatedAt: LocalDateTime? = null,
+        @Parameter(
+            name = "sortMode", description = "정렬 순서", `in` = ParameterIn.QUERY,
+            schema = Schema(
+                allowableValues = ["LATEST", "OLDEST"],
+                defaultValue = "LATEST"
+            )
+        )
+        sortMode: SortMode = SortMode.LATEST,
+        @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
+        size: Int = 15,
     ): CursorSlice<PurchasedContentListResponse> {
+        val request =  PurchasedContentListRequest(
+            sortMode = sortMode, cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        )
         val memberId = authMember.memberId
         val contents = paymentContentService.getPurchasedContents(memberId, request)
 
