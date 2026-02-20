@@ -2,10 +2,7 @@ package com.tropig.backend.contents.model.request
 
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
-import com.tropig.backend.contents.enums.ContentType
-import com.tropig.backend.contents.enums.ContentsStatus
-import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.enums.TermType
+import com.tropig.backend.contents.enums.*
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import jakarta.validation.constraints.*
 
@@ -16,8 +13,7 @@ data class UpdateContentRequest(
     @field:NotNull(message = "타입은 필수입니다.")
     val type: ContentType,
 
-    @field:NotNull(message = "규칙은 필수입니다.")
-    val rule: Rule,
+    val rule: Rule?,
 
     @field:NotNull(message = "장르는 필수입니다.")
     val genre: Genre,
@@ -27,6 +23,8 @@ data class UpdateContentRequest(
 
     @field:NotNull(message = "기간 타입은 필수입니다.")
     val termType: TermType,
+
+    val publishingType: PublishingType? = null,
 
     val publishingInfo: List<PublishingInfo>? = null,
 
@@ -46,10 +44,9 @@ data class UpdateContentRequest(
     @field:Min(value = 0, message = "가격은 0 이상이어야 합니다.")
     val price: Double,
 
-    @field:NotNull(message = "레벨은 필수입니다.")
     @field:Min(value = 1, message = "레벨은 1 이상이어야 합니다.")
     @field:Max(value = 4, message = "레벨은 4 이하여야 합니다.")
-    val level: Int,
+    val level: Int? = null,
 
     @field:Size(max = 8, message = "태그는 최대 8개까지 선택할 수 있습니다.")
     val tagIds: List<Long>? = null,

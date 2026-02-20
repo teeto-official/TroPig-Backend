@@ -20,6 +20,7 @@ import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.result.TagResult
+import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
@@ -145,18 +146,22 @@ class ContentService(
             title = request.title,
             type = request.type,
             memberId = memberId,
-            rule = request.rule,
+            rule =
+                if (request.type == ContentType.SCENARIO) request.rule!!
+                else Rule.RESOURCE,
             genre = request.genre,
             playerCountType = request.playerCountType,
             termType = request.termType,
-            publishingInfo = request.publishingInfo?.toJson(),
+            publishingInfo =
+                if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
+                else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() },
             status = request.status,
             adult = request.adult,
             publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
             freeContent = request.freeContent,
             nonFreeContent = null, // S3 업로드 후 업데이트
             price = request.price,
-            level = request.level,
+            level = request.level ?: 0,
             searchText = "", // 임시값, 나중에 업데이트
         )
 
@@ -245,7 +250,7 @@ class ContentService(
         searchTextParts.add(savedContent.title)
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre.displayName)
-        searchTextParts.add(request.rule.displayName)
+        searchTextParts.add(request.rule?.displayName ?: "")
 
         val searchText = searchTextParts.joinToString(" ")
 
@@ -283,17 +288,19 @@ class ContentService(
         // 3. Content 필드 업데이트 (alias는 수정하지 않음)
         content.title = request.title
         content.type = request.type
-        content.rule = request.rule
+        content.rule = if (request.type == ContentType.SCENARIO) request.rule!! else Rule.RESOURCE
         content.genre = request.genre
         content.playerCountType = request.playerCountType
         content.termType = request.termType
-        content.publishingInfo = request.publishingInfo?.toJson()
+        content.publishingInfo =
+            if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
+            else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
         content.status = request.status
         content.adult = request.adult
         content.publishedAt = request.publishedAt
         content.freeContent = request.freeContent
         content.price = request.price
-        content.level = request.level
+        content.level = request.level ?: 0
 
         // 4. non_free_content 처리
         // 기존 path가 있고, 새로운 nonFreeContent가 제공되면 S3에 업데이트
@@ -367,7 +374,7 @@ class ContentService(
         searchTextParts.add(content.title)
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre.displayName)
-        searchTextParts.add(request.rule.displayName)
+        searchTextParts.add(request.rule?.displayName ?: "")
 
         content.searchText = searchTextParts.joinToString(" ")
 
