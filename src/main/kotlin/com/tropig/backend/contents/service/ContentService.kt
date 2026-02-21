@@ -27,6 +27,7 @@ import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
 import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
@@ -407,11 +408,11 @@ class ContentService(
     }
 
     @Transactional
-    fun updateContentStatus(contentId: Long, memberId: Long, status: ContentsStatus): Content {
-        val content = findById(contentId)
-            ?.takeIf { it.status != ContentsStatus.DELETED }
-            ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
-
+    @CacheEvict(
+        cacheNames = ["creatorContentsByMember"],
+        key = "#memberId + '-' + #content.type.name()"
+    )
+    fun updateContentStatus(content: Content, memberId: Long, status: ContentsStatus): Content {
         if (content.memberId != memberId) {
             throw ContentException(
                 "본인의 콘텐츠만 상태를 변경할 수 있습니다.",

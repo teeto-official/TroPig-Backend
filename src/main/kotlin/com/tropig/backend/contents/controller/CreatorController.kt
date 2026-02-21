@@ -144,8 +144,12 @@ class CreatorController(
             )
         }
 
+        val content = contentService.findById(contentId)
+            ?.takeIf { it.status != ContentsStatus.DELETED }
+            ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
+
         val updatedContent = contentService.updateContentStatus(
-            contentId = contentId,
+            content = content,
             memberId = authMember.memberId,
             status = request.status,
         )
