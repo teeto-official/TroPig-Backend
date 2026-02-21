@@ -28,8 +28,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/whitelist-ips.conf:/etc/nginx/whitelist-ips.conf:ro
       - ./nginx/whitelist-domains.conf:/etc/nginx/whitelist-domains.conf:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - web-root:/var/www/html
     depends_on:
       - app
