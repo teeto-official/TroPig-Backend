@@ -10,6 +10,8 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
+    networks:
+      - internal
 
   nginx:
     image: nginx:alpine
@@ -32,6 +34,8 @@ services:
     depends_on:
       - app
     restart: unless-stopped
+    networks:
+      - internal
 
   certbot:
     image: certbot/certbot
@@ -43,6 +47,8 @@ services:
     depends_on:
       - nginx
     command: certonly --webroot --webroot-path=/var/www/html --email teeto.team.official@gmail.com --agree-tos --no-eff-email -d dev.triquest.me
+    networks:
+      - internal
 
   redis:
     image: redis:7-alpine
@@ -50,6 +56,15 @@ services:
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
 
 volumes:
   redis-data:
