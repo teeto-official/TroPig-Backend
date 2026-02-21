@@ -10,8 +10,6 @@ import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.member.entity.Member
-import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ContentDetailResponse(

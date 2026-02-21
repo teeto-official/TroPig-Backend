@@ -5,5 +5,6 @@ enum class TermType {
     SHORT,          // 단편
     LONG,           // 장편
     EPIC,           // 초장편
-    NONE,           // 자료
+    RESOURCE,       // 자료
+    NONE,           // 없음
 }

@@ -46,7 +46,8 @@ enum class Rule(val displayName: String) {
     RED_BLACK("적과흑"),
     BLOOD_PASS("블러드 패스 RPG"),
     UNSUNG_DUET("언성 듀엣"),
-    RESOURCE("")
+    RESOURCE(""),
+    NONE("")
     ;
 
     companion object {

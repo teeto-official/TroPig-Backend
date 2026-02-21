@@ -14,6 +14,8 @@ import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.entity.RelatedContent
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
+import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
@@ -143,15 +145,15 @@ class ContentService(
         // 1. Content 엔티티 생성 (임시 ID로 alias 생성)
         val tempContent = Content(
             alias = "", // 임시값, 저장 후 업데이트
-            title = request.title,
+            title = request.title ?: "",
             type = request.type,
             memberId = memberId,
             rule =
                 if (request.type == ContentType.SCENARIO) request.rule!!
                 else Rule.RESOURCE,
-            genre = request.genre,
-            playerCountType = request.playerCountType,
-            termType = request.termType,
+            genre = request.genre ?: Genre.NONE,
+            playerCountType = request.playerCountType ?: PlayerCountType.NONE,
+            termType = request.termType ?: TermType.NONE,
             publishingInfo =
                 if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
                 else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() },
@@ -164,6 +166,7 @@ class ContentService(
             level = request.level ?: 0,
             searchText = "", // 임시값, 나중에 업데이트
         )
+        validatePublishing(tempContent)
 
         // 2. Content 저장하여 ID 획득
         val savedContent = contentRepository.save(tempContent)
@@ -249,7 +252,7 @@ class ContentService(
         searchTextParts.add(writerNickname)
         searchTextParts.add(savedContent.title)
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(request.genre.displayName)
+        searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
 
         val searchText = searchTextParts.joinToString(" ")
@@ -286,12 +289,12 @@ class ContentService(
         }
 
         // 3. Content 필드 업데이트 (alias는 수정하지 않음)
-        content.title = request.title
-        content.type = request.type
-        content.rule = if (request.type == ContentType.SCENARIO) request.rule!! else Rule.RESOURCE
-        content.genre = request.genre
-        content.playerCountType = request.playerCountType
-        content.termType = request.termType
+        request.title?.let { content.title = it }
+
+        content.rule = if (request.type == ContentType.SCENARIO) request.rule ?: Rule.NONE else Rule.RESOURCE
+        request.genre?.let { content.genre = it }
+        request.playerCountType?.let { content.playerCountType = it }
+        request.termType?.let { content.termType = it }
         content.publishingInfo =
             if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
             else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
@@ -301,6 +304,8 @@ class ContentService(
         content.freeContent = request.freeContent
         content.price = request.price
         content.level = request.level ?: 0
+
+        validatePublishing(content)
 
         // 4. non_free_content 처리
         // 기존 path가 있고, 새로운 nonFreeContent가 제공되면 S3에 업데이트
@@ -336,6 +341,35 @@ class ContentService(
             content.nonFreeContent
         }
         content.nonFreeContent = nonFreeContentS3Path
+
+        // 6. 연관 작품 저장
+        relatedContentRepository.deleteByContentId(contentId)
+        request.relatedContentIds?.let { relatedIds ->
+            if (relatedIds.isNotEmpty()) {
+                // 연관 작품 조회: relatedIds 기준, status가 PUBLISHED이고, type은 SCENARIO인 것만
+                val existingContents = contentRepository.findAllById(relatedIds)
+                    .filter {
+                        it.status == ContentsStatus.PUBLISHED &&
+                                it.type == ContentType.SCENARIO
+                    }
+                val existingContentIds = existingContents.map { it.id }.toSet()
+
+                val relatedContents = relatedIds
+                    .filter { it in existingContentIds }
+                    .mapIndexed { index, relatedContentId ->
+                        RelatedContent(
+                            parentContentId = content.id,
+                            contentId = relatedContentId,
+                            orderNo = index + 1,
+                            path = "/content/${content.alias}", // 기본 경로
+                        )
+                    }
+
+                if (relatedContents.isNotEmpty()) {
+                    relatedContentRepository.saveAll(relatedContents)
+                }
+            }
+        }
 
         // 5. tag 정보 삭제 후 신규 저장
         contentTagRepository.deleteByContentId(contentId)
@@ -373,7 +407,7 @@ class ContentService(
         searchTextParts.add(writerNickname)
         searchTextParts.add(content.title)
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(request.genre.displayName)
+        searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
 
         content.searchText = searchTextParts.joinToString(" ")
@@ -506,5 +540,15 @@ class ContentService(
             "구매가 필요한 콘텐츠입니다.",
             MessageCode.PURCHASE_REQUIRED
         )
+    }
+
+    fun validatePublishing(content: Content) {
+        if (content.status == ContentsStatus.PUBLISHED) {
+            check(content.title.isEmpty())
+            check(content.rule != Rule.NONE)
+            check(content.genre != Genre.NONE)
+            check(content.playerCountType != PlayerCountType.NONE)
+            check(content.termType != TermType.NONE)
+        }
     }
 }
