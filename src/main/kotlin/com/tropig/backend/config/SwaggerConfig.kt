@@ -27,7 +27,7 @@ class SwaggerConfig(
         val serverUrl = if (activeProfiles.contains("local")) {
             "http://localhost:8080"
         } else {
-            "https://dev.triquest.me"
+            "https://api.dev.triquest.me"
         }
 
         return OpenAPI()
