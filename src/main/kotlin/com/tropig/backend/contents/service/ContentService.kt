@@ -343,7 +343,7 @@ class ContentService(
         content.nonFreeContent = nonFreeContentS3Path
 
         // 6. 연관 작품 저장
-        relatedContentRepository.deleteByContentId(contentId)
+        relatedContentRepository.deleteByParentContentId(contentId)
         request.relatedContentIds?.let { relatedIds ->
             if (relatedIds.isNotEmpty()) {
                 // 연관 작품 조회: relatedIds 기준, status가 PUBLISHED이고, type은 SCENARIO인 것만
@@ -361,7 +361,6 @@ class ContentService(
                             parentContentId = content.id,
                             contentId = relatedContentId,
                             orderNo = index + 1,
-                            path = "/content/${content.alias}", // 기본 경로
                         )
                     }
 
