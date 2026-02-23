@@ -193,7 +193,7 @@ class CreatorController(
 
         val contentIds = contents.map { it.id }
         val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-            .associateBy({ it.contentId }, { it.path })
+            .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
         val tags = tagService.findTagNamesByContentIds(contentIds)
 
         return contents.map {

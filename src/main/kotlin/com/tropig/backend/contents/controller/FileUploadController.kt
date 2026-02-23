@@ -108,7 +108,7 @@ class FileUploadController(
         return url.map {
             UploadFileResponse(
                 it.orderNo,
-                it.path,
+                s3Service.toUrl(it.path) ?: it.path,
                 it.fileType,
                 it.publishingType
             )

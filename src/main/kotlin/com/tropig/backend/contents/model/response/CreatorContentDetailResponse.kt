@@ -13,6 +13,7 @@ import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import java.time.LocalDateTime
 
 data class CreatorContentDetailResponse(
+    val id: Long,
     val type: ContentType,
     val publishedAt: LocalDateTime?,
     val title: String,
@@ -33,6 +34,7 @@ fun Content.toCreatorContentDetailResponse(
     nonFreeContent: String?,
 ): CreatorContentDetailResponse {
     return CreatorContentDetailResponse(
+        id = id,
         type = type,
         publishedAt = publishedAt,
         title = title,
