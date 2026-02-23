@@ -45,6 +45,8 @@ enum class Genre(val displayName: String) {
     HERO_VILLAIN("히어로빌런"),
     HEALING("힐링"),
     SF("SF"),
+    RESOURCE(""),
+    NONE(""),
     ;
 
     companion object {

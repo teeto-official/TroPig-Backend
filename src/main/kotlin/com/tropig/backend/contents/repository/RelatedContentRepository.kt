@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface RelatedContentRepository: JpaRepository<RelatedContent, Long> {
+    fun deleteByContentId(contentId: Long)
 }

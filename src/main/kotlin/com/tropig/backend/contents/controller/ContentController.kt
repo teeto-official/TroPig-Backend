@@ -180,12 +180,10 @@ class ContentController(
         val tags = tagService.findAllTags().map {
             SearchTagResponse.TagResponse(it.id, it.name, it.type)
         }
-        val genres = Genre.entries.map {
-            SearchTagResponse.GenreResponse(it, it.displayName)
-        }
-        val rules = Rule.entries.map {
-            SearchTagResponse.RuleResponse(it, it.displayName)
-        }
+        val genres = Genre.entries.filter { it.displayName.isNotEmpty() }
+            .map { SearchTagResponse.GenreResponse(it, it.displayName) }
+        val rules = Rule.entries.filter { it.displayName.isNotEmpty() }
+            .map { SearchTagResponse.RuleResponse(it, it.displayName) }
 
         return SearchTagResponse(tags, genres, rules)
     }
