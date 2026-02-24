@@ -138,6 +138,10 @@ class ContentService(
      * @return 생성된 Content
      */
     @Transactional
+    @CacheEvict(
+        cacheNames = ["creatorContentsByMember"],
+        key = "#memberId + '-' + #request.type.name()"
+    )
     fun createContent(
         request: CreateContentRequest,
         memberId: Long,
@@ -274,6 +278,10 @@ class ContentService(
      * @return 수정된 Content
      */
     @Transactional
+    @CacheEvict(
+        cacheNames = ["creatorContentsByMember"],
+        key = "#memberId + '-' + #request.type.name()"
+    )
     fun updateContent(
         contentId: Long,
         request: UpdateContentRequest,
@@ -465,12 +473,11 @@ class ContentService(
         return save(content)
     }
 
-    fun deleteContent(contentId: Long, memberId: Long): Content {
-        val content = findById(contentId) ?: throw NotFoundException(
-            "콘텐츠를 찾을 수 없습니다.",
-            MessageCode.NOT_FOUND_CONTENT
-        )
-
+    @CacheEvict(
+        cacheNames = ["creatorContentsByMember"],
+        key = "#memberId + '-' + #content.type.name()"
+    )
+    fun deleteContent(content: Content, memberId: Long): Content {
         if (content.memberId != memberId) {
             throw ContentException(
                 "본인의 콘텐츠만 삭제할 수 있습니다.",

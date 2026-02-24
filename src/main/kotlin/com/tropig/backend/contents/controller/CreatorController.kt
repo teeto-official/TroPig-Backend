@@ -11,11 +11,9 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
-import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CreateContentRequest
-import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.request.SimpleSearchContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentStatusRequest
@@ -27,7 +25,6 @@ import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.service.RevenueService
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @ApiController
@@ -120,7 +117,11 @@ class CreatorController(
 
         // 2. content.member_id가 authMember.member_id와 같은지 확인 (ContentService에서 처리)
         // 3. status만 DELETED로 변경 (ContentService에서 처리)
-        contentService.deleteContent(contentId, authMember.memberId)
+        val content = contentService.findById(contentId) ?: throw NotFoundException(
+            "콘텐츠를 찾을 수 없습니다.",
+            MessageCode.NOT_FOUND_CONTENT
+        )
+        contentService.deleteContent(content, authMember.memberId)
     }
 
     @RequireAuth
