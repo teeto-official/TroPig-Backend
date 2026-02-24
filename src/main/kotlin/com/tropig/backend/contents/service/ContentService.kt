@@ -545,7 +545,7 @@ class ContentService(
 
     fun validatePublishing(content: Content) {
         if (content.status == ContentsStatus.PUBLISHED) {
-            check(content.title.isEmpty())
+            check(content.title.isNotEmpty())
             check(content.rule != Rule.NONE)
             check(content.genre != Genre.NONE)
             check(content.playerCountType != PlayerCountType.NONE)
