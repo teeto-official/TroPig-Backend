@@ -18,7 +18,7 @@ data class MemberResponse(
     val favoriteGenres: List<Genre>,
     val favoriteRules: List<Rule>,
     val bio: String?,
-    val marketing: Boolean,
+    val isMarketing: Boolean,
     val isAuth: Boolean,
     val authDateAt: LocalDateTime?,
     val creator: Boolean,
