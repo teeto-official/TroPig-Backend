@@ -50,10 +50,8 @@ enum class Genre(val displayName: String) {
     ;
 
     companion object {
-        fun fromList(genres: String?): List<Genre> {
-            return genres?.split(",")
-                ?.map { Genre.valueOf(it) }
-                ?: emptyList()
-        }
+        fun fromList(genres: String?): List<Genre> = genres?.split(",")
+            ?.map { Genre.valueOf(it) }
+            ?: emptyList()
     }
 }

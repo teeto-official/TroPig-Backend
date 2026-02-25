@@ -16,15 +16,13 @@ import javax.crypto.spec.SecretKeySpec
  * 민감한 데이터(계좌번호 등)를 암호화/복호화
  */
 @Component
-class EncryptionService(
-    @Value("\${encryption.secret-key}") private val secretKeyString: String
-) {
+class EncryptionService(@Value("\${encryption.secret-key}") private val secretKeyString: String) {
     private val logger = LoggerFactory.getLogger(EncryptionService::class.java)
 
     private val algorithm = "AES/GCM/NoPadding"
     private val gcmTagLength = 128
     private val ivLength = 12
-    private val requiredKeyLength = 32  // 32 bytes for AES-256
+    private val requiredKeyLength = 32 // 32 bytes for AES-256
 
     private val secretKey: SecretKey by lazy {
         val keyBytes = try {
@@ -32,15 +30,15 @@ class EncryptionService(
         } catch (e: IllegalArgumentException) {
             throw IllegalStateException(
                 "Invalid encryption key format. Key must be Base64 encoded. " +
-                "Generate with: openssl rand -base64 32",
-                e
+                    "Generate with: openssl rand -base64 32",
+                e,
             )
         }
 
         require(keyBytes.size == requiredKeyLength) {
             "Encryption key must be exactly $requiredKeyLength bytes for AES-256. " +
-            "Current key size: ${keyBytes.size} bytes. " +
-            "Generate correct key with: openssl rand -base64 32"
+                "Current key size: ${keyBytes.size} bytes. " +
+                "Generate correct key with: openssl rand -base64 32"
         }
 
         SecretKeySpec(keyBytes, "AES")
@@ -66,7 +64,10 @@ class EncryptionService(
             logger.info("Encryption service validation completed")
         } catch (e: Exception) {
             logger.error("Failed to initialize encryption service", e)
-            throw IllegalStateException("Encryption service initialization failed. Check encryption.secret-key configuration.", e)
+            throw IllegalStateException(
+                "Encryption service initialization failed. Check encryption.secret-key configuration.",
+                e,
+            )
         }
     }
 

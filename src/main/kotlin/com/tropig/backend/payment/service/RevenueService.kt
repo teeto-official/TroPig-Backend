@@ -3,26 +3,26 @@ package com.tropig.backend.payment.service
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.member.enums.Role
+import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
+import com.tropig.backend.payment.enums.WithdrawalStatus
+import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.model.response.WithdrawalItemResponse
-import com.tropig.backend.payment.enums.WithdrawalStatus
-import com.tropig.backend.payment.model.request.RevenueListRequest
-import com.tropig.backend.common.model.CursorSlice
-import org.springframework.data.domain.PageRequest
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
-import com.tropig.backend.member.repository.MemberRepository
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 
 @Service
@@ -117,24 +117,21 @@ class RevenueService(
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
     @Cacheable(cacheNames = ["creatorContentsByMember"], key = "#memberId + '-' + #type.name()")
-    fun getCreatorContents(memberId: Long, type: ContentType): List<Content> {
-        return contentRepository.findByMemberIdAndTypeAndStatusIn(
+    fun getCreatorContents(memberId: Long, type: ContentType): List<Content> =
+        contentRepository.findByMemberIdAndTypeAndStatusIn(
             memberId = memberId,
             type = type,
             status = ContentsStatus.purchasedStatuses,
         )
-    }
 
     /**
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
     @Cacheable(cacheNames = ["creatorAllContentsByMember"], key = "#memberId")
-    fun getAllCreatorContents(memberId: Long): List<Content> {
-        return contentRepository.findByMemberIdAndStatusIn(
-            memberId = memberId,
-            status = ContentsStatus.purchasedStatuses,
-        )
-    }
+    fun getAllCreatorContents(memberId: Long): List<Content> = contentRepository.findByMemberIdAndStatusIn(
+        memberId = memberId,
+        status = ContentsStatus.purchasedStatuses,
+    )
 
     /**
      * 전체 수익 조회
@@ -211,4 +208,3 @@ class RevenueService(
         )
     }
 }
-

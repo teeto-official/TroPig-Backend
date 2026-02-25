@@ -18,10 +18,7 @@ data class CountSearchContentRequest(
     @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
     val tags: List<String>? = null,
 ) {
-    fun toCountDto(
-        isAdult: Boolean,
-        tagIds: List<Long>?,
-    ) = SearchContentRequestDto(
+    fun toCountDto(isAdult: Boolean, tagIds: List<Long>?) = SearchContentRequestDto(
         searchText = this.searchText,
         level = this.level,
         rules = this.rules,

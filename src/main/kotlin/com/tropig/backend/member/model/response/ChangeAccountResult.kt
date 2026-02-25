@@ -9,5 +9,5 @@ data class ChangeAccountResult(
     val updated: Boolean,
     val message: String,
     val lockedUntil: LocalDateTime,
-    val newAccountInfo: MaskedAccountInfo
+    val newAccountInfo: MaskedAccountInfo,
 )

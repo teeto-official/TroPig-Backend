@@ -25,5 +25,5 @@ data class VerificationResult(
     val verifiedAt: LocalDateTime,
 
     /** 사용자 메시지 */
-    val message: String
+    val message: String,
 )

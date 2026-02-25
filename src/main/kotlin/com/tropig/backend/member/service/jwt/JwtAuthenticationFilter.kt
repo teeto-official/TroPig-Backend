@@ -2,13 +2,12 @@ package com.tropig.backend.member.service.jwt
 
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.member.repository.MemberRepository
-import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -23,7 +22,7 @@ class JwtAuthenticationFilter(
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val token = request.getHeader("Authorization")
             ?.removePrefix("Bearer ")
@@ -41,7 +40,7 @@ class JwtAuthenticationFilter(
                         email = user.email,
                         nickname = user.nickname,
                         adult = user.adult,
-                        role = user.role
+                        role = user.role,
                     )
 
                     val auth = UsernamePasswordAuthenticationToken(authUser, null, listOf())

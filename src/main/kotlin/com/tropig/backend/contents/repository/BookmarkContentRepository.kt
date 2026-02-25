@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, BookmarkContentCustomRepository {
+interface BookmarkContentRepository :
+    JpaRepository<BookmarkContent, Long>,
+    BookmarkContentCustomRepository {
 
     @Query(
         nativeQuery = true,
@@ -30,14 +32,14 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
             AND
                 bc.deleted = false
             GROUP BY bc.content_id
-        """
+        """,
     )
     fun getBookmarkInfoByContentIdsAndMemberId(contentIds: List<Long>, memberId: Long): List<BookmarkContentProjection>
 
     @Query(
         nativeQuery = true,
         value =
-            """
+        """
             SELECT
                 bc.content_id,
                 count(1) as bookmarkCount,
@@ -49,7 +51,7 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
             AND
                 bc.deleted = false
             GROUP BY bc.content_id
-        """
+        """,
     )
     fun getBookmarkInfoByContentIds(contentIds: List<Long>): List<BookmarkContentProjection>
 
@@ -61,7 +63,7 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
     WHERE b.memberId = :memberId
       AND b.contentId = :contentId
       AND b.deleted = false
-    """
+    """,
     )
     fun deleteBookmark(memberId: Long, contentId: Long): Int
 
@@ -75,7 +77,7 @@ interface BookmarkContentRepository: JpaRepository<BookmarkContent, Long>, Bookm
             deleted = false,
             updated_at = now()
     """,
-        nativeQuery = true
+        nativeQuery = true,
     )
     fun upsertBookmark(memberId: Long, contentId: Long): Int
 

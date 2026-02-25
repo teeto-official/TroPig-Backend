@@ -6,5 +6,5 @@ import java.time.LocalDateTime
 data class ErrorResponse(
     val message: String,
     val code: MessageCode? = null,
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
 )

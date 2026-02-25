@@ -20,30 +20,25 @@ enum class BankCode(val koreanName: String, val portOneCode: String) {
     CITY("한국씨티은행", "CITY"),
     KAKAO("카카오뱅크", "KAKAO"),
     KBANK("케이뱅크", "KBANK"),
-    TOSS("토스뱅크", "TOSS");
+    TOSS("토스뱅크", "TOSS"),
+    ;
 
     companion object {
         /**
          * 한글 은행명으로 BankCode 찾기
          */
-        fun fromKoreanName(koreanName: String): BankCode? {
-            return values().find { it.koreanName == koreanName }
-        }
+        fun fromKoreanName(koreanName: String): BankCode? = values().find { it.koreanName == koreanName }
 
         /**
          * 한글 은행명을 PortOne 은행 코드로 변환
          * @throws IllegalArgumentException 지원하지 않는 은행인 경우
          */
-        fun toPortOneCode(koreanName: String): String {
-            return fromKoreanName(koreanName)?.portOneCode
-                ?: throw IllegalArgumentException("Unsupported bank: $koreanName")
-        }
+        fun toPortOneCode(koreanName: String): String = fromKoreanName(koreanName)?.portOneCode
+            ?: throw IllegalArgumentException("Unsupported bank: $koreanName")
 
         /**
          * 지원되는 모든 한글 은행명 목록
          */
-        fun getSupportedBankNames(): List<String> {
-            return values().map { it.koreanName }
-        }
+        fun getSupportedBankNames(): List<String> = values().map { it.koreanName }
     }
 }

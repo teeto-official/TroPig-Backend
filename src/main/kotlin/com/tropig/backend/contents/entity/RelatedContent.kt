@@ -7,11 +7,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "related_content")
-data class RelatedContent(
-    val parentContentId: Long,
-    val contentId: Long,
-    val orderNo: Int,
-) {
+data class RelatedContent(val parentContentId: Long, val contentId: Long, val orderNo: Int) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L

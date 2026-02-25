@@ -47,14 +47,12 @@ enum class Rule(val displayName: String) {
     BLOOD_PASS("블러드 패스 RPG"),
     UNSUNG_DUET("언성 듀엣"),
     RESOURCE(""),
-    NONE("")
+    NONE(""),
     ;
 
     companion object {
-        fun fromList(rules: String?): List<Rule> {
-            return rules?.split(",")
-                ?.map { Rule.valueOf(it) }
-                ?: emptyList()
-        }
+        fun fromList(rules: String?): List<Rule> = rules?.split(",")
+            ?.map { Rule.valueOf(it) }
+            ?: emptyList()
     }
 }

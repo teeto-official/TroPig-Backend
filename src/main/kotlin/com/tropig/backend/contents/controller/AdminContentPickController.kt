@@ -23,7 +23,6 @@ class AdminContentPickController(
         const val MAX_VALUE = Int.MAX_VALUE
     }
 
-
     @PostMapping("/pick")
     fun setUpPickContent(
         @RequestParam(name = "type", required = true)
@@ -46,7 +45,7 @@ class AdminContentPickController(
         return pickContentService.updatePickContents(sortedContents).map {
             AdminPickContentResponse(
                 contentId = it.contentId,
-                orderNo = it.orderNo
+                orderNo = it.orderNo,
             )
         }
     }

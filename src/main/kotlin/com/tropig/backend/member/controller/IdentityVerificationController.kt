@@ -17,9 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -29,41 +27,39 @@ import org.springframework.web.bind.annotation.*
 @ApiController
 @RequestMapping("/api/member/identity-verification")
 @Tag(name = "Identity Verification", description = "본인인증 API")
-class IdentityVerificationController(
-    private val identityVerificationService: IdentityVerificationService
-) {
+class IdentityVerificationController(private val identityVerificationService: IdentityVerificationService) {
 
     @RequireAuth
     @PostMapping("/request")
     @Operation(
         summary = "본인인증 요청",
         description = "휴대폰 본인인증을 시작합니다. OTP가 SMS로 전송됩니다.",
-        security = [SecurityRequirement(name = "bearerAuth")]
+        security = [SecurityRequirement(name = "bearerAuth")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
                 description = "인증 요청 성공 (OTP 전송됨)",
-                content = [Content(schema = Schema(implementation = VerificationRequestResult::class))]
+                content = [Content(schema = Schema(implementation = VerificationRequestResult::class))],
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "잘못된 요청 (유효하지 않은 전화번호, 주민등록번호 등)"
+                description = "잘못된 요청 (유효하지 않은 전화번호, 주민등록번호 등)",
             ),
             ApiResponse(
                 responseCode = "409",
-                description = "이미 본인인증이 완료된 사용자"
+                description = "이미 본인인증이 완료된 사용자",
             ),
             ApiResponse(
                 responseCode = "503",
-                description = "외부 서비스 오류 (PortOne API)"
-            )
-        ]
+                description = "외부 서비스 오류 (PortOne API)",
+            ),
+        ],
     )
     fun requestVerification(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: VerificationRequestDto
+        @Valid @RequestBody request: VerificationRequestDto,
     ): ResponseEntity<VerificationRequestResult> {
         val result = identityVerificationService.requestVerification(authMember.memberId, request)
         return ResponseEntity.ok(result)
@@ -74,36 +70,36 @@ class IdentityVerificationController(
     @Operation(
         summary = "본인인증 확인",
         description = "SMS로 받은 OTP 코드를 제출하여 본인인증을 완료합니다.",
-        security = [SecurityRequirement(name = "bearerAuth")]
+        security = [SecurityRequirement(name = "bearerAuth")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
                 description = "본인인증 완료",
-                content = [Content(schema = Schema(implementation = VerificationResult::class))]
+                content = [Content(schema = Schema(implementation = VerificationResult::class))],
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "잘못된 OTP 또는 만료된 세션"
+                description = "잘못된 OTP 또는 만료된 세션",
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "인증 세션을 찾을 수 없음"
+                description = "인증 세션을 찾을 수 없음",
             ),
             ApiResponse(
                 responseCode = "409",
-                description = "중복된 CI/DI (이미 다른 계정에서 인증됨)"
+                description = "중복된 CI/DI (이미 다른 계정에서 인증됨)",
             ),
             ApiResponse(
                 responseCode = "429",
-                description = "OTP 시도 횟수 초과"
-            )
-        ]
+                description = "OTP 시도 횟수 초과",
+            ),
+        ],
     )
     fun confirmVerification(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: VerificationConfirmDto
+        @Valid @RequestBody request: VerificationConfirmDto,
     ): ResponseEntity<VerificationResult> {
         val result = identityVerificationService.confirmVerification(authMember.memberId, request)
         return ResponseEntity.ok(result)
@@ -114,32 +110,32 @@ class IdentityVerificationController(
     @Operation(
         summary = "OTP 재전송",
         description = "본인인증 OTP를 재전송합니다. (최대 3회)",
-        security = [SecurityRequirement(name = "bearerAuth")]
+        security = [SecurityRequirement(name = "bearerAuth")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
                 description = "OTP 재전송 성공",
-                content = [Content(schema = Schema(implementation = VerificationResendResult::class))]
+                content = [Content(schema = Schema(implementation = VerificationResendResult::class))],
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "잘못된 요청"
+                description = "잘못된 요청",
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "인증 세션을 찾을 수 없음"
+                description = "인증 세션을 찾을 수 없음",
             ),
             ApiResponse(
                 responseCode = "429",
-                description = "재전송 횟수 초과 (최대 3회)"
-            )
-        ]
+                description = "재전송 횟수 초과 (최대 3회)",
+            ),
+        ],
     )
     fun resendOtp(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: VerificationResendDto
+        @Valid @RequestBody request: VerificationResendDto,
     ): ResponseEntity<VerificationResendResult> {
         val result = identityVerificationService.resendOtp(authMember.memberId, request)
         return ResponseEntity.ok(result)
@@ -150,24 +146,22 @@ class IdentityVerificationController(
     @Operation(
         summary = "본인인증 상태 조회",
         description = "현재 사용자의 본인인증 상태를 조회합니다.",
-        security = [SecurityRequirement(name = "bearerAuth")]
+        security = [SecurityRequirement(name = "bearerAuth")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
                 description = "조회 성공",
-                content = [Content(schema = Schema(implementation = VerificationStatusResponse::class))]
+                content = [Content(schema = Schema(implementation = VerificationStatusResponse::class))],
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "회원을 찾을 수 없음"
-            )
-        ]
+                description = "회원을 찾을 수 없음",
+            ),
+        ],
     )
-    fun getVerificationStatus(
-        @LoginMember authMember: AuthMember
-    ): ResponseEntity<VerificationStatusResponse> {
+    fun getVerificationStatus(@LoginMember authMember: AuthMember): ResponseEntity<VerificationStatusResponse> {
         val result = identityVerificationService.getVerificationStatus(authMember.memberId)
         return ResponseEntity.ok(result)
     }

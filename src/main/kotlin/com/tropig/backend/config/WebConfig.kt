@@ -22,9 +22,7 @@ class WebConfig(
         registry.addInterceptor(requireAuthInterceptor)
             .addPathPatterns("/**")
     }
-    
+
     @Bean
-    fun restTemplate(): RestTemplate {
-        return RestTemplate()
-    }
+    fun restTemplate(): RestTemplate = RestTemplate()
 }

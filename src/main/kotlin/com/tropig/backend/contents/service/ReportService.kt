@@ -10,5 +10,4 @@ class ReportService(
     private val memberRepository: MemberRepository,
     private val contentRepository: ContentRepository,
     private val reportContentRepository: ReportContentRepository,
-) {
-}
+)

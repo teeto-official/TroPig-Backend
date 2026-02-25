@@ -7,5 +7,5 @@ import jakarta.validation.constraints.NotBlank
 data class IdentityVerificationCompleteDto(
     @field:NotBlank(message = "identityVerificationId는 필수입니다.")
     @Schema(description = "PortOne SDK에서 발급된 본인인증 ID", example = "id-12345678-abcd-efgh")
-    val identityVerificationId: String
+    val identityVerificationId: String,
 )

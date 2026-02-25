@@ -9,23 +9,16 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
-class TagService(
-    private val contentTagRepository: ContentTagRepository,
-    private val tagRepository: TagRepository,
-) {
-    fun findTagNamesByContentIds(contentIds: List<Long>): Map<Long, List<TagDto>> {
-        return contentTagRepository.findByContentIdIn(contentIds)
+class TagService(private val contentTagRepository: ContentTagRepository, private val tagRepository: TagRepository) {
+    fun findTagNamesByContentIds(contentIds: List<Long>): Map<Long, List<TagDto>> =
+        contentTagRepository.findByContentIdIn(contentIds)
             .map { ContentTagResult(it.tagId, it.contentId, it.type, it.name) }
             .groupBy({ it.contentId }, { TagDto(it.tagId, it.type, it.name) })
-    }
 
     @Cacheable(cacheNames = ["tagList"])
-    fun findAllTags(): List<Tag> =
-        tagRepository.findAll()
+    fun findAllTags(): List<Tag> = tagRepository.findAll()
 
     @Cacheable(cacheNames = ["contentTags"], key = "#contentId")
-    fun findByContentId(contentId: Long): List<TagDto> {
-        return contentTagRepository.findByContentId(contentId)
-            .map { TagDto(it.tagId, it.type, it.name) }
-    }
+    fun findByContentId(contentId: Long): List<TagDto> = contentTagRepository.findByContentId(contentId)
+        .map { TagDto(it.tagId, it.type, it.name) }
 }

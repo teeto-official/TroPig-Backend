@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.context.annotation.Profile
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import java.time.LocalDateTime
@@ -31,18 +30,16 @@ import java.util.UUID
 @Tag(name = "Identity Verification (Mock)", description = "로컬 개발 전용 본인인증 Mock API")
 class MockIdentityVerificationController(
     private val memberRepository: MemberRepository,
-    private val memberAuthInfoRepository: MemberAuthInfoRepository
+    private val memberAuthInfoRepository: MemberAuthInfoRepository,
 ) {
 
     @RequireAuth
     @PostMapping("/mock-complete")
     @Operation(
         summary = "[로컬 전용] 본인인증 Mock 완료",
-        description = "KCP 테스트 환경에서 PASS 앱 없이 본인인증을 시뮬레이션합니다. local 프로파일에서만 동작합니다."
+        description = "KCP 테스트 환경에서 PASS 앱 없이 본인인증을 시뮬레이션합니다. local 프로파일에서만 동작합니다.",
     )
-    fun mockComplete(
-        @LoginMember authMember: AuthMember
-    ): ResponseEntity<VerificationResult> {
+    fun mockComplete(@LoginMember authMember: AuthMember): ResponseEntity<VerificationResult> {
         val memberId = authMember.memberId
 
         if (memberAuthInfoRepository.existsByMemberId(memberId)) {
@@ -59,7 +56,7 @@ class MockIdentityVerificationController(
             phoneNumber = "01012345678",
             ci = "MOCK_CI_${UUID.randomUUID()}",
             di = "MOCK_DI_${UUID.randomUUID()}",
-            verifiedAt = LocalDateTime.now()
+            verifiedAt = LocalDateTime.now(),
         )
         memberAuthInfoRepository.save(authInfo)
 
@@ -76,8 +73,8 @@ class MockIdentityVerificationController(
                 birthDate = authInfo.birthDate,
                 phoneNumber = MemberAuthInfo.maskPhoneNumber(authInfo.phoneNumber),
                 verifiedAt = authInfo.verifiedAt,
-                message = "[테스트] 본인인증이 완료되었습니다."
-            )
+                message = "[테스트] 본인인증이 완료되었습니다.",
+            ),
         )
     }
 }

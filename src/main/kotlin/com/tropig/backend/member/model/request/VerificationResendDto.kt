@@ -7,5 +7,5 @@ import jakarta.validation.constraints.NotBlank
  */
 data class VerificationResendDto(
     @field:NotBlank(message = "인증 ID는 필수입니다.")
-    val verificationId: String
+    val verificationId: String,
 )

@@ -20,7 +20,7 @@ class PortOneIdentityVerificationClient(
     private val objectMapper: ObjectMapper,
     @Value("\${portone.key.secret-v2}") private val apiSecret: String,
     @Value("\${portone.identity-verification.channel-key}") private val channelKey: String,
-    @Value("\${portone.base-url:https://api.portone.io}") private val baseUrl: String
+    @Value("\${portone.base-url:https://api.portone.io}") private val baseUrl: String,
 ) {
     private val logger = LoggerFactory.getLogger(PortOneIdentityVerificationClient::class.java)
 
@@ -38,31 +38,39 @@ class PortOneIdentityVerificationClient(
                 "name" to request.customer.name,
                 "phoneNumber" to request.customer.phoneNumber,
                 "ipAddress" to request.customer.ipAddress,
-                "identityNumber" to request.customer.identityNumber
+                "identityNumber" to request.customer.identityNumber,
             ),
             "operator" to request.operator,
             "method" to request.method,
-            "customData" to request.customData
+            "customData" to request.customData,
         )
 
         logger.info("Sending identity verification request: identityVerificationId=${request.identityVerificationId}")
         logger.debug("PortOne API URL: $url")
         logger.debug("Channel Key: ${channelKey.take(10)}...")
-        logger.debug("API Secret configured: ${if (apiSecret.isNotBlank()) "Yes (${apiSecret.take(10)}...)" else "NO - MISSING!"}")
+        logger.debug(
+            "API Secret configured: ${if (apiSecret.isNotBlank()) {
+                "Yes (${apiSecret.take(
+                    10,
+                )}...)"
+            } else {
+                "NO - MISSING!"
+            }}",
+        )
 
         return try {
             val response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 HttpEntity(body, headers),
-                String::class.java
+                String::class.java,
             )
 
             val jsonNode = objectMapper.readTree(response.body)
             SendVerificationResponse(
                 id = jsonNode.get("id").asText(),
                 status = jsonNode.get("status").asText(),
-                requestedAt = LocalDateTime.parse(jsonNode.get("requestedAt").asText())
+                requestedAt = LocalDateTime.parse(jsonNode.get("requestedAt").asText()),
             )
         } catch (e: HttpClientErrorException) {
             logger.error("PortOne API client error: ${e.statusCode} - ${e.responseBodyAsString}")
@@ -93,7 +101,7 @@ class PortOneIdentityVerificationClient(
                 url,
                 HttpMethod.POST,
                 HttpEntity(body, headers),
-                String::class.java
+                String::class.java,
             )
 
             val jsonNode = objectMapper.readTree(response.body)
@@ -110,9 +118,9 @@ class PortOneIdentityVerificationClient(
                     isForeigner = verifiedCustomer.get("isForeigner").asBoolean(),
                     ci = verifiedCustomer.get("ci").asText(),
                     di = verifiedCustomer.get("di").asText(),
-                    operator = verifiedCustomer.get("operator").asText()
+                    operator = verifiedCustomer.get("operator").asText(),
                 ),
-                verifiedAt = LocalDateTime.parse(jsonNode.get("verifiedAt").asText())
+                verifiedAt = LocalDateTime.parse(jsonNode.get("verifiedAt").asText()),
             )
         } catch (e: HttpClientErrorException) {
             val errorMessage = e.responseBodyAsString
@@ -129,7 +137,7 @@ class PortOneIdentityVerificationClient(
             throw PortOneIdentityVerificationException(
                 message = "Failed to confirm verification: $errorCode",
                 cause = e,
-                errorCode = errorCode
+                errorCode = errorCode,
             )
         } catch (e: HttpServerErrorException) {
             logger.error("PortOne API server error: ${e.statusCode} - ${e.responseBodyAsString}")
@@ -155,13 +163,13 @@ class PortOneIdentityVerificationClient(
                 url,
                 HttpMethod.POST,
                 HttpEntity<Any>(headers),
-                String::class.java
+                String::class.java,
             )
 
             val jsonNode = objectMapper.readTree(response.body)
             ResendVerificationResponse(
                 id = jsonNode.get("id").asText(),
-                status = jsonNode.get("status").asText()
+                status = jsonNode.get("status").asText(),
             )
         } catch (e: HttpClientErrorException) {
             logger.error("PortOne API client error: ${e.statusCode} - ${e.responseBodyAsString}")
@@ -194,24 +202,15 @@ data class SendVerificationRequest(
     val customer: CustomerInfo,
     val operator: String,
     val method: String,
-    val customData: String? = null
+    val customData: String? = null,
 )
 
-data class CustomerInfo(
-    val name: String,
-    val phoneNumber: String,
-    val ipAddress: String,
-    val identityNumber: String
-)
+data class CustomerInfo(val name: String, val phoneNumber: String, val ipAddress: String, val identityNumber: String)
 
 /**
  * 본인인증 요청 응답
  */
-data class SendVerificationResponse(
-    val id: String,
-    val status: String,
-    val requestedAt: LocalDateTime
-)
+data class SendVerificationResponse(val id: String, val status: String, val requestedAt: LocalDateTime)
 
 /**
  * 본인인증 확인 응답
@@ -220,7 +219,7 @@ data class ConfirmVerificationResponse(
     val id: String,
     val status: String,
     val verifiedCustomer: VerifiedCustomer,
-    val verifiedAt: LocalDateTime
+    val verifiedAt: LocalDateTime,
 )
 
 data class VerifiedCustomer(
@@ -231,22 +230,16 @@ data class VerifiedCustomer(
     val isForeigner: Boolean,
     val ci: String,
     val di: String,
-    val operator: String
+    val operator: String,
 )
 
 /**
  * OTP 재전송 응답
  */
-data class ResendVerificationResponse(
-    val id: String,
-    val status: String
-)
+data class ResendVerificationResponse(val id: String, val status: String)
 
 /**
  * PortOne Identity Verification API 예외
  */
-class PortOneIdentityVerificationException(
-    message: String,
-    cause: Throwable? = null,
-    val errorCode: String? = null
-) : RuntimeException(message, cause)
+class PortOneIdentityVerificationException(message: String, cause: Throwable? = null, val errorCode: String? = null) :
+    RuntimeException(message, cause)

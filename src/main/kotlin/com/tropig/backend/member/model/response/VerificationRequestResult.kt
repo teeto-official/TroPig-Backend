@@ -17,5 +17,5 @@ data class VerificationRequestResult(
     val method: VerificationMethod,
 
     /** 사용자 메시지 */
-    val message: String
+    val message: String,
 )

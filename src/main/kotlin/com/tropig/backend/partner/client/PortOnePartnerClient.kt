@@ -24,7 +24,7 @@ class PortOnePartnerClient(
     private val restTemplate: RestTemplate,
     private val objectMapper: ObjectMapper,
     @Value("\${portone.key.secret-v2}") private val apiSecret: String,
-    @Value("\${portone.base-url:https://api.portone.io}") private val baseUrl: String
+    @Value("\${portone.base-url:https://api.portone.io}") private val baseUrl: String,
 ) {
     private val logger = LoggerFactory.getLogger(PortOnePartnerClient::class.java)
 
@@ -40,7 +40,7 @@ class PortOnePartnerClient(
     @Retryable(
         retryFor = [HttpServerErrorException::class, IOException::class],
         maxAttempts = 3,
-        backoff = Backoff(delay = 1000, multiplier = 2.0)
+        backoff = Backoff(delay = 1000, multiplier = 2.0),
     )
     fun createPartner(request: CreatePartnerRequest): PartnerResponse {
         val url = "$baseUrl/platform/partners"
@@ -53,7 +53,7 @@ class PortOnePartnerClient(
                 url,
                 HttpMethod.POST,
                 HttpEntity(request, headers),
-                String::class.java
+                String::class.java,
             )
 
             objectMapper.readValue(response.body, PartnerResponse::class.java)
@@ -78,7 +78,7 @@ class PortOnePartnerClient(
     @Retryable(
         retryFor = [HttpServerErrorException::class, IOException::class],
         maxAttempts = 3,
-        backoff = Backoff(delay = 1000, multiplier = 2.0)
+        backoff = Backoff(delay = 1000, multiplier = 2.0),
     )
     fun updatePartnerAccount(partnerId: String, account: BankAccount): PartnerResponse {
         val url = "$baseUrl/platform/partners/$partnerId"
@@ -92,7 +92,7 @@ class PortOnePartnerClient(
                 url,
                 HttpMethod.PATCH,
                 HttpEntity(body, headers),
-                String::class.java
+                String::class.java,
             )
 
             objectMapper.readValue(response.body, PartnerResponse::class.java)
@@ -117,7 +117,7 @@ class PortOnePartnerClient(
     @Retryable(
         retryFor = [HttpServerErrorException::class, IOException::class],
         maxAttempts = 3,
-        backoff = Backoff(delay = 1000, multiplier = 2.0)
+        backoff = Backoff(delay = 1000, multiplier = 2.0),
     )
     fun getBankAccountHolder(bankCode: String, accountNumber: String): String {
         val url = "$baseUrl/platform/bank-accounts/$bankCode/$accountNumber/holder"
@@ -130,7 +130,7 @@ class PortOnePartnerClient(
                 url,
                 HttpMethod.GET,
                 HttpEntity<Any>(headers),
-                String::class.java
+                String::class.java,
             )
 
             val holderResponse = objectMapper.readValue(response.body, BankAccountHolderResponse::class.java)
@@ -150,21 +150,17 @@ class PortOnePartnerClient(
     /**
      * HTTP 헤더 생성
      */
-    private fun createHeaders(): HttpHeaders {
-        return HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-            set("Authorization", "PortOne $apiSecret")
-        }
+    private fun createHeaders(): HttpHeaders = HttpHeaders().apply {
+        contentType = MediaType.APPLICATION_JSON
+        set("Authorization", "PortOne $apiSecret")
     }
 
     /**
      * 계좌번호 마스킹 (로깅용)
      */
-    private fun maskAccountNumber(accountNumber: String): String {
-        return if (accountNumber.length >= 6) {
-            "${accountNumber.substring(0, 3)}****${accountNumber.substring(accountNumber.length - 3)}"
-        } else {
-            "****"
-        }
+    private fun maskAccountNumber(accountNumber: String): String = if (accountNumber.length >= 6) {
+        "${accountNumber.substring(0, 3)}****${accountNumber.substring(accountNumber.length - 3)}"
+    } else {
+        "****"
     }
 }

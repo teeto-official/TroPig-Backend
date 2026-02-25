@@ -14,9 +14,7 @@ import java.time.LocalDateTime
 import kotlin.math.min
 
 @Repository
-class PurchaseCustomRepositoryImpl(
-    @PersistenceContext private val em: EntityManager
-) : PurchaseCustomRepository {
+class PurchaseCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) : PurchaseCustomRepository {
 
     override fun findPurchasedContents(
         memberId: Long,
@@ -31,7 +29,7 @@ class PurchaseCustomRepositoryImpl(
             FROM purchase p
             WHERE p.member_id = :memberId
               AND p.status = :status
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val params = mutableMapOf<String, Any?>(

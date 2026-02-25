@@ -17,8 +17,8 @@ import java.time.temporal.ChronoUnit
     indexes = [
         Index(name = "idx_member_account_member_id", columnList = "member_id"),
         Index(name = "idx_member_account_expires_at", columnList = "expires_at"),
-        Index(name = "idx_member_account_portone_partner_id", columnList = "portone_partner_id")
-    ]
+        Index(name = "idx_member_account_portone_partner_id", columnList = "portone_partner_id"),
+    ],
 )
 @EntityListeners(AuditingEntityListener::class)
 data class MemberAccount(
@@ -33,7 +33,7 @@ data class MemberAccount(
     var bankName: String,
 
     @Column(name = "account_number_encrypted", nullable = false, length = 500)
-    var accountNumberEncrypted: String,  // AES-256-GCM encrypted
+    var accountNumberEncrypted: String, // AES-256-GCM encrypted
 
     @Column(name = "account_holder", nullable = false, length = 20)
     var accountHolder: String,
@@ -45,7 +45,7 @@ data class MemberAccount(
     var verifiedAt: LocalDateTime,
 
     @Column(name = "expires_at", nullable = false)
-    var expiresAt: LocalDateTime,  // verifiedAt + 1 year
+    var expiresAt: LocalDateTime, // verifiedAt + 1 year
 
     @Column(name = "last_changed_at", nullable = false)
     var lastChangedAt: LocalDateTime = LocalDateTime.now(),
@@ -56,7 +56,7 @@ data class MemberAccount(
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object {
         /**
@@ -78,9 +78,7 @@ data class MemberAccount(
     /**
      * Check if verification has expired
      */
-    fun isExpired(): Boolean {
-        return LocalDateTime.now().isAfter(expiresAt)
-    }
+    fun isExpired(): Boolean = LocalDateTime.now().isAfter(expiresAt)
 
     /**
      * Check if renewal is allowed (within 30 days of expiry or already expired)
@@ -111,12 +109,10 @@ data class MemberAccount(
     /**
      * Get next available account change time
      */
-    fun getNextChangeAvailableAt(): LocalDateTime? {
-        return if (!canChangeAccount()) {
-            lastChangedAt.plusDays(ACCOUNT_CHANGE_LOCKOUT_DAYS)
-        } else {
-            null
-        }
+    fun getNextChangeAvailableAt(): LocalDateTime? = if (!canChangeAccount()) {
+        lastChangedAt.plusDays(ACCOUNT_CHANGE_LOCKOUT_DAYS)
+    } else {
+        null
     }
 
     /**

@@ -12,34 +12,37 @@ data class MemberResponse(
     val id: Long,
     val nickname: String,
     val snsProvider: SnsProvider,
+    val email: String,
     val role: Role,
     val profile: String?,
     val favoriteGenres: List<Genre>,
     val favoriteRules: List<Rule>,
     val bio: String?,
-    val marketing: Boolean,
+    val isMarketing: Boolean,
     val isAuth: Boolean,
     val authDateAt: LocalDateTime?,
     val creator: Boolean,
     val authCreatorAt: LocalDateTime?,
 ) {
     companion object {
-        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse {
-            return MemberResponse(
-                member.id,
-                member.nickname,
-                member.snsProvider,
-                member.role,
-                member.profile,
-                Genre.fromList(member.favoriteGenres),
-                Rule.fromList(member.favoriteRules),
-                member.bio,
-                member.marketingAt != null,
-                isAuth = (memberAuthInfo?.verifiedAt != null && memberAuthInfo.verifiedAt.plusDays(365) >= LocalDateTime.now()),
-                authDateAt = memberAuthInfo?.verifiedAt,
-                creator = memberAuthInfo?.creator ?: false,
-                authCreatorAt = memberAuthInfo?.authCreatorAt
-            )
-        }
+        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse = MemberResponse(
+            member.id,
+            member.nickname,
+            member.snsProvider,
+            member.email,
+            member.role,
+            member.profile,
+            Genre.fromList(member.favoriteGenres),
+            Rule.fromList(member.favoriteRules),
+            member.bio,
+            member.marketingAt != null,
+            isAuth = (
+                memberAuthInfo?.verifiedAt != null &&
+                    memberAuthInfo.verifiedAt.plusDays(365) >= LocalDateTime.now()
+                ),
+            authDateAt = memberAuthInfo?.verifiedAt,
+            creator = memberAuthInfo?.creator ?: false,
+            authCreatorAt = memberAuthInfo?.authCreatorAt,
+        )
     }
 }

@@ -15,8 +15,8 @@ import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.model.request.ConfirmPurchaseRequest
 import com.tropig.backend.payment.model.request.CreatePurchaseRequest
-import com.tropig.backend.payment.model.request.PurchasedContentListRequest
 import com.tropig.backend.payment.model.request.FailPurchaseRequest
+import com.tropig.backend.payment.model.request.PurchasedContentListRequest
 import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
 import com.tropig.backend.payment.model.response.PurchasedContentListResponse
@@ -30,7 +30,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
@@ -51,7 +50,7 @@ class PaymentController(
     @Operation(summary = "구매 요청 생성", description = "콘텐츠 구매를 위한 결제를 생성합니다.")
     fun createPurchase(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: CreatePurchaseRequest
+        @Valid @RequestBody request: CreatePurchaseRequest,
     ): ResponseEntity<CreatePurchaseResponse> {
         val response = paymentService.createPurchase(authMember.memberId, authMember.adult, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
@@ -62,7 +61,7 @@ class PaymentController(
     @Operation(summary = "결제 승인", description = "생성된 결제를 승인합니다.")
     fun confirmPurchase(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: ConfirmPurchaseRequest
+        @Valid @RequestBody request: ConfirmPurchaseRequest,
     ): ResponseEntity<PurchaseResponse> {
         val response = paymentService.confirmPurchase(authMember.memberId, request)
         return ResponseEntity.ok(response)
@@ -73,7 +72,7 @@ class PaymentController(
     @Operation(summary = "결제 실패 처리", description = "결제 실패 시 Payment 상태를 FAILED로 업데이트합니다.")
     fun failPurchase(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: FailPurchaseRequest
+        @Valid @RequestBody request: FailPurchaseRequest,
     ): ResponseEntity<Void> {
         paymentService.failPurchase(authMember.memberId, request)
         return ResponseEntity.ok().build()
@@ -84,7 +83,7 @@ class PaymentController(
     @Operation(summary = "구매 내역 조회", description = "특정 구매 내역을 조회합니다.")
     fun getPurchase(
         @LoginMember authMember: AuthMember,
-        @PathVariable purchaseId: Long
+        @PathVariable purchaseId: Long,
     ): ResponseEntity<PurchaseResponse> {
         val response = paymentService.getPurchase(authMember.memberId, purchaseId)
         return ResponseEntity.ok(response)
@@ -95,7 +94,7 @@ class PaymentController(
     @Operation(summary = "콘텐츠 구매 여부 확인", description = "특정 콘텐츠의 구매 여부를 확인합니다.")
     fun isContentPurchased(
         @LoginMember authMember: AuthMember,
-        @PathVariable contentId: Long
+        @PathVariable contentId: Long,
     ): ResponseEntity<Map<String, Boolean>> {
         val purchased = paymentService.isContentPurchased(authMember.memberId, contentId)
         return ResponseEntity.ok(mapOf("purchased" to purchased))
@@ -111,18 +110,23 @@ class PaymentController(
         @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
         cursorCreatedAt: LocalDateTime? = null,
         @Parameter(
-            name = "sortMode", description = "정렬 순서", `in` = ParameterIn.QUERY,
+            name = "sortMode",
+            description = "정렬 순서",
+            `in` = ParameterIn.QUERY,
             schema = Schema(
                 allowableValues = ["LATEST", "OLDEST"],
-                defaultValue = "LATEST"
-            )
+                defaultValue = "LATEST",
+            ),
         )
         sortMode: SortMode = SortMode.LATEST,
         @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
         size: Int = 15,
     ): CursorSlice<PurchasedContentListResponse> {
-        val request =  PurchasedContentListRequest(
-            sortMode = sortMode, cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        val request = PurchasedContentListRequest(
+            sortMode = sortMode,
+            cursorCreatedAt = cursorCreatedAt,
+            cursorId = cursorId ?: 0,
+            size = size,
         )
         val memberId = authMember.memberId
         val contents = paymentContentService.getPurchasedContents(memberId, request)
@@ -144,7 +148,7 @@ class PaymentController(
                     bookmarkInfo = bookmarksInfo,
                     thumbnailPaths = thumbnailPaths,
                 )
-            }
+            },
         ) { item, ctx ->
             val content = item.content
             PurchasedContentListResponse(

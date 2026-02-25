@@ -16,5 +16,5 @@ data class VerificationResendResult(
     val message: String,
 
     /** 남은 재전송 횟수 */
-    val remainingResends: Int? = null
+    val remainingResends: Int? = null,
 )

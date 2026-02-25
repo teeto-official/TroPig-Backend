@@ -28,10 +28,10 @@ data class Purchase(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L
-    
+
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now()
-    
+
     @LastModifiedDate
     var updatedAt: LocalDateTime = LocalDateTime.now()
 }

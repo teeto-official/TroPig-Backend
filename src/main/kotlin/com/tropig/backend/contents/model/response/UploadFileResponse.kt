@@ -7,5 +7,5 @@ data class UploadFileResponse(
     val orderNo: Int,
     val uploadedFileName: String,
     val fileType: FileType,
-    val publishingType: PublishingType? = null
+    val publishingType: PublishingType? = null,
 )

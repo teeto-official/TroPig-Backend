@@ -1,10 +1,10 @@
 package com.tropig.backend.contents.enums
 
 enum class ContentsStatus {
-    PRIVATE,   // 비공개
-    DRAFT,  // 임시 저장
-    PUBLISHED,  // 공개(발행완료)
-    DELETED,    // 삭제
+    PRIVATE, // 비공개
+    DRAFT, // 임시 저장
+    PUBLISHED, // 공개(발행완료)
+    DELETED, // 삭제
     ;
 
     companion object {

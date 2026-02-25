@@ -12,15 +12,9 @@ data class UploadFileRequest(
     var publishingType: PublishingType? = null,
 )
 
-data class UploadFilesForm(
-    var request: MutableList<UploadFileRequest> = mutableListOf()
-)
+data class UploadFilesForm(var request: MutableList<UploadFileRequest> = mutableListOf())
 
-
-data class DeleteFileRequest(
-    val type: FileType,
-    val urls: List<String>,
-)
+data class DeleteFileRequest(val type: FileType, val urls: List<String>)
 
 class FileInfoRequest(
     val orderNo: Int,
@@ -29,5 +23,5 @@ class FileInfoRequest(
     val originalFileName: String,
     val type: FileType,
     val isCover: Boolean,
-    val publishingType: PublishingType?
+    val publishingType: PublishingType?,
 )

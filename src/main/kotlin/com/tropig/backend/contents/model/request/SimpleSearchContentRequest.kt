@@ -14,15 +14,14 @@ data class SimpleSearchContentRequest(
 
     val size: Int = 15,
 ) {
-    fun toDto(isAdult: Boolean): SearchContentRequestDto =
-        SearchContentRequestDto(
-            searchText = this.searchText,
-            isAdult = isAdult,
-            type = ContentType.SCENARIO,
-            sortMode = this.sortMode,
-            cursorPublishedAt = this.cursorPublishedAt,
-            cursorTitle = this.cursorTitle,
-            cursorId = this.cursorId,
-            size = this.size,
-        )
+    fun toDto(isAdult: Boolean): SearchContentRequestDto = SearchContentRequestDto(
+        searchText = this.searchText,
+        isAdult = isAdult,
+        type = ContentType.SCENARIO,
+        sortMode = this.sortMode,
+        cursorPublishedAt = this.cursorPublishedAt,
+        cursorTitle = this.cursorTitle,
+        cursorId = this.cursorId,
+        size = this.size,
+    )
 }

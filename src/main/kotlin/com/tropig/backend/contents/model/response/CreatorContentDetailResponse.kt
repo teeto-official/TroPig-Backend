@@ -29,11 +29,8 @@ data class CreatorContentDetailResponse(
     val nonFreeContent: String? = null,
 )
 
-fun Content.toCreatorContentDetailResponse(
-    tags: List<TagDto>,
-    nonFreeContent: String?,
-): CreatorContentDetailResponse {
-    return CreatorContentDetailResponse(
+fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: String?): CreatorContentDetailResponse =
+    CreatorContentDetailResponse(
         id = id,
         type = type,
         publishedAt = publishedAt,
@@ -45,10 +42,12 @@ fun Content.toCreatorContentDetailResponse(
         termType = termType,
         tags = tags,
         publishingType =
-            if (type == ContentType.RESOURCE) publishingInfo?.toPublishingInfoList()?.firstOrNull()?.type
-            else null,
+        if (type == ContentType.RESOURCE) {
+            publishingInfo?.toPublishingInfoList()?.firstOrNull()?.type
+        } else {
+            null
+        },
         publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
         nonFreeContent = nonFreeContent,
     )
-}

@@ -1,0 +1,29 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+ktlint_standard_filename = enabled
+ktlint_code_style = intellij_idea
+# IntelliJ IDE가 자동으로 wildcard import를 생성하므로 허용
+ktlint_standard_no-wildcard-imports = disabled
+
+# 최대 줄 길이
+max_line_length = 120
+
+# import 정렬
+ktlint_standard_import-ordering = enabled
+
+
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.json]
+indent_size = 2

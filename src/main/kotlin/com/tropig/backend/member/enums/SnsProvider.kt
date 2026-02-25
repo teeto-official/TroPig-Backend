@@ -6,5 +6,5 @@ enum class SnsProvider {
     NAVER,
     APPLE,
     FACEBOOK,
-    TWITTER
+    TWITTER,
 }

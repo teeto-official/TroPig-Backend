@@ -38,7 +38,7 @@ class PortOnePlatformClient(
             url,
             HttpMethod.GET,
             HttpEntity(null, headers),
-            String::class.java
+            String::class.java,
         )
 
         if (!response.statusCode.is2xxSuccessful) {
@@ -49,7 +49,7 @@ class PortOnePlatformClient(
         return PlatformAccountHolderResponse(
             holderName = responseBody["holderName"]?.asText()
                 ?: throw PortOnePlatformApiException("예금주명을 찾을 수 없습니다"),
-            responseJson = response.body!!
+            responseJson = response.body!!,
         )
     }
 
@@ -77,15 +77,15 @@ class PortOnePlatformClient(
             "name" to request.name,
             "contact" to mapOf(
                 "email" to request.contact.email,
-                "phoneNumber" to request.contact.phoneNumber
+                "phoneNumber" to request.contact.phoneNumber,
             ),
             "account" to mapOf(
                 "bankCode" to request.account.bankCode,
                 "accountNumber" to request.account.accountNumber,
-                "accountHolderName" to request.account.accountHolderName
+                "accountHolderName" to request.account.accountHolderName,
             ),
             "defaultContractId" to request.defaultContractId,
-            "tags" to request.tags
+            "tags" to request.tags,
         )
 
         if (typeMap.isNotEmpty()) {
@@ -96,7 +96,7 @@ class PortOnePlatformClient(
             url,
             HttpMethod.POST,
             HttpEntity(body, headers),
-            String::class.java
+            String::class.java,
         )
 
         if (!response.statusCode.is2xxSuccessful) {
@@ -111,7 +111,7 @@ class PortOnePlatformClient(
             name = responseBody["name"]?.asText() ?: "",
             status = responseBody["status"]?.asText() ?: "UNKNOWN",
             createdAt = responseBody["createdAt"]?.asText(),
-            responseJson = response.body!!
+            responseJson = response.body!!,
         )
     }
 
@@ -141,7 +141,7 @@ class PortOnePlatformClient(
             url,
             HttpMethod.POST,
             HttpEntity(body, headers),
-            String::class.java
+            String::class.java,
         )
 
         if (!response.statusCode.is2xxSuccessful) {
@@ -156,14 +156,12 @@ class PortOnePlatformClient(
             settlementAmount = responseBody["settlementAmount"]?.asLong() ?: 0L,
             status = responseBody["status"]?.asText() ?: "UNKNOWN",
             createdAt = responseBody["createdAt"]?.asText(),
-            responseJson = response.body!!
+            responseJson = response.body!!,
         )
     }
 
-    private fun createHeaders(): HttpHeaders {
-        return HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-            set("Authorization", "PortOne $apiSecret")
-        }
+    private fun createHeaders(): HttpHeaders = HttpHeaders().apply {
+        contentType = MediaType.APPLICATION_JSON
+        set("Authorization", "PortOne $apiSecret")
     }
 }

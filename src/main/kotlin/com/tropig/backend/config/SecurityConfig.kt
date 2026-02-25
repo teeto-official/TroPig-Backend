@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val requestLoggingFilter: RequestLoggingFilter
+    private val requestLoggingFilter: RequestLoggingFilter,
 ) {
 
     @Bean
@@ -33,7 +33,7 @@ class SecurityConfig(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/error"
+                    "/error",
                 ).permitAll()
                     .anyRequest().permitAll()
             }
@@ -44,7 +44,6 @@ class SecurityConfig(
     }
 
     @Bean
-    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
-        return authConfig.authenticationManager
-    }
+    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager =
+        authConfig.authenticationManager
 }

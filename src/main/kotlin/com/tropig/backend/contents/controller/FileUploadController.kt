@@ -20,15 +20,11 @@ import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.member.enums.Role
 import jakarta.transaction.Transactional
 import org.springframework.http.MediaType
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @ApiController
 @RequestMapping("/api/files")
-class FileUploadController(
-    private val s3Service: S3Service,
-    private val contentService: ContentService,
-) {
+class FileUploadController(private val s3Service: S3Service, private val contentService: ContentService) {
 
     @RequireAuth
     @PostMapping("/uploads/{contentId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -36,7 +32,7 @@ class FileUploadController(
     fun uploadFileWithRollback(
         @LoginMember authMember: AuthMember,
         @ModelAttribute form: UploadFilesForm,
-        @PathVariable contentId: Long
+        @PathVariable contentId: Long,
     ): List<UploadFileResponse> {
         // @ModelAttribute로 ArrayList를 직접 받아 Spring Data projection 문제 방지
         // request[0].type, request[0].file 형식으로 보내야 함
@@ -58,7 +54,7 @@ class FileUploadController(
         }
 
         val fileRequests = form.request.toList()
-        
+
         if (fileRequests.isEmpty()) {
             throw IllegalArgumentException("업로드할 파일이 없습니다.")
         }
@@ -89,7 +85,7 @@ class FileUploadController(
                         val files = it.value.map { file ->
                             PublishingInfo(
                                 file.publishingType ?: PublishingType.ETC,
-                                file.path
+                                file.path,
                             )
                         }
                         contentService.findById(contentId)?.let { content ->
@@ -110,17 +106,14 @@ class FileUploadController(
                 it.orderNo,
                 s3Service.toUrl(it.path) ?: it.path,
                 it.fileType,
-                it.publishingType
+                it.publishingType,
             )
         }
     }
 
     @DeleteMapping("/delete/{contentId}")
     @Transactional
-    fun deleteFile(
-        @RequestBody request: List<DeleteFileRequest>,
-        @PathVariable contentId: Long,
-    ) {
+    fun deleteFile(@RequestBody request: List<DeleteFileRequest>, @PathVariable contentId: Long) {
         request.forEach {
             when (it.type) {
                 FileType.CONTENT_FILE -> {

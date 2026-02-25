@@ -9,4 +9,4 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @CrossOrigin(origins = ["*"])
 @SecurityRequirement(name = "bearerAuth")
-annotation class ApiController()
+annotation class ApiController

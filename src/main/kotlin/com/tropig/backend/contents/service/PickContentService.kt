@@ -7,9 +7,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
-class PickContentService(
-    private val pickContentRepository: PickContentRepository,
-) {
+class PickContentService(private val pickContentRepository: PickContentRepository) {
 
     @Transactional
     fun updatePickContents(pickContents: List<PickContent>): List<PickContent> {
@@ -18,6 +16,5 @@ class PickContentService(
     }
 
     @Cacheable(value = ["pickContent"])
-    fun getAllPickContent(): List<PickContent> =
-        pickContentRepository.findAll()
+    fun getAllPickContent(): List<PickContent> = pickContentRepository.findAll()
 }

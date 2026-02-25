@@ -14,7 +14,6 @@ import com.tropig.backend.member.service.CreatorVerificationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -24,9 +23,7 @@ import org.springframework.web.bind.annotation.*
 @ApiController
 @RequestMapping("/api/member/creator-verification")
 @Tag(name = "Creator Verification", description = "창작자 인증 API")
-class CreatorVerificationController(
-    private val creatorVerificationService: CreatorVerificationService
-) {
+class CreatorVerificationController(private val creatorVerificationService: CreatorVerificationService) {
 
     /**
      * 창작자 인증 요청
@@ -37,10 +34,8 @@ class CreatorVerificationController(
     @Operation(summary = "창작자 인증", description = "은행 계좌 등록 및 파트너 등록으로 창작자 인증")
     fun verifyCreator(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: CreatorVerificationRequest
-    ): CreatorVerificationResult {
-        return creatorVerificationService.verifyCreator(authMember.memberId, request)
-    }
+        @Valid @RequestBody request: CreatorVerificationRequest,
+    ): CreatorVerificationResult = creatorVerificationService.verifyCreator(authMember.memberId, request)
 
     /**
      * 창작자 인증 상태 조회
@@ -49,11 +44,8 @@ class CreatorVerificationController(
     @RequireAuth
     @GetMapping
     @Operation(summary = "창작자 인증 상태 조회", description = "현재 창작자 인증 상태 및 계좌 정보 조회")
-    fun getVerificationStatus(
-        @LoginMember authMember: AuthMember
-    ): CreatorVerificationStatusResponse {
-        return creatorVerificationService.getVerificationStatus(authMember.memberId)
-    }
+    fun getVerificationStatus(@LoginMember authMember: AuthMember): CreatorVerificationStatusResponse =
+        creatorVerificationService.getVerificationStatus(authMember.memberId)
 
     /**
      * 창작자 인증 갱신
@@ -62,11 +54,8 @@ class CreatorVerificationController(
     @RequireAuth
     @PostMapping("/renew")
     @Operation(summary = "창작자 인증 갱신", description = "만료 전 인증 갱신 (기존 계좌 정보로 1년 연장)")
-    fun renewVerification(
-        @LoginMember authMember: AuthMember
-    ): RenewVerificationResult {
-        return creatorVerificationService.renewVerification(authMember.memberId)
-    }
+    fun renewVerification(@LoginMember authMember: AuthMember): RenewVerificationResult =
+        creatorVerificationService.renewVerification(authMember.memberId)
 
     /**
      * 계좌 정보 변경
@@ -77,8 +66,6 @@ class CreatorVerificationController(
     @Operation(summary = "계좌 정보 변경", description = "등록된 계좌 정보 변경 (30일 lockout 적용)")
     fun changeAccount(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: ChangeAccountRequest
-    ): ChangeAccountResult {
-        return creatorVerificationService.changeAccount(authMember.memberId, request)
-    }
+        @Valid @RequestBody request: ChangeAccountRequest,
+    ): ChangeAccountResult = creatorVerificationService.changeAccount(authMember.memberId, request)
 }

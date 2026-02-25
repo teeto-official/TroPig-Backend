@@ -1,5 +1,3 @@
 package com.tropig.backend.common.enums
 
-enum class BankCode {
-
-}
+enum class BankCode

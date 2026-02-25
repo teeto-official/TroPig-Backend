@@ -17,7 +17,7 @@ data class Member(
 
     @Column(nullable = false, unique = true)
     val email: String,
-    
+
     @Column(nullable = false)
     var nickname: String,
 

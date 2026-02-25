@@ -37,7 +37,7 @@ class PaymentService(
         PaymentChannel.KCP -> portOneProperties.channels.kcp
         PaymentChannel.KAKAO_PAY -> portOneProperties.channels.kakaoPay
     }
-    
+
     /**
      * 구매 요청 생성 (결제 생성)
      */
@@ -49,7 +49,7 @@ class PaymentService(
             if (!adult && it.adult) {
                 throw PaymentException(
                     "성인 인증이 필요한 콘텐츠입니다.",
-                    MessageCode.ADULT_CONTENT
+                    MessageCode.ADULT_CONTENT,
                 )
             }
 
@@ -63,21 +63,21 @@ class PaymentService(
         }
             ?: throw NotFoundException(
                 "콘텐츠를 찾을 수 없습니다: ${request.contentId}",
-                MessageCode.NOT_FOUND_CONTENT_INFO
+                MessageCode.NOT_FOUND_CONTENT_INFO,
             )
-        
+
         // 2. 이미 구매한 콘텐츠인지 확인
         val existingPurchase = purchaseRepository.findByMemberIdAndContentId(memberId, request.contentId)
         if (existingPurchase != null && existingPurchase.status == PurchaseStatus.COMPLETED) {
             throw PaymentException(
                 "이미 구매한 콘텐츠입니다.",
-                MessageCode.ALREADY_PURCHASED
+                MessageCode.ALREADY_PURCHASED,
             )
         }
 
         // 4. 결제 ID 생성 (PortOne v2는 서버에서 paymentId를 생성)
         val paymentId = generateOrderId(memberId, request.contentId)
-        
+
         // 5. Payment 엔티티 저장 (결제는 프론트엔드에서 PortOne SDK로 시작됨)
         val payment = Payment(
             memberId = memberId,
@@ -88,17 +88,17 @@ class PaymentService(
             currency = "KRW",
             channelKey = resolveChannelKey(request.channel),
             storeId = storeId,
-            portoneResponse = null // 결제 생성 시점에는 아직 PortOne 응답 없음
+            portoneResponse = null, // 결제 생성 시점에는 아직 PortOne 응답 없음
         )
         val savedPayment = paymentRepository.save(payment)
 
         return CreatePurchaseResponse(
             paymentId = savedPayment.id,
             portonePaymentId = paymentId,
-            amount = content.price.toLong()
+            amount = content.price.toLong(),
         )
     }
-    
+
     /**
      * 결제 승인
      */
@@ -110,12 +110,12 @@ class PaymentService(
                 "결제를 찾을 수 없습니다: ${request.portonePaymentId}",
                 MessageCode.NOT_FOUND_PAYMENT_INFO,
             )
-        
+
         // 2. 권한 확인
         if (payment.memberId != memberId) {
             throw PaymentException(
                 "본인의 결제만 확인할 수 있습니다.",
-                MessageCode.NOT_OWN_PAYMENT_INFO
+                MessageCode.NOT_OWN_PAYMENT_INFO,
             )
         }
 
@@ -135,7 +135,7 @@ class PaymentService(
                 status = existingPurchase.status,
                 paymentStatus = payment.status,
                 createdAt = existingPurchase.createdAt,
-                updatedAt = existingPurchase.updatedAt
+                updatedAt = existingPurchase.updatedAt,
             )
         }
 
@@ -156,7 +156,7 @@ class PaymentService(
             paymentRepository.save(payment)
             throw PaymentException(
                 "결제가 완료되지 않았습니다. 현재 상태: ${queryResponse.status}",
-                MessageCode.PAYMENT_ERROR
+                MessageCode.PAYMENT_ERROR,
             )
         }
 
@@ -167,7 +167,7 @@ class PaymentService(
             paymentRepository.save(payment)
             throw PaymentException(
                 "결제 금액이 일치하지 않습니다. 예상: ${payment.amount}원, 실제: ${queryResponse.amount}원",
-                MessageCode.PAYMENT_ERROR
+                MessageCode.PAYMENT_ERROR,
             )
         }
 
@@ -184,7 +184,7 @@ class PaymentService(
             contentId = payment.contentId,
             paymentId = payment.id,
             amount = payment.amount,
-            status = PurchaseStatus.COMPLETED
+            status = PurchaseStatus.COMPLETED,
         )
         val savedPurchase = purchaseRepository.save(purchase)
 
@@ -197,7 +197,7 @@ class PaymentService(
             status = savedPurchase.status,
             paymentStatus = updatedPayment.status,
             createdAt = savedPurchase.createdAt,
-            updatedAt = savedPurchase.updatedAt
+            updatedAt = savedPurchase.updatedAt,
         )
     }
 
@@ -215,7 +215,7 @@ class PaymentService(
         if (payment.memberId != memberId) {
             throw PaymentException(
                 "본인의 결제만 처리할 수 있습니다.",
-                MessageCode.NOT_OWN_PAYMENT_INFO
+                MessageCode.NOT_OWN_PAYMENT_INFO,
             )
         }
 
@@ -249,7 +249,7 @@ class PaymentService(
             .orElseThrow {
                 NotFoundException(
                     message = "결제 정보를 찾을 수 없습니다: ${purchase.paymentId}",
-                    code = MessageCode.NOT_FOUND_PAYMENT_INFO
+                    code = MessageCode.NOT_FOUND_PAYMENT_INFO,
                 )
             }
 
@@ -262,22 +262,20 @@ class PaymentService(
             status = purchase.status,
             paymentStatus = payment.status,
             createdAt = purchase.createdAt,
-            updatedAt = purchase.updatedAt
+            updatedAt = purchase.updatedAt,
         )
     }
 
     /**
      * 콘텐츠 구매 여부 확인
      */
-    fun isContentPurchased(memberId: Long, contentId: Long): Boolean {
-        return purchaseRepository.existsByMemberIdAndContentIdAndStatus(
-            memberId, 
-            contentId, 
-            PurchaseStatus.COMPLETED
+    fun isContentPurchased(memberId: Long, contentId: Long): Boolean =
+        purchaseRepository.existsByMemberIdAndContentIdAndStatus(
+            memberId,
+            contentId,
+            PurchaseStatus.COMPLETED,
         )
-    }
-    
-    private fun generateOrderId(memberId: Long, contentId: Long): String {
-        return "payment-content-${contentId}-${System.currentTimeMillis()}"
-    }
+
+    private fun generateOrderId(memberId: Long, contentId: Long): String =
+        "payment-content-$contentId-${System.currentTimeMillis()}"
 }
