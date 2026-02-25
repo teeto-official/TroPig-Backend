@@ -20,6 +20,8 @@ max_line_length = 120
 # import 정렬
 ktlint_standard_import-ordering = enabled
 
+
+
 [*.{yml,yaml}]
 indent_size = 2
 
