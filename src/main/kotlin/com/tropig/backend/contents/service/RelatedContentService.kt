@@ -2,13 +2,11 @@ package com.tropig.backend.contents.service
 
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.NotFoundException
-import com.tropig.backend.contents.entity.RelatedContent
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.result.RelatedContentsResult
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,16 +15,6 @@ class RelatedContentService(
     private val relatedContentRepository: RelatedContentRepository,
 ) {
 
-    /**
-     * 기준 콘텐츠와 연관된 시나리오/자료를 조회합니다.
-     *
-     * 요구사항:
-     * 1. 기준 content의 type이 시나리오인 경우
-     *   1-1. 관련 시나리오는 parent_content_id = content.id 로 조회
-     *   1-2. 관련 자료는 content_id = content.id 로 조회하고, content.type 이 자료인 것을 조회
-     * 2. 기준 content의 type이 자료인 경우, 관련 시나리오만 조회
-     * 4. authMember.adult 가 false 이면 content.adult = false 인 것만, true 이면 제한 없음
-     */
     fun getRelatedContents(
         contentId: Long,
         isAdult: Boolean,

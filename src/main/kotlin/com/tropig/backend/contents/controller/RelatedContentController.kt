@@ -24,18 +24,6 @@ class RelatedContentController(
     private val contentService: ContentService,
 ) {
 
-    /**
-     * 기준 콘텐츠와 연관된 시나리오/자료를 조회합니다.
-     *
-     * 1. 기준 content 의 type 이 시나리오인 경우
-     *   1-1. 관련 시나리오는 parent_content_id = content.id 로 조회
-     *   1-2. 관련 자료는 content_id = content.id 로 조회하고, content.type 이 자료인 것을 조회
-     * 2. 기준 content 의 type 이 자료인 경우, 관련 시나리오만 조회
-     * 3. Response: 썸네일 path, content.id, content.title, content.alias,
-     *    content.rule, tag 리스트, creator.name, content.player_count
-     * 4. authMember.adult = false 이면 content.adult = false 인 것만,
-     *    true 이면 content.adult 와 상관없이 조회
-     */
     @GetMapping("/related/{contentId}")
     fun getRelatedContents(
         @AuthenticationPrincipal
