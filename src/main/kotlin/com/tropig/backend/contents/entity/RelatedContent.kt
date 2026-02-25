@@ -11,7 +11,6 @@ data class RelatedContent(
     val parentContentId: Long,
     val contentId: Long,
     val orderNo: Int,
-    val path: String,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
