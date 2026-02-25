@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 @Component
 class VerificationSessionManager(
     private val redisTemplate: RedisTemplate<String, String>,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
     companion object {
         private const val SESSION_PREFIX = "identity_verify:"
@@ -34,7 +34,7 @@ class VerificationSessionManager(
             portoneId = portoneId,
             expiresAt = LocalDateTime.now().plusMinutes(SESSION_TTL_MINUTES),
             otpAttempts = 0,
-            resendCount = 0
+            resendCount = 0,
         )
 
         val key = getKey(sessionId)
@@ -89,7 +89,7 @@ class VerificationSessionManager(
         // 재전송 시 만료 시간 갱신
         val updatedSession = session.copy(
             resendCount = newCount,
-            expiresAt = LocalDateTime.now().plusMinutes(SESSION_TTL_MINUTES)
+            expiresAt = LocalDateTime.now().plusMinutes(SESSION_TTL_MINUTES),
         )
         saveSession(updatedSession)
 
@@ -111,23 +111,17 @@ class VerificationSessionManager(
     /**
      * 세션이 만료되었는지 확인합니다.
      */
-    fun isExpired(session: VerificationSession): Boolean {
-        return LocalDateTime.now().isAfter(session.expiresAt)
-    }
+    fun isExpired(session: VerificationSession): Boolean = LocalDateTime.now().isAfter(session.expiresAt)
 
     /**
      * 남은 재전송 횟수를 반환합니다.
      */
-    fun getRemainingResends(session: VerificationSession): Int {
-        return MAX_RESEND_ATTEMPTS - session.resendCount
-    }
+    fun getRemainingResends(session: VerificationSession): Int = MAX_RESEND_ATTEMPTS - session.resendCount
 
     /**
      * 남은 OTP 시도 횟수를 반환합니다.
      */
-    fun getRemainingAttempts(session: VerificationSession): Int {
-        return MAX_OTP_ATTEMPTS - session.otpAttempts
-    }
+    fun getRemainingAttempts(session: VerificationSession): Int = MAX_OTP_ATTEMPTS - session.otpAttempts
 
     private fun saveSession(session: VerificationSession) {
         val key = getKey(session.sessionId)
@@ -149,17 +143,14 @@ data class VerificationSession(
     val portoneId: String,
     val expiresAt: LocalDateTime,
     val otpAttempts: Int = 0,
-    val resendCount: Int = 0
+    val resendCount: Int = 0,
 )
 
 /**
  * 세션 관련 예외
  */
-class SessionNotFoundException(sessionId: String) :
-    RuntimeException("Verification session not found: $sessionId")
+class SessionNotFoundException(sessionId: String) : RuntimeException("Verification session not found: $sessionId")
 
-class OtpAttemptsExceededException :
-    RuntimeException("OTP attempts exceeded (max 5 attempts)")
+class OtpAttemptsExceededException : RuntimeException("OTP attempts exceeded (max 5 attempts)")
 
-class ResendLimitExceededException :
-    RuntimeException("Resend limit exceeded (max 3 resends)")
+class ResendLimitExceededException : RuntimeException("Resend limit exceeded (max 3 resends)")

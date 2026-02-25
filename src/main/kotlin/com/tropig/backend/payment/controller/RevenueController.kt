@@ -4,10 +4,9 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
-import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.common.model.CursorSlice
-import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.request.RevenueListRequest
+import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
 import com.tropig.backend.payment.model.response.RevenueSummaryResponse
 import com.tropig.backend.payment.model.response.WithdrawalItemResponse
@@ -24,9 +23,7 @@ import java.time.LocalDateTime
 @ApiController
 @RequestMapping("/api/revenue")
 @Tag(name = "Revenue", description = "크리에이터 수익 조회 API")
-class RevenueController(
-    private val revenueService: RevenueService,
-) {
+class RevenueController(private val revenueService: RevenueService) {
 
     @RequireAuth
     @GetMapping("/list")
@@ -40,8 +37,10 @@ class RevenueController(
         @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
         size: Int = 15,
     ): CursorSlice<RevenueItemResponse> {
-        val request =  RevenueListRequest(
-            cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+        val request = RevenueListRequest(
+            cursorCreatedAt = cursorCreatedAt,
+            cursorId = cursorId ?: 0,
+            size = size,
         )
         val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
@@ -54,9 +53,7 @@ class RevenueController(
     @RequireAuth
     @GetMapping("/summary")
     @Operation(summary = "전체 수익 조회", description = "CREATOR가 등록한 작품의 전체 수익과 출금 완료 금액, 잔여 수익을 조회합니다.")
-    fun getRevenueSummary(
-        @LoginMember authMember: AuthMember,
-    ): RevenueSummaryResponse {
+    fun getRevenueSummary(@LoginMember authMember: AuthMember): RevenueSummaryResponse {
         val contents = revenueService.getAllCreatorContents(authMember.memberId)
         if (contents.isEmpty()) {
             return RevenueSummaryResponse(
@@ -83,9 +80,10 @@ class RevenueController(
         size: Int = 15,
     ): CursorSlice<WithdrawalItemResponse> {
         val request = WithdrawalListRequest(
-            cursorCreatedAt = cursorCreatedAt, cursorId = cursorId ?: 0, size = size
+            cursorCreatedAt = cursorCreatedAt,
+            cursorId = cursorId ?: 0,
+            size = size,
         )
         return revenueService.getWithdrawalList(authMember.memberId, request)
     }
 }
-

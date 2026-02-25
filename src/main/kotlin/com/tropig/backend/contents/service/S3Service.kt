@@ -1,15 +1,14 @@
 package com.tropig.backend.contents.service
 
-import com.tropig.backend.common.enums.FileType
 import com.tropig.backend.config.S3Properties
 import com.tropig.backend.contents.model.request.FileInfoRequest
 import com.tropig.backend.contents.model.request.UploadFileRequest
 import com.tropig.backend.contents.model.result.FileResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
@@ -23,7 +22,7 @@ import java.util.concurrent.CompletableFuture
 class S3Service(
     private val s3Client: S3Client,
     private val s3Properties: S3Properties,
-    private val s3AsyncUploadService: S3AsyncUploadService
+    private val s3AsyncUploadService: S3AsyncUploadService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(S3Service::class.java)
@@ -48,7 +47,7 @@ class S3Service(
             "text/csv",
             // 기타
             "application/json",
-            "application/xml"
+            "application/xml",
         )
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
     }
@@ -81,15 +80,16 @@ class S3Service(
      * @param url S3 URL
      * @return S3 키
      */
-    fun extractS3Key(url: String): String {
-        return when {
-            url.contains("amazonaws.com/") -> {
-                url.substringAfter("amazonaws.com/")
-            }
-            else -> {
-                // 이미 키인 경우
-                if (!url.contains("http")) url
-                else throw IllegalArgumentException("잘못된 S3 URL 형식입니다: $url")
+    fun extractS3Key(url: String): String = when {
+        url.contains("amazonaws.com/") -> {
+            url.substringAfter("amazonaws.com/")
+        }
+        else -> {
+            // 이미 키인 경우
+            if (!url.contains("http")) {
+                url
+            } else {
+                throw IllegalArgumentException("잘못된 S3 URL 형식입니다: $url")
             }
         }
     }
@@ -121,13 +121,13 @@ class S3Service(
                 .build()
 
             val response: ResponseInputStream<GetObjectResponse> = s3Client.getObject(getObjectRequest)
-            
+
             // Content-Type도 확인 (추가 검증)
             val contentType = response.response().contentType()
             if (contentType != null && !contentType.startsWith("text/")) {
                 logger.warn("Content-Type이 text가 아닙니다: $contentType, key=$s3Key")
             }
-            
+
             return response.use { inputStream ->
                 inputStream.readAllBytes().toString(StandardCharsets.UTF_8)
             }
@@ -166,20 +166,16 @@ class S3Service(
      * @param s3Key 업데이트할 S3 key (기존 key)
      * @return 업로드된 파일의 S3 Key (입력한 key와 동일)
      */
-    fun updateFile(
-        inputStream: InputStream,
-        contentType: String,
-        s3Key: String,
-    ): String {
+    fun updateFile(inputStream: InputStream, contentType: String, s3Key: String): String {
         val fileBytes = inputStream.readAllBytes()
-        
+
         // 파일 타입 검증
         if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
             throw IllegalArgumentException(
                 "허용되지 않는 파일 타입입니다. 지원 형식: 이미지(JPEG, PNG, GIF, WEBP), " +
-                "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
-                "압축파일(ZIP, RAR, 7Z), " +
-                "기타(JSON, XML, TXT, CSV)"
+                    "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
+                    "압축파일(ZIP, RAR, 7Z), " +
+                    "기타(JSON, XML, TXT, CSV)",
             )
         }
 
@@ -228,9 +224,9 @@ class S3Service(
         if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
             throw IllegalArgumentException(
                 "허용되지 않는 파일 타입입니다. 지원 형식: 이미지(JPEG, PNG, GIF, WEBP), " +
-                "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
-                "압축파일(ZIP, RAR, 7Z), " +
-                "기타(JSON, XML, TXT, CSV)"
+                    "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
+                    "압축파일(ZIP, RAR, 7Z), " +
+                    "기타(JSON, XML, TXT, CSV)",
             )
         }
 
@@ -240,7 +236,7 @@ class S3Service(
         }
 
         // 파일명 생성 (UUID + 원본 파일명)
-        val fileName = "${UUID.randomUUID()}-${originalFileName}"
+        val fileName = "${UUID.randomUUID()}-$originalFileName"
         val s3Key = if (isMember) "member/$contentId/$fileName" else "public/$contentId/$fileName"
 
         try {
@@ -274,7 +270,7 @@ class S3Service(
     fun uploadFileWithRollback(
         request: List<UploadFileRequest>,
         contentId: Long,
-        onSuccess: (List<FileResult>) -> Unit
+        onSuccess: (List<FileResult>) -> Unit,
     ): List<FileResult> {
         // InputStream을 미리 바이트 배열로 변환 (비동기 처리 전에 읽어야 함)
         val fileDataList = request.mapNotNull {
@@ -282,13 +278,27 @@ class S3Service(
                 val fileBytes = f.inputStream.readAllBytes()
                 val contentType = f.contentType ?: "application/content"
                 val originalFileName = f.originalFilename ?: "${contentId}_${it.orderNo}"
-                FileInfoRequest(it.orderNo!!, fileBytes, contentType, originalFileName, it.type!!,  it.isCover!!, it.publishingType)
+                FileInfoRequest(
+                    it.orderNo!!,
+                    fileBytes,
+                    contentType,
+                    originalFileName,
+                    it.type!!,
+                    it.isCover!!,
+                    it.publishingType,
+                )
             }
         }
 
         // 모든 파일을 비동기로 업로드 (별도 서비스를 통해 호출하여 프록시가 작동하도록 함)
         val uploadFutures = fileDataList.map {
-            s3AsyncUploadService.uploadFileAsync(it.fileBytes, it.contentType, it.originalFileName, contentId, it.type.path)
+            s3AsyncUploadService.uploadFileAsync(
+                it.fileBytes,
+                it.contentType,
+                it.originalFileName,
+                contentId,
+                it.type.path,
+            )
                 .thenApply { s3Key -> FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType) }
                 .exceptionally { throwable ->
                     logger.error("파일 업로드 실패: orderNo=${it.orderNo}", throwable)
@@ -315,7 +325,7 @@ class S3Service(
             uploadResults
         } catch (e: Exception) {
             // 에러 발생 시 업로드된 모든 파일 삭제 (롤백)
-            // uploadedKeys는 onSuccess 호출 전에 채워지지 않을 수 있으므로, 
+            // uploadedKeys는 onSuccess 호출 전에 채워지지 않을 수 있으므로,
             // 실제로 업로드된 파일들을 찾아서 삭제해야 함
             uploadFutures.forEachIndexed { index, future ->
                 try {
@@ -330,7 +340,7 @@ class S3Service(
                     logger.debug("파일 업로드 미완료 또는 실패: index=$index")
                 }
             }
-            
+
             // 업로드된 모든 파일 삭제
             uploadedKeys.forEach { s3Key ->
                 try {

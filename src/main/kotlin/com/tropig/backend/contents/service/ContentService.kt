@@ -2,8 +2,8 @@ package com.tropig.backend.contents.service
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
@@ -48,8 +48,7 @@ class ContentService(
 ) {
     private val typeToken = object : TypeToken<List<String>>() {}.type
 
-    fun findById(id: Long): Content? =
-        contentRepository.findById(id).getOrNull()
+    fun findById(id: Long): Content? = contentRepository.findById(id).getOrNull()
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
         contentRepository.findByIdInAndType(ids, type)
@@ -73,39 +72,34 @@ class ContentService(
                 alias = it.alias,
                 thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writerId = it.memberId,
-                tags = tags[it.id] ?: emptyList()
+                tags = tags[it.id] ?: emptyList(),
             )
         }
     }
 
     @Cacheable(value = ["getNewestContents"], key = "#type.name() + '_' + #isAdult")
-    fun getNewestContents(type: ContentType, isAdult: Boolean): List<Content> =
-        if (isAdult) {
-            contentRepository.findTop20ByTypeAndStatusOrderByPublishedAtDesc(type, ContentsStatus.PUBLISHED)
-        } else {
-            contentRepository.findTop20ByTypeAndStatusAndAdultOrderByPublishedAtDesc(type, ContentsStatus.PUBLISHED, false)
-        }
-
-
-    fun getThumbnailPath(contentIds: List<Long>): List<ContentThumbnail> {
-        return contentThumbnailRepository.findByContentIdIn(contentIds)
+    fun getNewestContents(type: ContentType, isAdult: Boolean): List<Content> = if (isAdult) {
+        contentRepository.findTop20ByTypeAndStatusOrderByPublishedAtDesc(type, ContentsStatus.PUBLISHED)
+    } else {
+        contentRepository.findTop20ByTypeAndStatusAndAdultOrderByPublishedAtDesc(
+            type,
+            ContentsStatus.PUBLISHED,
+            false,
+        )
     }
+
+    fun getThumbnailPath(contentIds: List<Long>): List<ContentThumbnail> =
+        contentThumbnailRepository.findByContentIdIn(contentIds)
 
     @Cacheable(value = ["getDraftContent"], key = "#memberId")
     fun getDraftContent(memberId: Long): List<Content> =
         contentRepository.findByMemberIdAndStatus(memberId, ContentsStatus.DRAFT)
 
-    fun searchContents(
-        request: SearchContentRequestDto,
-    ): CursorSlice<Content> {
-        return contentRepository.searchContents(request)
-    }
+    fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> =
+        contentRepository.searchContents(request)
 
-    fun countSearchContents(
-        request: SearchContentRequestDto,
-    ): CountSearchContentsResult {
-        return contentRepository.countSearchContents(request)
-    }
+    fun countSearchContents(request: SearchContentRequestDto): CountSearchContentsResult =
+        contentRepository.countSearchContents(request)
 
     fun saveAllContentThumbnail(contentThumbnails: List<ContentThumbnail>): List<ContentThumbnail> =
         contentThumbnailRepository.saveAll(contentThumbnails)
@@ -113,11 +107,9 @@ class ContentService(
     fun findThumbnailByContentId(contentId: Long): List<ContentThumbnail> =
         contentThumbnailRepository.findByContentId(contentId)
 
-    fun deleteThumbnails(ids: List<Long>) =
-        contentThumbnailRepository.deleteByIdIn(ids)
+    fun deleteThumbnails(ids: List<Long>) = contentThumbnailRepository.deleteByIdIn(ids)
 
-    fun save(content: Content): Content =
-        contentRepository.save(content)
+    fun save(content: Content): Content = contentRepository.save(content)
 
     @Transactional
     fun updateContentToDelete(memberId: Long) {
@@ -126,9 +118,7 @@ class ContentService(
         }
     }
 
-    fun findByAlias(alias: String): Content? =
-        contentRepository.findByAliasAndStatusNot(alias, ContentsStatus.DELETED)
-
+    fun findByAlias(alias: String): Content? = contentRepository.findByAliasAndStatusNot(alias, ContentsStatus.DELETED)
 
     /**
      * Content를 생성합니다.
@@ -140,13 +130,9 @@ class ContentService(
     @Transactional
     @CacheEvict(
         cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #request.type.name()"
+        key = "#memberId + '-' + #request.type.name()",
     )
-    fun createContent(
-        request: CreateContentRequest,
-        memberId: Long,
-        writerNickname: String,
-    ): Content {
+    fun createContent(request: CreateContentRequest, memberId: Long, writerNickname: String): Content {
         // 1. Content 엔티티 생성 (임시 ID로 alias 생성)
         val tempContent = Content(
             alias = "", // 임시값, 저장 후 업데이트
@@ -154,14 +140,20 @@ class ContentService(
             type = request.type,
             memberId = memberId,
             rule =
-                if (request.type == ContentType.SCENARIO) request.rule!!
-                else Rule.RESOURCE,
+            if (request.type == ContentType.SCENARIO) {
+                request.rule!!
+            } else {
+                Rule.RESOURCE
+            },
             genre = request.genre ?: Genre.NONE,
             playerCountType = request.playerCountType ?: PlayerCountType.NONE,
             termType = request.termType ?: TermType.NONE,
             publishingInfo =
-                if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
-                else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() },
+            if (request.type == ContentType.SCENARIO) {
+                request.publishingInfo?.toJson()
+            } else {
+                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
+            },
             status = request.status,
             adult = request.adult,
             publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
@@ -226,7 +218,7 @@ class ContentService(
                 val existingContents = contentRepository.findAllById(relatedIds)
                     .filter {
                         it.status == ContentsStatus.PUBLISHED &&
-                        it.type == ContentType.SCENARIO
+                            it.type == ContentType.SCENARIO
                     }
                 val existingContentIds = existingContents.map { it.id }.toSet()
 
@@ -280,7 +272,7 @@ class ContentService(
     @Transactional
     @CacheEvict(
         cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #request.type.name()"
+        key = "#memberId + '-' + #request.type.name()",
     )
     fun updateContent(
         contentId: Long,
@@ -305,8 +297,11 @@ class ContentService(
         request.playerCountType?.let { content.playerCountType = it }
         request.termType?.let { content.termType = it }
         content.publishingInfo =
-            if (request.type == ContentType.SCENARIO) request.publishingInfo?.toJson()
-            else request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
+            if (request.type == ContentType.SCENARIO) {
+                request.publishingInfo?.toJson()
+            } else {
+                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
+            }
         content.status = request.status
         content.adult = request.adult
         content.publishedAt = request.publishedAt
@@ -359,7 +354,7 @@ class ContentService(
                 val existingContents = contentRepository.findAllById(relatedIds)
                     .filter {
                         it.status == ContentsStatus.PUBLISHED &&
-                                it.type == ContentType.SCENARIO
+                            it.type == ContentType.SCENARIO
                     }
                 val existingContentIds = existingContents.map { it.id }.toSet()
 
@@ -459,13 +454,13 @@ class ContentService(
     @Transactional
     @CacheEvict(
         cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #content.type.name()"
+        key = "#memberId + '-' + #content.type.name()",
     )
     fun updateContentStatus(content: Content, memberId: Long, status: ContentsStatus): Content {
         if (content.memberId != memberId) {
             throw ContentException(
                 "본인의 콘텐츠만 상태를 변경할 수 있습니다.",
-                MessageCode.NOT_OWN_CONTENT
+                MessageCode.NOT_OWN_CONTENT,
             )
         }
 
@@ -475,20 +470,19 @@ class ContentService(
 
     @CacheEvict(
         cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #content.type.name()"
+        key = "#memberId + '-' + #content.type.name()",
     )
     fun deleteContent(content: Content, memberId: Long): Content {
         if (content.memberId != memberId) {
             throw ContentException(
                 "본인의 콘텐츠만 삭제할 수 있습니다.",
-                MessageCode.NOT_OWN_CONTENT
+                MessageCode.NOT_OWN_CONTENT,
             )
         }
 
         content.status = ContentsStatus.DELETED
         return save(content)
     }
-
 
     fun getRandomGenreContent(genres: String, isAdult: Boolean): Content {
         val genreNames: List<String> = Gson().fromJson(genres, typeToken)
@@ -504,9 +498,7 @@ class ContentService(
         return contentRepository.findRandomRuleContent(ruleList, isAdult)
     }
 
-    fun getRandomContent(isAdult: Boolean): Content {
-        return contentRepository.findRandomContent(isAdult)
-    }
+    fun getRandomContent(isAdult: Boolean): Content = contentRepository.findRandomContent(isAdult)
 
     /**
      * non_free_content를 조회합니다.
@@ -517,16 +509,12 @@ class ContentService(
      * @throws NotFoundException 콘텐츠를 찾을 수 없는 경우
      * @throws ContentException 구매가 필요한 경우
      */
-    fun getNonFreeContent(
-        contentId: Long,
-        memberId: Long?,
-        isContentPurchased: (Long, Long) -> Boolean,
-    ): String {
+    fun getNonFreeContent(contentId: Long, memberId: Long?, isContentPurchased: (Long, Long) -> Boolean): String {
         // 1. Content 조회
         val content = findById(contentId)
             ?: throw NotFoundException(
                 "콘텐츠를 찾을 수 없습니다.",
-                MessageCode.NOT_FOUND_CONTENT
+                MessageCode.NOT_FOUND_CONTENT,
             )
 
         // 2. nonFreeContent가 null인 경우
@@ -546,7 +534,7 @@ class ContentService(
         // 6. 구매 이력이 없고 price가 0 초과면 예외 발생
         throw ContentException(
             "구매가 필요한 콘텐츠입니다.",
-            MessageCode.PURCHASE_REQUIRED
+            MessageCode.PURCHASE_REQUIRED,
         )
     }
 

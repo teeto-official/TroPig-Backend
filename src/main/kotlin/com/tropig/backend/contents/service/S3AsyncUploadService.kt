@@ -11,10 +11,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 
 @Service
-class S3AsyncUploadService(
-    private val s3Client: S3Client,
-    private val s3Properties: S3Properties
-) {
+class S3AsyncUploadService(private val s3Client: S3Client, private val s3Properties: S3Properties) {
     companion object {
         private val logger = LoggerFactory.getLogger(S3AsyncUploadService::class.java)
         private val ALLOWED_FILE_TYPES = setOf(
@@ -38,7 +35,7 @@ class S3AsyncUploadService(
             "text/csv",
             // 기타
             "application/json",
-            "application/xml"
+            "application/xml",
         )
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
     }
@@ -64,9 +61,9 @@ class S3AsyncUploadService(
         if (!ALLOWED_FILE_TYPES.contains(contentType.lowercase())) {
             throw IllegalArgumentException(
                 "허용되지 않는 파일 타입입니다. 지원 형식: 이미지(JPEG, PNG, GIF, WEBP), " +
-                "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
-                "압축파일(ZIP, RAR, 7Z), " +
-                "기타(JSON, XML, TXT, CSV)"
+                    "문서(PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX), " +
+                    "압축파일(ZIP, RAR, 7Z), " +
+                    "기타(JSON, XML, TXT, CSV)",
             )
         }
 
@@ -76,7 +73,7 @@ class S3AsyncUploadService(
         }
 
         // 파일명 생성 (UUID + 원본 파일명)
-        val fileName = "${UUID.randomUUID()}-${originalFileName}"
+        val fileName = "${UUID.randomUUID()}-$originalFileName"
         val s3Key = "$prefix/$contentId/$fileName"
 
         try {

@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-interface PurchaseRepository : JpaRepository<Purchase, Long>, PurchaseCustomRepository {
+interface PurchaseRepository :
+    JpaRepository<Purchase, Long>,
+    PurchaseCustomRepository {
     fun findByMemberIdAndContentId(memberId: Long, contentId: Long): Purchase?
     fun existsByMemberIdAndContentIdAndStatus(memberId: Long, contentId: Long, status: PurchaseStatus): Boolean
     fun findByMemberIdAndPaymentId(memberId: Long, paymentId: Long): Purchase?
@@ -24,7 +26,7 @@ interface PurchaseRepository : JpaRepository<Purchase, Long>, PurchaseCustomRepo
     @Query(
         "SELECT p FROM Purchase p WHERE p.contentId IN :contentIds AND p.status = :status " +
             "AND (p.createdAt < :cursorCreatedAt OR (p.createdAt = :cursorCreatedAt AND p.id < :cursorId)) " +
-            "ORDER BY p.createdAt DESC, p.id DESC LIMIT :size"
+            "ORDER BY p.createdAt DESC, p.id DESC LIMIT :size",
     )
     fun findByContentIdInAndStatusWithCursor(
         contentIds: List<Long>,

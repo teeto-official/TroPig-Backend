@@ -49,7 +49,6 @@ class GlobalExceptionHandler {
             .body(ErrorResponse(message = e.message!!, code = e.code))
     }
 
-
     @ExceptionHandler(ResponseStatusException::class)
     fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> {
         logger.debug("ResponseStatusException: ${e.reason}")

@@ -4,11 +4,9 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
-import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.result.BookmarkContentResult
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -16,19 +14,18 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class BookmarkContentCustomRepositoryImpl(
-    @PersistenceContext private val em: EntityManager
-): BookmarkContentCustomRepository {
+class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) :
+    BookmarkContentCustomRepository {
     override fun getBookmarkList(
         memberId: Long,
         type: ContentType,
         cursorId: Long?,
         cursorCreatedAt: LocalDateTime?,
         sortMode: SortMode,
-        size: Int
+        size: Int,
     ): CursorSlice<BookmarkContentResult> {
         val sql = StringBuilder(
-        """
+            """
             SELECT
                 c.id,
                 c.alias,
@@ -48,12 +45,12 @@ class BookmarkContentCustomRepositoryImpl(
                 bc.member_id = :memberId
             AND
                 bc.deleted = false
-            """.trimIndent()
+            """.trimIndent(),
         )
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "memberId" to memberId
+            "memberId" to memberId,
         )
 
         when (sortMode) {
@@ -89,7 +86,7 @@ class BookmarkContentCustomRepositoryImpl(
             items = items,
             hasNext = hasNext,
             nextCursorDateAt = last?.updatedAt,
-            nextCursorId = last?.id
+            nextCursorId = last?.id,
         )
     }
 

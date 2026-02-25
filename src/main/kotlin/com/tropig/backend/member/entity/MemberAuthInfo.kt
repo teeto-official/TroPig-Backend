@@ -17,8 +17,8 @@ import java.time.format.DateTimeFormatter
     name = "member_auth_info",
     indexes = [
         Index(name = "idx_member_auth_info_member_id", columnList = "member_id", unique = true),
-        Index(name = "idx_member_auth_info_phone_number", columnList = "phone_number")
-    ]
+        Index(name = "idx_member_auth_info_phone_number", columnList = "phone_number"),
+    ],
 )
 data class MemberAuthInfo(
     @Id
@@ -64,7 +64,7 @@ data class MemberAuthInfo(
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    val updatedAt: LocalDateTime? = null
+    val updatedAt: LocalDateTime? = null,
 ) {
 
     companion object {
@@ -91,9 +91,7 @@ data class MemberAuthInfo(
         /**
          * 성인 여부를 판단합니다 (만 19세 이상).
          */
-        fun isAdult(birthDate: String): Boolean {
-            return calculateAge(birthDate) >= 19
-        }
+        fun isAdult(birthDate: String): Boolean = calculateAge(birthDate) >= 19
     }
 
     /**

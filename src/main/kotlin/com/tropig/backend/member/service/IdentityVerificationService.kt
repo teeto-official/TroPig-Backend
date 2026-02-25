@@ -6,7 +6,6 @@ import com.tropig.backend.member.client.CustomerInfo
 import com.tropig.backend.member.client.PortOneIdentityVerificationClient
 import com.tropig.backend.member.client.PortOneIdentityVerificationException
 import com.tropig.backend.member.client.SendVerificationRequest
-import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.MemberAuthInfo
 import com.tropig.backend.member.model.request.VerificationConfirmDto
 import com.tropig.backend.member.model.request.VerificationRequestDto
@@ -30,7 +29,7 @@ class IdentityVerificationService(
     private val memberAuthInfoRepository: MemberAuthInfoRepository,
     private val portOneClient: PortOneIdentityVerificationClient,
     private val sessionManager: VerificationSessionManager,
-    private val httpRequest: HttpServletRequest
+    private val httpRequest: HttpServletRequest,
 ) {
     private val logger = LoggerFactory.getLogger(IdentityVerificationService::class.java)
 
@@ -38,10 +37,7 @@ class IdentityVerificationService(
      * 본인인증 요청을 시작합니다.
      * OTP를 SMS로 전송합니다.
      */
-    fun requestVerification(
-        memberId: Long,
-        request: VerificationRequestDto
-    ): VerificationRequestResult {
+    fun requestVerification(memberId: Long, request: VerificationRequestDto): VerificationRequestResult {
         logger.info("Starting identity verification for member: $memberId")
 
         // 1. 이미 인증된 사용자 체크
@@ -53,18 +49,18 @@ class IdentityVerificationService(
         val ipAddress = getClientIpAddress()
 
         // 3. PortOne API 호출
-        val portoneId = "portone_identity_${System.currentTimeMillis()}_${memberId}"
+        val portoneId = "portone_identity_${System.currentTimeMillis()}_$memberId"
         val portoneRequest = SendVerificationRequest(
             identityVerificationId = portoneId,
             customer = CustomerInfo(
                 name = request.name,
                 phoneNumber = request.phoneNumber,
                 ipAddress = ipAddress,
-                identityNumber = request.idNumber
+                identityNumber = request.idNumber,
             ),
             operator = request.carrier.name,
             method = request.method.name,
-            customData = "tropig_member_id:$memberId"
+            customData = "tropig_member_id:$memberId",
         )
 
         return try {
@@ -79,13 +75,13 @@ class IdentityVerificationService(
                 verificationId = session.sessionId,
                 expiresAt = session.expiresAt,
                 method = request.method,
-                message = "인증번호가 발송되었습니다. 3분 이내에 입력해주세요."
+                message = "인증번호가 발송되었습니다. 3분 이내에 입력해주세요.",
             )
         } catch (e: PortOneIdentityVerificationException) {
             logger.error("Failed to request verification from PortOne", e)
             throw MemberException(
                 "본인인증 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                MessageCode.EXTERNAL_SERVICE_ERROR
+                MessageCode.EXTERNAL_SERVICE_ERROR,
             )
         }
     }
@@ -94,10 +90,7 @@ class IdentityVerificationService(
      * OTP 코드로 본인인증을 확인합니다.
      */
     @Transactional
-    fun confirmVerification(
-        memberId: Long,
-        request: VerificationConfirmDto
-    ): VerificationResult {
+    fun confirmVerification(memberId: Long, request: VerificationConfirmDto): VerificationResult {
         logger.info("Confirming identity verification: member=$memberId, sessionId=${request.verificationId}")
 
         // 1. 세션 조회
@@ -124,14 +117,14 @@ class IdentityVerificationService(
             if (memberAuthInfoRepository.existsByCi(verifiedCustomer.ci)) {
                 throw MemberException(
                     "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
-                    MessageCode.CI_ALREADY_EXISTS
+                    MessageCode.CI_ALREADY_EXISTS,
                 )
             }
 
             if (memberAuthInfoRepository.existsByDi(verifiedCustomer.di)) {
                 throw MemberException(
                     "이미 등록된 본인인증 정보입니다.",
-                    MessageCode.DI_ALREADY_EXISTS
+                    MessageCode.DI_ALREADY_EXISTS,
                 )
             }
 
@@ -146,7 +139,7 @@ class IdentityVerificationService(
                 phoneNumber = verifiedCustomer.phoneNumber,
                 ci = verifiedCustomer.ci,
                 di = verifiedCustomer.di,
-                verifiedAt = LocalDateTime.now()
+                verifiedAt = LocalDateTime.now(),
             )
             memberAuthInfoRepository.save(authInfo)
 
@@ -168,7 +161,7 @@ class IdentityVerificationService(
                 birthDate = verifiedCustomer.birthDate,
                 phoneNumber = MemberAuthInfo.maskPhoneNumber(verifiedCustomer.phoneNumber),
                 verifiedAt = LocalDateTime.now(),
-                message = "본인인증이 완료되었습니다."
+                message = "본인인증이 완료되었습니다.",
             )
         } catch (e: PortOneIdentityVerificationException) {
             // OTP 시도 횟수 증가
@@ -180,13 +173,13 @@ class IdentityVerificationService(
 
                 throw MemberException(
                     "인증번호가 일치하지 않습니다. (남은 시도: ${remaining}회)",
-                    MessageCode.INVALID_OTP
+                    MessageCode.INVALID_OTP,
                 )
             } catch (e: OtpAttemptsExceededException) {
                 logger.warn("OTP attempts exceeded: member=$memberId")
                 throw MemberException(
                     "인증번호 입력 횟수를 초과했습니다. 처음부터 다시 시도해주세요.",
-                    MessageCode.OTP_ATTEMPTS_EXCEEDED
+                    MessageCode.OTP_ATTEMPTS_EXCEEDED,
                 )
             }
         }
@@ -195,10 +188,7 @@ class IdentityVerificationService(
     /**
      * OTP를 재전송합니다.
      */
-    fun resendOtp(
-        memberId: Long,
-        request: VerificationResendDto
-    ): VerificationResendResult {
+    fun resendOtp(memberId: Long, request: VerificationResendDto): VerificationResendResult {
         logger.info("Resending OTP: member=$memberId, sessionId=${request.verificationId}")
 
         // 1. 세션 조회
@@ -227,19 +217,19 @@ class IdentityVerificationService(
                 sent = true,
                 expiresAt = updatedSession.expiresAt,
                 message = "인증번호가 재전송되었습니다.",
-                remainingResends = remaining - 1
+                remainingResends = remaining - 1,
             )
         } catch (e: ResendLimitExceededException) {
             logger.warn("Resend limit exceeded: member=$memberId")
             throw MemberException(
                 "인증번호 재전송 횟수를 초과했습니다. 처음부터 다시 시도해주세요.",
-                MessageCode.RESEND_LIMIT_EXCEEDED
+                MessageCode.RESEND_LIMIT_EXCEEDED,
             )
         } catch (e: PortOneIdentityVerificationException) {
             logger.error("Failed to resend OTP", e)
             throw MemberException(
                 "인증번호 재전송 중 오류가 발생했습니다.",
-                MessageCode.EXTERNAL_SERVICE_ERROR
+                MessageCode.EXTERNAL_SERVICE_ERROR,
             )
         }
     }
@@ -261,7 +251,7 @@ class IdentityVerificationService(
                 name = authInfo.name,
                 phoneNumber = authInfo.getMaskedPhoneNumber(),
                 birthDate = authInfo.birthDate,
-                age = authInfo.getAge()
+                age = authInfo.getAge(),
             )
         } else {
             VerificationStatusResponse(
@@ -271,7 +261,7 @@ class IdentityVerificationService(
                 name = null,
                 phoneNumber = null,
                 birthDate = null,
-                age = null
+                age = null,
             )
         }
     }

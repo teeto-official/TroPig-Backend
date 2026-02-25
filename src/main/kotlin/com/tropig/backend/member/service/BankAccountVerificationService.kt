@@ -13,9 +13,7 @@ import org.springframework.stereotype.Service
  * PortOne Bank Account API를 사용하여 계좌 실명 인증
  */
 @Service
-class BankAccountVerificationService(
-    private val portOnePartnerClient: PortOnePartnerClient
-) {
+class BankAccountVerificationService(private val portOnePartnerClient: PortOnePartnerClient) {
     private val logger = LoggerFactory.getLogger(BankAccountVerificationService::class.java)
 
     /**
@@ -28,7 +26,7 @@ class BankAccountVerificationService(
     fun verifyBankAccount(
         bankName: String,
         accountNumber: String,
-        expectedHolder: String
+        expectedHolder: String,
     ): BankAccountVerificationResult {
         // Convert Korean bank name to PortOne bank code
         val bankCode = try {
@@ -37,7 +35,7 @@ class BankAccountVerificationService(
             logger.error("Unsupported bank: $bankName")
             throw MemberException(
                 "지원하지 않는 은행입니다: $bankName",
-                MessageCode.UNSUPPORTED_BANK
+                MessageCode.UNSUPPORTED_BANK,
             )
         }
 
@@ -48,7 +46,7 @@ class BankAccountVerificationService(
             logger.error("Bank account verification failed", e)
             throw MemberException(
                 "계좌 인증에 실패했습니다.",
-                MessageCode.BANK_ACCOUNT_VERIFICATION_FAILED
+                MessageCode.BANK_ACCOUNT_VERIFICATION_FAILED,
             )
         }
 
@@ -61,30 +59,24 @@ class BankAccountVerificationService(
             return BankAccountVerificationResult(
                 verified = false,
                 accountHolder = accountHolder,
-                message = "예금주명이 일치하지 않습니다."
+                message = "예금주명이 일치하지 않습니다.",
             )
         }
 
         return BankAccountVerificationResult(
             verified = true,
             accountHolder = accountHolder,
-            message = "계좌 인증 완료"
+            message = "계좌 인증 완료",
         )
     }
 
     /**
      * 한글 이름 정규화 (공백, 특수문자 제거)
      */
-    private fun normalizeKoreanName(name: String): String {
-        return name.replace(Regex("[\\s\\-\\.]"), "")
-    }
+    private fun normalizeKoreanName(name: String): String = name.replace(Regex("[\\s\\-\\.]"), "")
 }
 
 /**
  * 은행 계좌 인증 결과
  */
-data class BankAccountVerificationResult(
-    val verified: Boolean,
-    val accountHolder: String,
-    val message: String
-)
+data class BankAccountVerificationResult(val verified: Boolean, val accountHolder: String, val message: String)

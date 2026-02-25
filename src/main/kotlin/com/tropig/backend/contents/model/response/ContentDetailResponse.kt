@@ -46,7 +46,7 @@ fun Content.toDetailResponse(
             WriterInfo(
                 writerId = writer.id,
                 nickname = writer.nickname,
-                profilePath = writerProfileUrl
+                profilePath = writerProfileUrl,
             )
         }
     } ?: run {
@@ -73,8 +73,4 @@ fun Content.toDetailResponse(
     )
 }
 
-data class WriterInfo(
-    val writerId: Long = 0L,
-    val nickname: String = "탈퇴한 유저",
-    val profilePath: String? = null,
-)
+data class WriterInfo(val writerId: Long = 0L, val nickname: String = "탈퇴한 유저", val profilePath: String? = null)

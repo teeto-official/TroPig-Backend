@@ -21,27 +21,25 @@ enum class Carrier {
     KT_MVNO,
 
     /** LG U+ 알뜰폰 (MVNO) */
-    LGU_MVNO;
+    LGU_MVNO,
+
+    ;
 
     companion object {
         /**
          * 문자열로부터 Carrier enum을 생성합니다.
          * 대소문자 구분 없이 변환합니다.
          */
-        fun fromString(value: String): Carrier {
-            return valueOf(value.uppercase())
-        }
+        fun fromString(value: String): Carrier = valueOf(value.uppercase())
 
         /**
          * 유효한 통신사 값인지 확인합니다.
          */
-        fun isValid(value: String): Boolean {
-            return try {
-                fromString(value)
-                true
-            } catch (e: IllegalArgumentException) {
-                false
-            }
+        fun isValid(value: String): Boolean = try {
+            fromString(value)
+            true
+        } catch (e: IllegalArgumentException) {
+            false
         }
     }
 }

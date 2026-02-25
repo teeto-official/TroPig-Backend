@@ -7,5 +7,5 @@ data class S3Properties(
     val bucket: String = "",
     val region: String = "ap-northeast-2",
     val accessKey: String = "",
-    val secretKey: String = ""
+    val secretKey: String = "",
 )

@@ -13,7 +13,7 @@ data class VerificationConfirmDto(
     @field:NotBlank(message = "인증번호는 필수입니다.")
     @field:Pattern(
         regexp = "^[0-9]{6}$",
-        message = "6자리 인증번호를 입력하세요."
+        message = "6자리 인증번호를 입력하세요.",
     )
-    val otp: String
+    val otp: String,
 )

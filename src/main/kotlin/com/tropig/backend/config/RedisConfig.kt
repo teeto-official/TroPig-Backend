@@ -21,7 +21,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 class RedisConfig(
     @Value("\${spring.data.redis.host}") private val host: String,
     @Value("\${spring.data.redis.port}") private val port: Int,
-    @Value("\${spring.data.redis.password}") private val pass: String?
+    @Value("\${spring.data.redis.password}") private val pass: String?,
 ) {
 
     @Bean
@@ -37,8 +37,8 @@ class RedisConfig(
     }
 
     @Bean
-    fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<String, String> {
-        return RedisTemplate<String, String>().apply {
+    fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<String, String> =
+        RedisTemplate<String, String>().apply {
             this.connectionFactory = connectionFactory
 
             // Key Serializer
@@ -51,14 +51,11 @@ class RedisConfig(
 
             afterPropertiesSet()
         }
-    }
 
     @Bean
-    fun objectMapper(): ObjectMapper {
-        return ObjectMapper().apply {
-            registerModule(kotlinModule())
-            registerModule(JavaTimeModule())
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        }
+    fun objectMapper(): ObjectMapper = ObjectMapper().apply {
+        registerModule(kotlinModule())
+        registerModule(JavaTimeModule())
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 }

@@ -15,7 +15,7 @@ class RequestLoggingFilter : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val startTime = System.currentTimeMillis()
         val uri = request.requestURI

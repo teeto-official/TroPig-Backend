@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ContentThumbnailRepository: JpaRepository<ContentThumbnail, Long> {
+interface ContentThumbnailRepository : JpaRepository<ContentThumbnail, Long> {
 
     fun findByContentIdIn(contentIds: List<Long>): List<ContentThumbnail>
 

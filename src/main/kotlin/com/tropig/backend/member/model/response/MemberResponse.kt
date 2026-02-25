@@ -25,23 +25,24 @@ data class MemberResponse(
     val authCreatorAt: LocalDateTime?,
 ) {
     companion object {
-        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse {
-            return MemberResponse(
-                member.id,
-                member.nickname,
-                member.snsProvider,
-                member.email,
-                member.role,
-                member.profile,
-                Genre.fromList(member.favoriteGenres),
-                Rule.fromList(member.favoriteRules),
-                member.bio,
-                member.marketingAt != null,
-                isAuth = (memberAuthInfo?.verifiedAt != null && memberAuthInfo.verifiedAt.plusDays(365) >= LocalDateTime.now()),
-                authDateAt = memberAuthInfo?.verifiedAt,
-                creator = memberAuthInfo?.creator ?: false,
-                authCreatorAt = memberAuthInfo?.authCreatorAt
-            )
-        }
+        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse = MemberResponse(
+            member.id,
+            member.nickname,
+            member.snsProvider,
+            member.email,
+            member.role,
+            member.profile,
+            Genre.fromList(member.favoriteGenres),
+            Rule.fromList(member.favoriteRules),
+            member.bio,
+            member.marketingAt != null,
+            isAuth = (
+                memberAuthInfo?.verifiedAt != null &&
+                    memberAuthInfo.verifiedAt.plusDays(365) >= LocalDateTime.now()
+                ),
+            authDateAt = memberAuthInfo?.verifiedAt,
+            creator = memberAuthInfo?.creator ?: false,
+            authCreatorAt = memberAuthInfo?.authCreatorAt,
+        )
     }
 }

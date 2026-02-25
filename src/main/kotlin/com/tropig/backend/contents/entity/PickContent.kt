@@ -10,10 +10,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "pick_content")
-data class PickContent(
-    val contentId: Long,
-    val orderNo: Int,
-) {
+data class PickContent(val contentId: Long, val orderNo: Int) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L

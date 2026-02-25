@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ContentRepository: JpaRepository<Content, Long>, ContentCustomRepository {
+interface ContentRepository :
+    JpaRepository<Content, Long>,
+    ContentCustomRepository {
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content>
 
@@ -32,6 +34,6 @@ interface ContentRepository: JpaRepository<Content, Long>, ContentCustomReposito
     fun findTop20ByTypeAndStatusAndAdultOrderByPublishedAtDesc(
         type: ContentType,
         status: ContentsStatus,
-        adult: Boolean
+        adult: Boolean,
     ): List<Content>
 }

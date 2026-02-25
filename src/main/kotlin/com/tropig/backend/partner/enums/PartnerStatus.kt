@@ -4,5 +4,5 @@ enum class PartnerStatus {
     PENDING,
     ACTIVE,
     INACTIVE,
-    FAILED
+    FAILED,
 }

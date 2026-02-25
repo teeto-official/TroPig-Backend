@@ -18,14 +18,14 @@ data class VerificationRequestDto(
     @field:NotBlank(message = "휴대폰 번호는 필수입니다.")
     @field:Pattern(
         regexp = "^01[0-9]{8,9}$",
-        message = "유효한 휴대폰 번호를 입력하세요. (예: 01012345678)"
+        message = "유효한 휴대폰 번호를 입력하세요. (예: 01012345678)",
     )
     val phoneNumber: String,
 
     @field:NotBlank(message = "주민등록번호 앞 7자리는 필수입니다.")
     @field:Pattern(
         regexp = "^[0-9]{7}$",
-        message = "주민등록번호 앞 7자리를 입력하세요. (예: 9001011)"
+        message = "주민등록번호 앞 7자리를 입력하세요. (예: 9001011)",
     )
     val idNumber: String,
 
@@ -33,5 +33,5 @@ data class VerificationRequestDto(
     val carrier: Carrier,
 
     @field:NotNull(message = "인증 방법은 필수입니다.")
-    val method: VerificationMethod
+    val method: VerificationMethod,
 )

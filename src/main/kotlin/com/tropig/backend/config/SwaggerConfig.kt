@@ -15,11 +15,9 @@ import org.springframework.core.env.Environment
     type = SecuritySchemeType.HTTP,
     scheme = "bearer",
     bearerFormat = "JWT",
-    `in` = SecuritySchemeIn.HEADER
+    `in` = SecuritySchemeIn.HEADER,
 )
-class SwaggerConfig(
-    private val environment: Environment
-) {
+class SwaggerConfig(private val environment: Environment) {
 
     @Bean
     fun openApi(): OpenAPI {

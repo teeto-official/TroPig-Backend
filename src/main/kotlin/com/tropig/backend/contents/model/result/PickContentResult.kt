@@ -6,5 +6,5 @@ data class PickContentResult(
     val alias: String,
     val thumbnailPath: String?,
     val writerId: Long,
-    val tags: List<TagResult>
+    val tags: List<TagResult>,
 )

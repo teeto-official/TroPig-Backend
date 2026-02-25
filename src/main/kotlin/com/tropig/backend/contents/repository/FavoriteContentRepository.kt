@@ -7,12 +7,12 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-interface FavoriteContentRepository: JpaRepository<FavoriteContent, Long> {
+interface FavoriteContentRepository : JpaRepository<FavoriteContent, Long> {
 
     @Query(
         nativeQuery = true,
         value =
-            """
+        """
             SELECT
                 fc.content_id,
                 count(1) as count
@@ -23,7 +23,7 @@ interface FavoriteContentRepository: JpaRepository<FavoriteContent, Long> {
             AND
                 fc.deleted = false
             GROUP BY fc.content_id
-        """
+        """,
     )
     fun countByContentIdsIn(contentIds: List<Long>): List<FavoriteCountProjection>
 }

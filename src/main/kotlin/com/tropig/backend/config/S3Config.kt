@@ -10,14 +10,12 @@ import software.amazon.awssdk.services.s3.S3Client
 
 @Configuration
 @EnableConfigurationProperties(S3Properties::class)
-class S3Config(
-    private val s3Properties: S3Properties
-) {
+class S3Config(private val s3Properties: S3Properties) {
     @Bean
     fun s3Client(): S3Client {
         val credentials = AwsBasicCredentials.create(
             s3Properties.accessKey,
-            s3Properties.secretKey
+            s3Properties.secretKey,
         )
 
         return S3Client.builder()

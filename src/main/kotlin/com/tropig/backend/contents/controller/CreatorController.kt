@@ -40,15 +40,12 @@ class CreatorController(
     @PostMapping
     @RequireAuth
     @ResponseStatus(HttpStatus.CREATED)
-    fun createContent(
-        @LoginMember authMember: AuthMember,
-        @RequestBody request: CreateContentRequest,
-    ): Long {
+    fun createContent(@LoginMember authMember: AuthMember, @RequestBody request: CreateContentRequest): Long {
         // CREATOR 권한 체크
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
                 message = "콘텐츠를 생성할 권한이 없습니다. CREATOR 권한이 필요합니다.",
-                code = MessageCode.INCORRECT_ROLE
+                code = MessageCode.INCORRECT_ROLE,
             )
         }
 
@@ -72,7 +69,7 @@ class CreatorController(
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
                 message = "콘텐츠를 수정할 권한이 없습니다. CREATOR 권한이 필요합니다.",
-                code = MessageCode.INCORRECT_ROLE
+                code = MessageCode.INCORRECT_ROLE,
             )
         }
 
@@ -80,13 +77,13 @@ class CreatorController(
         val content = contentService.findById(contentId)
             ?: throw ContentException(
                 message = "Content를 찾을 수 없습니다.",
-                code = MessageCode.NOT_FOUND_CONTENT
+                code = MessageCode.NOT_FOUND_CONTENT,
             )
 
         if (content.memberId != authMember.memberId) {
             throw MemberException(
                 message = "본인이 작성한 작품만 수정할 수 있습니다.",
-                code = MessageCode.NOT_OWN_CONTENT
+                code = MessageCode.NOT_OWN_CONTENT,
             )
         }
 
@@ -111,7 +108,7 @@ class CreatorController(
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
                 "CREATOR 권한이 필요합니다.",
-                MessageCode.INCORRECT_ROLE
+                MessageCode.INCORRECT_ROLE,
             )
         }
 
@@ -119,7 +116,7 @@ class CreatorController(
         // 3. status만 DELETED로 변경 (ContentService에서 처리)
         val content = contentService.findById(contentId) ?: throw NotFoundException(
             "콘텐츠를 찾을 수 없습니다.",
-            MessageCode.NOT_FOUND_CONTENT
+            MessageCode.NOT_FOUND_CONTENT,
         )
         contentService.deleteContent(content, authMember.memberId)
     }
@@ -134,14 +131,14 @@ class CreatorController(
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
                 message = "콘텐츠 상태를 변경할 권한이 없습니다. CREATOR 권한이 필요합니다.",
-                code = MessageCode.INCORRECT_ROLE
+                code = MessageCode.INCORRECT_ROLE,
             )
         }
 
         if (request.status !in listOf(ContentsStatus.PRIVATE, ContentsStatus.PUBLISHED)) {
             throw IllegalArgumentException(
-                message = "변경 가능한 상태는 비공개 또는 공개만 가능합니다. (입력값: contentId: ${contentId}, status: ${request.status})",
-                code = MessageCode.INVALID_PARAMS
+                message = "변경 가능한 상태는 비공개 또는 공개만 가능합니다. (입력값: contentId: $contentId, status: ${request.status})",
+                code = MessageCode.INVALID_PARAMS,
             )
         }
 
@@ -185,7 +182,7 @@ class CreatorController(
             else -> {
                 throw IllegalArgumentException(
                     message = "유효하지 않은 상태값입니다. PUBLISHED 또는 DRAFT만 가능합니다. (입력값: $status)",
-                    code = MessageCode.INVALID_PARAMS
+                    code = MessageCode.INVALID_PARAMS,
                 )
             }
         }
@@ -227,14 +224,14 @@ class CreatorController(
         val content = contentService.findByAlias(alias)
             ?: throw NotFoundException(
                 "해당 콘텐츠를 찾을 수 없습니다.",
-                MessageCode.NOT_FOUND_CONTENT
+                MessageCode.NOT_FOUND_CONTENT,
             )
 
         // 2. CREATOR 권한 확인
         if (authMember.role != Role.CREATOR) {
             throw ContentException(
                 message = "창작자 권한이 필요합니다.",
-                code = MessageCode.INCORRECT_ROLE
+                code = MessageCode.INCORRECT_ROLE,
             )
         }
 
@@ -242,7 +239,7 @@ class CreatorController(
         if (content.memberId != authMember.memberId) {
             throw ContentException(
                 message = "본인이 작성한 콘텐츠만 조회할 수 있습니다.",
-                code = MessageCode.NOT_OWN_CONTENT
+                code = MessageCode.NOT_OWN_CONTENT,
             )
         }
 
@@ -250,7 +247,7 @@ class CreatorController(
         if (content.status !in ContentsStatus.authorStatuses) {
             throw ContentException(
                 message = "삭제된 콘텐츠입니다.",
-                code = MessageCode.NOT_FOUND_CONTENT
+                code = MessageCode.NOT_FOUND_CONTENT,
             )
         }
 
@@ -294,7 +291,7 @@ class CreatorController(
                     favoriteCounts = emptyMap(),
                     thumbnailPaths = thumbnailPaths,
                 )
-            }
+            },
         ) { content, ctx ->
             SimpleSearchContentResponse(
                 id = content.id,

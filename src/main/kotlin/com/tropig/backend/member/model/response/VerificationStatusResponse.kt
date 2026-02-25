@@ -25,5 +25,5 @@ data class VerificationStatusResponse(
     val birthDate: String?,
 
     /** 나이 */
-    val age: Int?
+    val age: Int?,
 )

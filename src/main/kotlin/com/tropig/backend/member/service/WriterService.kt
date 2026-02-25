@@ -7,16 +7,11 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
-class WriterService(
-    private val memberRepository: MemberRepository,
-) {
+class WriterService(private val memberRepository: MemberRepository) {
 
-    fun getWritersName(writerIds: List<Long>): Map<Long, String> {
-        return memberRepository.findByIdInAndRoleAndDeletedAtIsNull(writerIds, Role.CREATOR)
+    fun getWritersName(writerIds: List<Long>): Map<Long, String> =
+        memberRepository.findByIdInAndRoleAndDeletedAtIsNull(writerIds, Role.CREATOR)
             .associate { it.id to it.nickname }
-    }
 
-    fun getWriter(writerId: Long): Member? =
-        memberRepository.findByIdOrNull(writerId)
-
+    fun getWriter(writerId: Long): Member? = memberRepository.findByIdOrNull(writerId)
 }

@@ -17,7 +17,6 @@ import com.tropig.backend.member.service.CreatorService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
@@ -43,17 +42,26 @@ class BookmarkController(
         @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
         cursorCreatedAt: LocalDateTime? = null,
         @Parameter(
-            name = "sortMode", description = "정렬 순서", `in` = ParameterIn.QUERY,
+            name = "sortMode",
+            description = "정렬 순서",
+            `in` = ParameterIn.QUERY,
             schema = Schema(
                 allowableValues = ["LATEST", "OLDEST"],
-                defaultValue = "LATEST"
-            )
+                defaultValue = "LATEST",
+            ),
         )
         sortMode: SortMode = SortMode.LATEST,
         @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
         size: Int = 15,
     ): CursorSlice<BookmarkContentResponse> {
-        val bookmarkList = bookmarkContentService.getBookmarkList(authMember.memberId, type, cursorId, cursorCreatedAt, sortMode, size)
+        val bookmarkList = bookmarkContentService.getBookmarkList(
+            authMember.memberId,
+            type,
+            cursorId,
+            cursorCreatedAt,
+            sortMode,
+            size,
+        )
 
         return bookmarkList.mapWith(
             buildContext = { items ->
@@ -72,7 +80,7 @@ class BookmarkController(
                     favoriteCounts = emptyMap(),
                     thumbnailPaths = thumbnailPaths,
                 )
-            }
+            },
         ) { content, ctx ->
             BookmarkContentResponse(
                 id = content.id,

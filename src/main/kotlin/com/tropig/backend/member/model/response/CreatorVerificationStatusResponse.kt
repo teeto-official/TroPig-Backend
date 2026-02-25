@@ -17,7 +17,7 @@ data class CreatorVerificationStatusResponse(
     val partnerId: String?,
     val lastChangedAt: LocalDateTime?,
     val canChangeAccount: Boolean,
-    val nextChangeAvailableAt: LocalDateTime?
+    val nextChangeAvailableAt: LocalDateTime?,
 )
 
 /**
@@ -25,6 +25,6 @@ data class CreatorVerificationStatusResponse(
  */
 data class MaskedAccountInfo(
     val bankName: String,
-    val accountNumber: String,  // Masked: "110-****-*000"
-    val accountHolder: String   // Masked: "홍*동"
+    val accountNumber: String, // Masked: "110-****-*000"
+    val accountHolder: String, // Masked: "홍*동"
 )

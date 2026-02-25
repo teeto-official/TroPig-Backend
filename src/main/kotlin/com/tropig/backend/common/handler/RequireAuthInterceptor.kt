@@ -11,17 +11,12 @@ import org.springframework.web.servlet.HandlerInterceptor
 
 @Component
 class RequireAuthInterceptor : HandlerInterceptor {
-    override fun preHandle(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        handler: Any
-    ): Boolean {
-
+    override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler !is HandlerMethod) return true
 
         val requireAuth =
             handler.getMethodAnnotation(RequireAuth::class.java) != null ||
-                    handler.beanType.getAnnotation(RequireAuth::class.java) != null
+                handler.beanType.getAnnotation(RequireAuth::class.java) != null
 
         if (!requireAuth) return true
 

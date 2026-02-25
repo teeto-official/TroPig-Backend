@@ -7,10 +7,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class PublishingInfo(
-    var type: PublishingType,
-    var path: String?,
-)
+data class PublishingInfo(var type: PublishingType, var path: String?)
 
 /**
  * List<PublishingInfo>를 JSON 문자열로 변환

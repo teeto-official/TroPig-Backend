@@ -11,11 +11,11 @@ import com.tropig.backend.member.model.response.*
 import com.tropig.backend.member.repository.MemberAccountRepository
 import com.tropig.backend.member.repository.MemberAuthInfoRepository
 import com.tropig.backend.member.repository.MemberRepository
-import com.tropig.backend.partner.client.PortOnePartnerClient
 import com.tropig.backend.partner.client.BankAccount
 import com.tropig.backend.partner.client.ContactInfo
 import com.tropig.backend.partner.client.CreatePartnerRequest
 import com.tropig.backend.partner.client.PartnerType
+import com.tropig.backend.partner.client.PortOnePartnerClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -32,7 +32,7 @@ class CreatorVerificationService(
     private val memberAuthInfoRepository: MemberAuthInfoRepository,
     private val bankAccountVerificationService: BankAccountVerificationService,
     private val portOnePartnerClient: PortOnePartnerClient,
-    private val encryptionService: EncryptionService
+    private val encryptionService: EncryptionService,
 ) {
     private val logger = LoggerFactory.getLogger(CreatorVerificationService::class.java)
 
@@ -45,10 +45,7 @@ class CreatorVerificationService(
      * 3. Save to database (transactional)
      * 4. If database save fails, log for manual cleanup
      */
-    fun verifyCreator(
-        memberId: Long,
-        request: CreatorVerificationRequest
-    ): CreatorVerificationResult {
+    fun verifyCreator(memberId: Long, request: CreatorVerificationRequest): CreatorVerificationResult {
         // 1. 모든 사전 조건 검증 (트랜잭션 외부)
         val validationData = validateCreatorVerification(memberId, request)
 
@@ -60,13 +57,13 @@ class CreatorVerificationService(
                 email = validationData.member.email,
                 bankName = request.bankName,
                 accountNumber = request.accountNumber,
-                accountHolder = request.accountHolder
+                accountHolder = request.accountHolder,
             )
         } catch (e: Exception) {
             logger.error("Failed to register PortOne partner for memberId=$memberId", e)
             throw MemberException(
                 "파트너 등록에 실패했습니다.",
-                MessageCode.PORTONE_PARTNER_CREATE_FAILED
+                MessageCode.PORTONE_PARTNER_CREATE_FAILED,
             )
         }
 
@@ -76,13 +73,13 @@ class CreatorVerificationService(
                 memberId = memberId,
                 request = request,
                 partnerId = partnerId,
-                existingAccount = validationData.existingAccount
+                existingAccount = validationData.existingAccount,
             )
         } catch (e: Exception) {
             logger.error(
                 "Failed to save creator verification for memberId=$memberId, partnerId=$partnerId. " +
-                "Manual cleanup may be required for PortOne partner.",
-                e
+                    "Manual cleanup may be required for PortOne partner.",
+                e,
             )
             throw e
         }
@@ -91,10 +88,7 @@ class CreatorVerificationService(
     /**
      * 창작자 인증 사전 조건 검증
      */
-    private fun validateCreatorVerification(
-        memberId: Long,
-        request: CreatorVerificationRequest
-    ): ValidationData {
+    private fun validateCreatorVerification(memberId: Long, request: CreatorVerificationRequest): ValidationData {
         // 1. 본인인증 완료 여부 확인
         val member = memberRepository.findById(memberId).orElseThrow {
             MemberException("회원을 찾을 수 없습니다.", MessageCode.MEMBER_NOT_FOUND)
@@ -103,7 +97,7 @@ class CreatorVerificationService(
         val authInfo = memberAuthInfoRepository.findByMemberId(memberId)
             ?: throw MemberException(
                 "본인인증이 필요합니다.",
-                MessageCode.IDENTITY_VERIFICATION_REQUIRED
+                MessageCode.IDENTITY_VERIFICATION_REQUIRED,
             )
 
         // 2. 이미 창작자 인증이 완료되었는지 확인
@@ -111,7 +105,7 @@ class CreatorVerificationService(
         if (existingAccount != null && !existingAccount.isExpired()) {
             throw MemberException(
                 "이미 창작자 인증이 완료되었습니다.",
-                MessageCode.CREATOR_ALREADY_VERIFIED
+                MessageCode.CREATOR_ALREADY_VERIFIED,
             )
         }
 
@@ -119,7 +113,7 @@ class CreatorVerificationService(
         if (request.accountHolder != authInfo.name) {
             throw MemberException(
                 "예금주명이 본인인증 실명과 일치하지 않습니다.",
-                MessageCode.ACCOUNT_HOLDER_MISMATCH
+                MessageCode.ACCOUNT_HOLDER_MISMATCH,
             )
         }
 
@@ -127,13 +121,13 @@ class CreatorVerificationService(
         val verificationResult = bankAccountVerificationService.verifyBankAccount(
             bankName = request.bankName,
             accountNumber = request.accountNumber,
-            expectedHolder = request.accountHolder
+            expectedHolder = request.accountHolder,
         )
 
         if (!verificationResult.verified) {
             throw MemberException(
                 verificationResult.message,
-                MessageCode.ACCOUNT_HOLDER_MISMATCH
+                MessageCode.ACCOUNT_HOLDER_MISMATCH,
             )
         }
 
@@ -148,7 +142,7 @@ class CreatorVerificationService(
         memberId: Long,
         request: CreatorVerificationRequest,
         partnerId: String,
-        existingAccount: MemberAccount?
+        existingAccount: MemberAccount?,
     ): CreatorVerificationResult {
         val member = memberRepository.findById(memberId).orElseThrow()
 
@@ -177,7 +171,7 @@ class CreatorVerificationService(
                 portonePartnerId = partnerId,
                 verifiedAt = now,
                 expiresAt = expiresAt,
-                lastChangedAt = now
+                lastChangedAt = now,
             )
         }
         memberAccountRepository.save(memberAccount)
@@ -193,7 +187,7 @@ class CreatorVerificationService(
             role = Role.CREATOR,
             expiresAt = expiresAt,
             message = "창작자 인증이 완료되었습니다.",
-            partnerId = partnerId
+            partnerId = partnerId,
         )
     }
 
@@ -203,7 +197,7 @@ class CreatorVerificationService(
     private data class ValidationData(
         val member: com.tropig.backend.member.entity.Member,
         val authInfo: com.tropig.backend.member.entity.MemberAuthInfo,
-        val existingAccount: MemberAccount?
+        val existingAccount: MemberAccount?,
     )
 
     /**
@@ -230,14 +224,14 @@ class CreatorVerificationService(
                 accountInfo = MaskedAccountInfo(
                     bankName = account.bankName,
                     accountNumber = maskAccountNumber(
-                        encryptionService.decrypt(account.accountNumberEncrypted)
+                        encryptionService.decrypt(account.accountNumberEncrypted),
                     ),
-                    accountHolder = maskAccountHolder(account.accountHolder)
+                    accountHolder = maskAccountHolder(account.accountHolder),
                 ),
                 partnerId = account.portonePartnerId,
                 lastChangedAt = account.lastChangedAt,
                 canChangeAccount = account.canChangeAccount(),
-                nextChangeAvailableAt = account.getNextChangeAvailableAt()
+                nextChangeAvailableAt = account.getNextChangeAvailableAt(),
             )
         } else {
             CreatorVerificationStatusResponse(
@@ -251,7 +245,7 @@ class CreatorVerificationService(
                 partnerId = null,
                 lastChangedAt = null,
                 canChangeAccount = false,
-                nextChangeAvailableAt = null
+                nextChangeAvailableAt = null,
             )
         }
     }
@@ -264,7 +258,7 @@ class CreatorVerificationService(
         val account = memberAccountRepository.findByMemberId(memberId)
             ?: throw MemberException(
                 "창작자 인증 정보가 없습니다.",
-                MessageCode.CREATOR_VERIFICATION_NOT_FOUND
+                MessageCode.CREATOR_VERIFICATION_NOT_FOUND,
             )
 
         // 만료 30일 전부터 갱신 가능
@@ -272,7 +266,7 @@ class CreatorVerificationService(
             val daysUntilExpiry = account.getDaysUntilExpiry()
             throw MemberException(
                 "만료 30일 전부터 갱신 가능합니다. (현재 ${daysUntilExpiry}일 남음)",
-                MessageCode.RENEWAL_TOO_EARLY
+                MessageCode.RENEWAL_TOO_EARLY,
             )
         }
 
@@ -284,7 +278,7 @@ class CreatorVerificationService(
         return RenewVerificationResult(
             renewed = true,
             expiresAt = account.expiresAt,
-            message = "창작자 인증이 갱신되었습니다."
+            message = "창작자 인증이 갱신되었습니다.",
         )
     }
 
@@ -292,14 +286,11 @@ class CreatorVerificationService(
      * 계좌 정보 변경
      */
     @Transactional
-    fun changeAccount(
-        memberId: Long,
-        request: ChangeAccountRequest
-    ): ChangeAccountResult {
+    fun changeAccount(memberId: Long, request: ChangeAccountRequest): ChangeAccountResult {
         val account = memberAccountRepository.findByMemberId(memberId)
             ?: throw MemberException(
                 "창작자 인증 정보가 없습니다.",
-                MessageCode.CREATOR_VERIFICATION_NOT_FOUND
+                MessageCode.CREATOR_VERIFICATION_NOT_FOUND,
             )
 
         // 30일 이내 재변경 불가 체크
@@ -307,7 +298,7 @@ class CreatorVerificationService(
             val nextChangeAt = account.getNextChangeAvailableAt()
             throw MemberException(
                 "계좌 변경 후 30일간 재변경이 불가능합니다.",
-                MessageCode.ACCOUNT_CHANGE_LOCKED
+                MessageCode.ACCOUNT_CHANGE_LOCKED,
             )
         }
 
@@ -316,7 +307,7 @@ class CreatorVerificationService(
         if (request.accountHolder != authInfo.name) {
             throw MemberException(
                 "예금주명이 본인인증 실명과 일치하지 않습니다.",
-                MessageCode.ACCOUNT_HOLDER_MISMATCH
+                MessageCode.ACCOUNT_HOLDER_MISMATCH,
             )
         }
 
@@ -325,7 +316,7 @@ class CreatorVerificationService(
         if (decryptedAccountNumber == request.accountNumber && account.bankName == request.bankName) {
             throw MemberException(
                 "기존 계좌와 동일합니다.",
-                MessageCode.ACCOUNT_UNCHANGED
+                MessageCode.ACCOUNT_UNCHANGED,
             )
         }
 
@@ -333,13 +324,13 @@ class CreatorVerificationService(
         val verificationResult = bankAccountVerificationService.verifyBankAccount(
             bankName = request.bankName,
             accountNumber = request.accountNumber,
-            expectedHolder = request.accountHolder
+            expectedHolder = request.accountHolder,
         )
 
         if (!verificationResult.verified) {
             throw MemberException(
                 verificationResult.message,
-                MessageCode.ACCOUNT_HOLDER_MISMATCH
+                MessageCode.ACCOUNT_HOLDER_MISMATCH,
             )
         }
 
@@ -348,7 +339,7 @@ class CreatorVerificationService(
             partnerId = account.portonePartnerId,
             bankName = request.bankName,
             accountNumber = request.accountNumber,
-            accountHolder = request.accountHolder
+            accountHolder = request.accountHolder,
         )
 
         // 계좌 정보 업데이트
@@ -356,7 +347,7 @@ class CreatorVerificationService(
         account.updateAccount(
             bankName = request.bankName,
             accountNumberEncrypted = encryptedAccountNumber,
-            accountHolder = request.accountHolder
+            accountHolder = request.accountHolder,
         )
         memberAccountRepository.save(account)
 
@@ -371,8 +362,8 @@ class CreatorVerificationService(
             newAccountInfo = MaskedAccountInfo(
                 bankName = request.bankName,
                 accountNumber = maskAccountNumber(request.accountNumber),
-                accountHolder = maskAccountHolder(request.accountHolder)
-            )
+                accountHolder = maskAccountHolder(request.accountHolder),
+            ),
         )
     }
 
@@ -385,7 +376,7 @@ class CreatorVerificationService(
         email: String,
         bankName: String,
         accountNumber: String,
-        accountHolder: String
+        accountHolder: String,
     ): String {
         val partnerRequest = CreatePartnerRequest(
             id = "member_$memberId",
@@ -394,9 +385,9 @@ class CreatorVerificationService(
             account = BankAccount(
                 bank = com.tropig.backend.member.enums.BankCode.toPortOneCode(bankName),
                 accountNumber = accountNumber,
-                holder = accountHolder
+                holder = accountHolder,
             ),
-            type = PartnerType.NON_WHT_PAYER  // 기본: 개인 (원천징수 미대상자)
+            type = PartnerType.NON_WHT_PAYER, // 기본: 개인 (원천징수 미대상자)
         )
 
         val response = portOnePartnerClient.createPartner(partnerRequest)
@@ -410,12 +401,12 @@ class CreatorVerificationService(
         partnerId: String,
         bankName: String,
         accountNumber: String,
-        accountHolder: String
+        accountHolder: String,
     ) {
         val account = BankAccount(
             bank = com.tropig.backend.member.enums.BankCode.toPortOneCode(bankName),
             accountNumber = accountNumber,
-            holder = accountHolder
+            holder = accountHolder,
         )
         portOnePartnerClient.updatePartnerAccount(partnerId, account)
     }
@@ -423,24 +414,20 @@ class CreatorVerificationService(
     /**
      * 계좌번호 마스킹 (예: "1234567890" → "123-****-*890")
      */
-    private fun maskAccountNumber(accountNumber: String): String {
-        return if (accountNumber.length >= 6) {
-            "${accountNumber.substring(0, 3)}-****-*${accountNumber.substring(accountNumber.length - 3)}"
-        } else {
-            "****"
-        }
+    private fun maskAccountNumber(accountNumber: String): String = if (accountNumber.length >= 6) {
+        "${accountNumber.substring(0, 3)}-****-*${accountNumber.substring(accountNumber.length - 3)}"
+    } else {
+        "****"
     }
 
     /**
      * 예금주명 마스킹 (예: "홍길동" → "홍*동")
      */
-    private fun maskAccountHolder(name: String): String {
-        return if (name.length >= 3) {
-            "${name.first()}${"*".repeat(name.length - 2)}${name.last()}"
-        } else if (name.length == 2) {
-            "${name.first()}*"
-        } else {
-            name
-        }
+    private fun maskAccountHolder(name: String): String = if (name.length >= 3) {
+        "${name.first()}${"*".repeat(name.length - 2)}${name.last()}"
+    } else if (name.length == 2) {
+        "${name.first()}*"
+    } else {
+        name
     }
 }

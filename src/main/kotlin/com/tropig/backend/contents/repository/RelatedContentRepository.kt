@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface RelatedContentRepository: JpaRepository<RelatedContent, Long> {
+interface RelatedContentRepository : JpaRepository<RelatedContent, Long> {
     fun deleteByContentId(contentId: Long)
 }

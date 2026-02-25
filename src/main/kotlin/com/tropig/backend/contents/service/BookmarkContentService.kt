@@ -2,21 +2,16 @@ package com.tropig.backend.contents.service
 
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
-import com.tropig.backend.contents.entity.BookmarkContent
-import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.BookmarkContentResult
 import com.tropig.backend.contents.repository.BookmarkContentRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import software.amazon.awssdk.services.s3.endpoints.internal.Value.Bool
 import java.time.LocalDateTime
 
 @Service
-class BookmarkContentService(
-    private val bookmarkContentRepository: BookmarkContentRepository,
-) {
+class BookmarkContentService(private val bookmarkContentRepository: BookmarkContentRepository) {
 
     fun getBookmarkInfo(memberId: Long?, contentIds: List<Long>): Map<Long, BookmarkContentInfo> {
         val bookmarkInfo = memberId?.let {
@@ -29,7 +24,7 @@ class BookmarkContentService(
             BookmarkContentInfo(
                 contentId = it.contentId,
                 bookmarkCount = it.bookmarkCount,
-                bookmarked = it.bookmarked
+                bookmarked = it.bookmarked,
             )
         }.associateBy { it.contentId }
     }
@@ -41,34 +36,25 @@ class BookmarkContentService(
         cursorCreatedAt: LocalDateTime?,
         sortMode: SortMode,
         size: Int,
-    ): CursorSlice<BookmarkContentResult> {
-        return bookmarkContentRepository.getBookmarkList(
-            memberId,
-            type,
-            cursorId,
-            cursorCreatedAt,
-            sortMode,
-            size
-        )
-    }
+    ): CursorSlice<BookmarkContentResult> = bookmarkContentRepository.getBookmarkList(
+        memberId,
+        type,
+        cursorId,
+        cursorCreatedAt,
+        sortMode,
+        size,
+    )
 
     @Transactional
-    fun saveBookmark(
-        memberId: Long,
-        contentId: Long,
-    ) {
+    fun saveBookmark(memberId: Long, contentId: Long) {
         bookmarkContentRepository.upsertBookmark(memberId, contentId)
     }
 
     @Transactional
-    fun deleteBookmark(
-        memberId: Long,
-        contentId: Long,
-    ) {
+    fun deleteBookmark(memberId: Long, contentId: Long) {
         bookmarkContentRepository.deleteBookmark(memberId, contentId)
     }
 
-    fun existsBookmark(memberId: Long, contentId: Long): Boolean {
-        return bookmarkContentRepository.existsByMemberIdAndContentIdAndDeleted(memberId, contentId, false)
-    }
+    fun existsBookmark(memberId: Long, contentId: Long): Boolean =
+        bookmarkContentRepository.existsByMemberIdAndContentIdAndDeleted(memberId, contentId, false)
 }

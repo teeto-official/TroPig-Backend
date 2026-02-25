@@ -15,11 +15,11 @@ data class CreatorVerificationRequest(
     @field:NotBlank(message = "계좌번호는 필수입니다")
     @field:Pattern(
         regexp = "^[0-9]{10,14}$",
-        message = "계좌번호는 10-14자리 숫자여야 합니다"
+        message = "계좌번호는 10-14자리 숫자여야 합니다",
     )
     val accountNumber: String,
 
     @field:NotBlank(message = "예금주명은 필수입니다")
     @field:Size(max = 20, message = "예금주명은 20자 이하여야 합니다")
-    val accountHolder: String
+    val accountHolder: String,
 )

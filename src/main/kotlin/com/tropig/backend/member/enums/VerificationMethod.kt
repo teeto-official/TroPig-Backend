@@ -8,20 +8,18 @@ enum class VerificationMethod {
     SMS,
 
     /** 앱 인증 (통신사 앱) */
-    APP;
+    APP,
+
+    ;
 
     companion object {
-        fun fromString(value: String): VerificationMethod {
-            return valueOf(value.uppercase())
-        }
+        fun fromString(value: String): VerificationMethod = valueOf(value.uppercase())
 
-        fun isValid(value: String): Boolean {
-            return try {
-                fromString(value)
-                true
-            } catch (e: IllegalArgumentException) {
-                false
-            }
+        fun isValid(value: String): Boolean = try {
+            fromString(value)
+            true
+        } catch (e: IllegalArgumentException) {
+            false
         }
     }
 }

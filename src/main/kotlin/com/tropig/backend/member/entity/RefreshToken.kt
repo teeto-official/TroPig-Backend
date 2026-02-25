@@ -8,11 +8,7 @@ import java.time.ZoneId
 
 @Entity
 @Table(name = "refresh_token")
-data class RefreshToken(
-    val memberId: Long,
-    val token: String,
-    val expiryDate: LocalDateTime,
-) {
+data class RefreshToken(val memberId: Long, val token: String, val expiryDate: LocalDateTime) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L

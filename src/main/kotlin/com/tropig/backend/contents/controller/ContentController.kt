@@ -23,7 +23,6 @@ import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @ApiController
@@ -44,7 +43,7 @@ class ContentController(
     fun getPickContent(
         @LoginMember authMember: AuthMember?,
         @PathVariable
-        type: ContentType
+        type: ContentType,
     ): List<PickContentResponse> {
         val isAdult = authMember?.adult ?: false
         val pickContents = pickContentService.getAllPickContent()
@@ -61,7 +60,7 @@ class ContentController(
                 thumbnailPath = content.thumbnailPath,
                 writer = writerName[content.writerId] ?: "",
                 tags = content.tags,
-                orderNo = it.orderNo
+                orderNo = it.orderNo,
             )
         }.sortedBy { it.orderNo }
     }
@@ -70,7 +69,7 @@ class ContentController(
     fun getNewestContent(
         @LoginMember authMember: AuthMember?,
         @PathVariable
-        type: ContentType
+        type: ContentType,
     ): List<PickContentResponse> {
         val isAdult = authMember?.adult ?: false
         val contents = contentService.getNewestContents(type, isAdult)
@@ -86,7 +85,7 @@ class ContentController(
                 thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writer = writerName[it.memberId] ?: "",
                 tags = tags[it.id]?.map { tag -> tag.toTagResult(it.id) } ?: emptyList(),
-                orderNo = 0
+                orderNo = 0,
             )
         }
     }
@@ -152,7 +151,7 @@ class ContentController(
                     favoriteCounts = favoriteCountsByContentId,
                     thumbnailPaths = thumbnailPaths,
                 )
-            }
+            },
         ) { content, ctx ->
             val bookmarkInfo = ctx.bookmarkInfo[content.id]
             SearchContentResponse(
@@ -197,7 +196,7 @@ class ContentController(
         val content = contentService.findByAlias(alias)
             ?: throw NotFoundException(
                 "해당 시나리오/자료를 찾을 수 없습니다.",
-                MessageCode.NOT_FOUND_CONTENT
+                MessageCode.NOT_FOUND_CONTENT,
             )
 
         // 1. 작가이고 본인 작품일 경우: DRAFT, PRIVATE, PUBLISHED 상태에서 조회 가능
@@ -224,7 +223,7 @@ class ContentController(
         if (content.status !in ContentsStatus.publicStatuses) {
             throw NotFoundException(
                 "해당 시나리오/자료를 찾을 수 없습니다.",
-                MessageCode.NOT_FOUND_CONTENT
+                MessageCode.NOT_FOUND_CONTENT,
             )
         }
 
@@ -232,17 +231,14 @@ class ContentController(
         if (authMember?.adult == false && content.adult) {
             throw ContentException(
                 "성인 인증이 필요한 콘텐츠입니다.",
-                MessageCode.NOT_FOUND_CONTENT
+                MessageCode.NOT_FOUND_CONTENT,
             )
         }
 
         return buildContentDetailResponse(content, authMember)
     }
 
-    private fun buildContentDetailResponse(
-        content: Content,
-        authMember: AuthMember?
-    ): ContentDetailResponse {
+    private fun buildContentDetailResponse(content: Content, authMember: AuthMember?): ContentDetailResponse {
         val writer = creatorService.getWriter(content.memberId)
 
         val tags = tagService.findByContentId(content.id)
@@ -284,7 +280,7 @@ class ContentController(
             val member = memberService.getUserById(it.memberId)
                 ?: throw NotFoundException(
                     message = "${MessageCode.NOT_FOUND_MEMBER} memberId = ${it.memberId}",
-                    code = MessageCode.NOT_FOUND_MEMBER
+                    code = MessageCode.NOT_FOUND_MEMBER,
                 )
 
             if (type == "GENRE" && member.favoriteGenres != null) {
@@ -312,7 +308,7 @@ class ContentController(
             memberId = memberId,
             isContentPurchased = { memberId, contentId ->
                 paymentContentService.isContentPurchased(memberId, contentId)
-            }
+            },
         )
 
         return PurchasedContentResponse(content = content)

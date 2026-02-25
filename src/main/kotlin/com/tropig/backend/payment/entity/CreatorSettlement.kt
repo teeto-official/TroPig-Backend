@@ -23,4 +23,3 @@ data class CreatorSettlement(
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now()
 }
-
