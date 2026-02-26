@@ -303,7 +303,7 @@ class ContentService(
             }
         content.status = request.status
         content.adult = request.adult
-        content.publishedAt = request.publishedAt
+        content.publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt
         content.freeContent = request.freeContent
         content.price = request.price
         content.level = request.level ?: 0
