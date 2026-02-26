@@ -50,17 +50,25 @@ class ContentController(
         val contents = contentService.getPickContentsByType(type, isAdult, pickContents.map { it.contentId })
         val writerName = creatorService.getWritersName(contents.map { it.writerId })
         val contentsMap = contents.associateBy { it.id }
+        val bookmarks = authMember?.let {
+            bookmarkContentService.getBookmarkList(it.memberId, contentsMap.keys.toList())
+        } ?: emptyMap()
 
         return pickContents.mapNotNull {
             val content = contentsMap[it.contentId] ?: return@mapNotNull null
+            val isBookmark = bookmarks[it.contentId] != null
 
             PickContentResponse(
+                id = content.id,
                 title = content.title,
                 alias = content.alias,
-                thumbnailPath = content.thumbnailPath,
+                thumbnailPath = s3Service.toUrl(content.thumbnailPath),
                 writer = writerName[content.writerId] ?: "",
                 tags = content.tags,
                 orderNo = it.orderNo,
+                rule = content.rule,
+                playerCountType = content.playerCountType,
+                isBookmark = isBookmark,
             )
         }.sortedBy { it.orderNo }
     }
@@ -75,17 +83,25 @@ class ContentController(
         val contents = contentService.getNewestContents(type, isAdult)
         val writerName = creatorService.getWritersName(contents.map { it.memberId })
         val contentIds = contents.map { it.id }
-        val tags = tagService.findTagNamesByContentIds(contentIds)
+        val tags = contentService.getTags(contentIds)
         val thumbnails = contentService.getThumbnailPath(contentIds).associateBy { it.contentId }
+        val bookmarks = authMember?.let {
+            bookmarkContentService.getBookmarkList(it.memberId, contentIds)
+        } ?: emptyMap()
 
         return contents.map {
+            val isBookmark = bookmarks[it.id] != null
             PickContentResponse(
+                id = it.id,
                 title = it.title,
                 alias = it.alias,
                 thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writer = writerName[it.memberId] ?: "",
-                tags = tags[it.id]?.map { tag -> tag.toTagResult(it.id) } ?: emptyList(),
+                tags = tags[it.id] ?: emptyList(),
                 orderNo = 0,
+                rule = it.rule,
+                playerCountType = it.playerCountType,
+                isBookmark = isBookmark,
             )
         }
     }
