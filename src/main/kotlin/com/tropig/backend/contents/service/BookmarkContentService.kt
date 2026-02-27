@@ -60,5 +60,7 @@ class BookmarkContentService(private val bookmarkContentRepository: BookmarkCont
         bookmarkContentRepository.existsByMemberIdAndContentIdAndDeleted(memberId, contentId, false)
 
     fun getBookmarkList(memberId: Long, contentIds: List<Long>): Map<Long, BookmarkContent> =
-        bookmarkContentRepository.findByMemberIdAndContentIdInAndDeleted(memberId, contentIds, false).associateBy { it.contentId }
+        bookmarkContentRepository.findByMemberIdAndContentIdInAndDeleted(memberId, contentIds, false).associateBy {
+            it.contentId
+        }
 }

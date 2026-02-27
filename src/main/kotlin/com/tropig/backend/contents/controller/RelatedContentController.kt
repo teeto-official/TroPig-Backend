@@ -49,18 +49,16 @@ class RelatedContentController(
         val thumbnailPaths = contentService.getThumbnailPath(contentIds)
             .associateBy({ it.contentId }, { it.path })
 
-        fun mapToItem(content: Content): RelatedContentItemResponse {
-            return RelatedContentItemResponse(
-                id = content.id,
-                title = content.title,
-                alias = content.alias,
-                rule = content.rule,
-                playerCountType = content.playerCountType,
-                thumbnailPath = thumbnailPaths[content.id],
-                tags = tagsByContentId[content.id].orEmpty(),
-                writer = writerNames[content.memberId] ?: "탈퇴한 작가입니다.",
-            )
-        }
+        fun mapToItem(content: Content): RelatedContentItemResponse = RelatedContentItemResponse(
+            id = content.id,
+            title = content.title,
+            alias = content.alias,
+            rule = content.rule,
+            playerCountType = content.playerCountType,
+            thumbnailPath = thumbnailPaths[content.id],
+            tags = tagsByContentId[content.id].orEmpty(),
+            writer = writerNames[content.memberId] ?: "탈퇴한 작가입니다.",
+        )
 
         return RelatedContentsResponse(
             scenarios = relatedContents.scenarios.map { mapToItem(it) },
@@ -68,4 +66,3 @@ class RelatedContentController(
         )
     }
 }
-

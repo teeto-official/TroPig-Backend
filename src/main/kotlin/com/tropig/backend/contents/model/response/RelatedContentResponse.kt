@@ -19,4 +19,3 @@ data class RelatedContentsResponse(
     val scenarios: List<RelatedContentItemResponse>,
     val resources: List<RelatedContentItemResponse>,
 )
-

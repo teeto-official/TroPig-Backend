@@ -22,7 +22,6 @@ import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.result.ContentTagResult
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
-import com.tropig.backend.contents.model.result.TagResult
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.repository.ContentRepository
@@ -309,7 +308,8 @@ class ContentService(
             }
         content.status = request.status
         content.adult = request.adult
-        content.publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt
+        content.publishedAt =
+            if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt
         content.freeContent = request.freeContent
         content.price = request.price
         content.level = request.level ?: 0
@@ -412,7 +412,7 @@ class ContentService(
                 val existingContents = contentRepository.findAllById(relatedIds)
                     .filter {
                         it.status == ContentsStatus.PUBLISHED &&
-                                it.type == ContentType.SCENARIO
+                            it.type == ContentType.SCENARIO
                     }
                 val existingContentIds = existingContents.map { it.id }.toSet()
 
