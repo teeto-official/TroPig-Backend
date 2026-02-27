@@ -15,7 +15,6 @@ import com.tropig.backend.member.model.response.ChangeAccountResult
 import com.tropig.backend.member.model.response.CreatorVerificationResult
 import com.tropig.backend.member.model.response.CreatorVerificationStatusResponse
 import com.tropig.backend.member.model.response.MaskedAccountInfo
-import com.tropig.backend.member.model.response.RenewVerificationResult
 import com.tropig.backend.member.repository.MemberAuthInfoRepository
 import com.tropig.backend.member.repository.MemberRepository
 import io.swagger.v3.oas.annotations.Operation
@@ -61,19 +60,21 @@ class MockCreatorVerificationController(
     }
 
     /**
-     * [로컬 전용] 창작자 인증 Mock
+     * [로컬 전용] 창작자 인증 / 갱신 Mock
      * - 본인인증(member_auth_info 존재)이 선행되어야 합니다.
-     * - 계좌번호는 AES-256-GCM으로 암호화하여 member_auth_info.bank_account에 저장됩니다.
+     * - 창작자 미인증 상태: 계좌 정보로 최초 창작자 인증을 수행합니다.
+     * - 창작자 인증 완료 상태 + 갱신 가능 기간(만료 30일 이내): 기존 계좌 정보로 인증을 갱신합니다.
+     * - 창작자 인증 완료 상태 + 갱신 불가 기간: CREATOR_ALREADY_VERIFIED 에러를 반환합니다.
      */
     @RequireAuth
     @PostMapping
     @Operation(
-        summary = "[로컬 전용] 창작자 인증 Mock",
-        description = "본인인증 완료 후 PortOne 연동 없이 창작자 인증을 시뮬레이션합니다. local 프로파일에서만 동작합니다.",
+        summary = "[로컬 전용] 창작자 인증 / 갱신 Mock",
+        description = "창작자 미인증 시 최초 인증, 갱신 가능 기간(만료 30일 이내)이면 갱신을 수행합니다. local 프로파일에서만 동작합니다.",
     )
-    fun mockVerifyCreator(
+    fun mockVerifyOrRenewCreator(
         @LoginMember authMember: AuthMember,
-        @Valid @RequestBody request: CreatorVerificationRequest,
+        @RequestBody(required = false) request: CreatorVerificationRequest?,
     ): CreatorVerificationResult {
         val memberId = authMember.memberId
 
@@ -85,11 +86,35 @@ class MockCreatorVerificationController(
         val authInfo = memberAuthInfoRepository.findByMemberId(memberId)
             ?: throw MemberException("본인인증이 필요합니다.", MessageCode.IDENTITY_VERIFICATION_REQUIRED)
 
-        if (authInfo.creator && (authInfo.authCreatorAt?.plusDays(30) ?: LocalDateTime.now()) > LocalDateTime.now()) {
-            throw MemberException("이미 창작자 인증이 완료되었습니다.", MessageCode.CREATOR_ALREADY_VERIFIED)
+        val now = LocalDateTime.now()
+
+        // 기존 창작자 인증이 있는 경우: 갱신 가능 여부 판단
+        if (authInfo.creator && authInfo.authCreatorAt != null) {
+            val expiresAt = authInfo.authCreatorAt!!.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
+            val daysUntilExpiry = ChronoUnit.DAYS.between(now, expiresAt)
+
+            if (daysUntilExpiry > MemberAccount.RENEWAL_WINDOW_DAYS) {
+                throw MemberException("이미 창작자 인증이 완료되었습니다.", MessageCode.CREATOR_ALREADY_VERIFIED)
+            }
+
+            // 갱신: authCreatorAt 갱신 (계좌 정보는 유지)
+            memberAuthInfoRepository.save(authInfo.copy(authCreatorAt = now))
+
+            val newExpiresAt = now.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
+            return CreatorVerificationResult(
+                verified = true,
+                role = member.role,
+                expiresAt = newExpiresAt,
+                message = "[테스트] 창작자 인증이 갱신되었습니다.",
+                partnerId = null,
+            )
         }
 
-        val now = LocalDateTime.now()
+        // 최초 창작자 인증 - 계좌 정보 필수
+        if (request == null) {
+            throw MemberException("계좌 정보가 필요합니다.", MessageCode.INVALID_PARAMS)
+        }
+
         val encryptedAccountNumber = encryptionService.encrypt(request.accountNumber)
         authInfo.authCreatorAt = now
         authInfo.creator = true
@@ -179,47 +204,6 @@ class MockCreatorVerificationController(
             lastChangedAt = authInfo.authCreatorAt,
             canChangeAccount = canChangeAccount,
             nextChangeAvailableAt = nextChangeAvailableAt,
-        )
-    }
-
-    /**
-     * [로컬 전용] 창작자 인증 갱신 Mock
-     */
-    @RequireAuth
-    @PostMapping("/renew")
-    @Operation(
-        summary = "[로컬 전용] 창작자 인증 갱신 Mock",
-        description = "창작자 인증을 갱신합니다. local 프로파일에서만 동작합니다.",
-    )
-    fun mockRenewVerification(@LoginMember authMember: AuthMember): RenewVerificationResult {
-        val memberId = authMember.memberId
-
-        val authInfo = memberAuthInfoRepository.findByMemberId(memberId)
-            ?: throw MemberException("본인인증이 필요합니다.", MessageCode.IDENTITY_VERIFICATION_REQUIRED)
-
-        if (!authInfo.creator || authInfo.authCreatorAt == null) {
-            throw MemberException("창작자 인증 정보가 없습니다.", MessageCode.CREATOR_VERIFICATION_NOT_FOUND)
-        }
-
-        val expiresAt = authInfo.authCreatorAt!!.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
-        val daysUntilExpiry = ChronoUnit.DAYS.between(LocalDateTime.now(), expiresAt)
-
-        if (daysUntilExpiry > MemberAccount.RENEWAL_WINDOW_DAYS) {
-            throw MemberException(
-                "만료 30일 전부터 갱신 가능합니다. (현재 ${daysUntilExpiry}일 남음)",
-                MessageCode.RENEWAL_TOO_EARLY,
-            )
-        }
-
-        val now = LocalDateTime.now()
-        val newExpiresAt = now.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
-
-        memberAuthInfoRepository.save(authInfo.copy(authCreatorAt = now))
-
-        return RenewVerificationResult(
-            renewed = true,
-            expiresAt = newExpiresAt,
-            message = "[테스트] 창작자 인증이 갱신되었습니다.",
         )
     }
 
