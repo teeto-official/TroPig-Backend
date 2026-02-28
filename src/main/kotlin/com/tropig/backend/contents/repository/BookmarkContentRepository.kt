@@ -82,4 +82,10 @@ interface BookmarkContentRepository :
     fun upsertBookmark(memberId: Long, contentId: Long): Int
 
     fun existsByMemberIdAndContentIdAndDeleted(memberId: Long, contentId: Long, deleted: Boolean): Boolean
+
+    fun findByMemberIdAndContentIdInAndDeleted(
+        memberId: Long,
+        contentIds: List<Long>,
+        deleted: Boolean,
+    ): List<BookmarkContent>
 }

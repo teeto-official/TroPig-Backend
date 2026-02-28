@@ -51,16 +51,16 @@ data class MemberAuthInfo(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(nullable = false)
-    val creator: Boolean = false,
+    var creator: Boolean = false,
 
     @Column(name = "auth_creator_at")
-    val authCreatorAt: LocalDateTime? = null,
+    var authCreatorAt: LocalDateTime? = null,
 
     @Column(name = "auth_user_at")
-    val authUserAt: LocalDateTime? = null,
+    var authUserAt: LocalDateTime? = null,
 
     @Column(name = "bank_account", length = 255)
-    val bankAccount: String? = null,
+    var bankAccount: String? = null,
 
     @LastModifiedDate
     @Column(name = "updated_at")

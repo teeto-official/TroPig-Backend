@@ -2,6 +2,7 @@ package com.tropig.backend.contents.service
 
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.contents.entity.BookmarkContent
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.BookmarkContentResult
@@ -57,4 +58,9 @@ class BookmarkContentService(private val bookmarkContentRepository: BookmarkCont
 
     fun existsBookmark(memberId: Long, contentId: Long): Boolean =
         bookmarkContentRepository.existsByMemberIdAndContentIdAndDeleted(memberId, contentId, false)
+
+    fun getBookmarkList(memberId: Long, contentIds: List<Long>): Map<Long, BookmarkContent> =
+        bookmarkContentRepository.findByMemberIdAndContentIdInAndDeleted(memberId, contentIds, false).associateBy {
+            it.contentId
+        }
 }

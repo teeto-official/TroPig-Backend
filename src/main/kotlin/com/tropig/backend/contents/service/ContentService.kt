@@ -19,9 +19,9 @@ import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
+import com.tropig.backend.contents.model.result.ContentTagResult
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
-import com.tropig.backend.contents.model.result.TagResult
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.repository.ContentRepository
@@ -53,6 +53,11 @@ class ContentService(
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
         contentRepository.findByIdInAndType(ids, type)
 
+    fun getTags(contentIds: List<Long>): Map<Long, List<ContentTagResult>> =
+        contentTagRepository.findByContentIdIn(contentIds)
+            .map { ContentTagResult(it.tagId, it.contentId, it.type, it.name) }
+            .groupBy { it.contentId }
+
     @Cacheable(value = ["pickContentByType"], key = "#type.name() + '_' + #isAdult")
     fun getPickContentsByType(type: ContentType, isAdult: Boolean, contentIds: List<Long>): List<PickContentResult> {
         val contents = if (isAdult) {
@@ -61,9 +66,7 @@ class ContentService(
             contentRepository.findContentsByIdInAndTypeAndAdult(contentIds, type, false)
         }
         val thumbnails = getThumbnailPath(contentIds).associateBy { it.contentId }
-        val tags = contentTagRepository.findByContentIdIn(contentIds)
-            .map { TagResult(it.tagId, it.contentId, it.type) }
-            .groupBy { it.contentId }
+        val tags = getTags(contentIds)
 
         return contents.map {
             PickContentResult(
@@ -73,6 +76,8 @@ class ContentService(
                 thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writerId = it.memberId,
                 tags = tags[it.id] ?: emptyList(),
+                rule = it.rule,
+                playerCountType = it.playerCountType,
             )
         }
     }
@@ -303,7 +308,8 @@ class ContentService(
             }
         content.status = request.status
         content.adult = request.adult
-        content.publishedAt = request.publishedAt
+        content.publishedAt =
+            if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt
         content.freeContent = request.freeContent
         content.price = request.price
         content.level = request.level ?: 0
@@ -406,7 +412,7 @@ class ContentService(
                 val existingContents = contentRepository.findAllById(relatedIds)
                     .filter {
                         it.status == ContentsStatus.PUBLISHED &&
-                                it.type == ContentType.SCENARIO
+                            it.type == ContentType.SCENARIO
                     }
                 val existingContentIds = existingContents.map { it.id }.toSet()
 
