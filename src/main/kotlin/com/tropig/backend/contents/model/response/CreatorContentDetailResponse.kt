@@ -27,9 +27,10 @@ data class CreatorContentDetailResponse(
     val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
+    val thumbnailPath: String? = null
 )
 
-fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: String?): CreatorContentDetailResponse =
+fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: String?, thumbnailPath: String?): CreatorContentDetailResponse =
     CreatorContentDetailResponse(
         id = id,
         type = type,
@@ -50,4 +51,5 @@ fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: S
         publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
         nonFreeContent = nonFreeContent,
+        thumbnailPath = thumbnailPath
     )
