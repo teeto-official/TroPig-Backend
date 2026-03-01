@@ -54,7 +54,11 @@ class S3Service(
 
     val baseUrl = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
 
-    fun toUrl(key: String?): String? = key?.let { baseUrl + it.trimStart('/') }
+    fun toUrl(key: String?): String? =
+        key?.let {
+            if (it.startsWith(baseUrl)) it
+            else baseUrl + it.trimStart('/')
+        }
 
     /**
      * S3에서 파일을 삭제합니다.
