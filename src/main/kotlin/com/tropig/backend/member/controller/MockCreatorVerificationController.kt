@@ -74,7 +74,7 @@ class MockCreatorVerificationController(
     )
     fun mockVerifyOrRenewCreator(
         @LoginMember authMember: AuthMember,
-        @RequestBody(required = false) request: CreatorVerificationRequest?,
+        @RequestBody request: CreatorVerificationRequest,
     ): CreatorVerificationResult {
         val memberId = authMember.memberId
 
@@ -88,33 +88,15 @@ class MockCreatorVerificationController(
 
         val now = LocalDateTime.now()
 
-        // 기존 창작자 인증이 있는 경우: 갱신 가능 여부 판단
-        if (authInfo.creator && authInfo.authCreatorAt != null) {
-            val expiresAt = authInfo.authCreatorAt!!.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
-            val daysUntilExpiry = ChronoUnit.DAYS.between(now, expiresAt)
-
-            if (daysUntilExpiry > MemberAccount.RENEWAL_WINDOW_DAYS) {
-                throw MemberException("이미 창작자 인증이 완료되었습니다.", MessageCode.CREATOR_ALREADY_VERIFIED)
-            }
-
-            // 갱신: authCreatorAt 갱신 (계좌 정보는 유지)
-            memberAuthInfoRepository.save(authInfo.copy(authCreatorAt = now))
-
-            val newExpiresAt = now.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS)
-            return CreatorVerificationResult(
-                verified = true,
-                role = member.role,
-                expiresAt = newExpiresAt,
-                message = "[테스트] 창작자 인증이 갱신되었습니다.",
-                partnerId = null,
-            )
+        if (authInfo.creator && (authInfo.authCreatorAt?.plusDays(30) ?: LocalDateTime.now()) > LocalDateTime.now()) {
+            throw MemberException("이미 창작자 인증이 완료되었습니다.", MessageCode.CREATOR_ALREADY_VERIFIED)
         }
 
-        // 최초 창작자 인증 - 계좌 정보 필수
-        if (request == null) {
-            throw MemberException("계좌 정보가 필요합니다.", MessageCode.INVALID_PARAMS)
+        val message = if (authInfo.authCreatorAt != null) {
+            "[테스트] 창작자 인증이 갱신되었습니다."
+        } else {
+            "[테스트] 창작자 인증이 완료되었습니다."
         }
-
         val encryptedAccountNumber = encryptionService.encrypt(request.accountNumber)
         authInfo.authCreatorAt = now
         authInfo.creator = true
@@ -125,11 +107,12 @@ class MockCreatorVerificationController(
         member.role = Role.CREATOR
         memberRepository.save(member)
 
+        val newExpiresAt = now.plusDays(30)
         return CreatorVerificationResult(
             verified = true,
-            role = Role.CREATOR,
-            expiresAt = now.plusYears(MemberAccount.VERIFICATION_VALIDITY_YEARS),
-            message = "[테스트] 창작자 인증이 완료되었습니다.",
+            role = member.role,
+            expiresAt = newExpiresAt,
+            message = message,
             partnerId = "mock_partner_${UUID.randomUUID()}",
         )
     }
