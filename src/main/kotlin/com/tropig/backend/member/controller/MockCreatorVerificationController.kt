@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.context.annotation.Profile
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -35,9 +36,9 @@ import java.util.UUID
  * PortOne 은행 계좌 실명 인증 및 파트너 등록 없이 창작자 인증을 테스트하기 위한 엔드포인트입니다.
  * 계좌번호는 AES-256-GCM으로 암호화하여 member_auth_info.bank_account에 저장됩니다.
  * 계좌 변경 잠금은 auth_creator_at 기준 30일입니다.
- * local 프로파일에서만 활성화됩니다.
+ * local, development 프로파일에서만 활성화됩니다.
  */
-@Profile("local")
+@Profile("local", "development")
 @ApiController
 @RequestMapping("/api/member/creator-verification/mock")
 @Tag(name = "Creator Verification (Mock)", description = "로컬 개발 전용 창작자 인증 Mock API")
