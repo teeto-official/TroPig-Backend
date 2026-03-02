@@ -162,7 +162,11 @@ class ContentService(
             if (request.type == ContentType.SCENARIO) {
                 request.publishingInfo?.toJson()
             } else {
-                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
+                val list = request.publishingType?.let { mutableListOf(PublishingInfo(type = it, path = null, originalName = null)) } ?: mutableListOf()
+                request.publishingInfo?.let {
+                    list.addAll(it)
+                }
+                list.toJson()
             },
             status = request.status,
             adult = request.adult,
@@ -312,7 +316,11 @@ class ContentService(
             if (request.type == ContentType.SCENARIO) {
                 request.publishingInfo?.toJson()
             } else {
-                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
+                val list = request.publishingType?.let { mutableListOf(PublishingInfo(type = it, path = null, originalName = null)) } ?: mutableListOf()
+                request.publishingInfo?.let {
+                    list.addAll(it)
+                }
+                list.toJson()
             }
         content.status = request.status
         content.adult = request.adult

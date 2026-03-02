@@ -86,6 +86,7 @@ class FileUploadController(private val s3Service: S3Service, private val content
                             PublishingInfo(
                                 file.publishingType ?: PublishingType.ETC,
                                 file.path,
+                                file.originalName,
                             )
                         }
                         contentService.findById(contentId)?.let { content ->
@@ -107,6 +108,7 @@ class FileUploadController(private val s3Service: S3Service, private val content
                 s3Service.toUrl(it.path) ?: it.path,
                 it.fileType,
                 it.publishingType,
+                it.originalName,
             )
         }
     }

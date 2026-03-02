@@ -9,4 +9,5 @@ data class FileResult(
     val fileType: FileType,
     val isCover: Boolean,
     val publishingType: PublishingType?,
+    val originalName: String?,
 )
