@@ -12,7 +12,7 @@ data class PublishingInfo(var type: PublishingType, var path: String?)
 /**
  * List<PublishingInfo>를 JSON 문자열로 변환
  */
-fun List<PublishingInfo>.toJson(): String = Json { prettyPrint = true }.encodeToString(this)
+fun List<PublishingInfo>.toJson(): String = Json.encodeToString(this)
 
 /**
  * JSON 문자열을 List<PublishingInfo>로 변환

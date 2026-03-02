@@ -3,6 +3,7 @@ package com.tropig.backend.contents.enums
 enum class PublishingType(val displayName: String) {
     PDF("PDF"),
     EXTERNAL_LINK("외부 링크"),
+    SCENARIO_FILE(""),
     IMAGE("이미지"),
     BGM("BGM"),
     COCOFORIA("코코포리아"),

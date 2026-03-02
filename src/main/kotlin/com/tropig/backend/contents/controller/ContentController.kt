@@ -13,6 +13,7 @@ import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.*
@@ -199,8 +200,10 @@ class ContentController(
             .map { SearchTagResponse.GenreResponse(it, it.displayName) }
         val rules = Rule.entries.filter { it.displayName.isNotEmpty() }
             .map { SearchTagResponse.RuleResponse(it, it.displayName) }
+        val publishingTypes = PublishingType.entries.filter { it.displayName.isNotEmpty() }
+            .map { SearchTagResponse.PublishingTypeResponse(it, it.displayName) }
 
-        return SearchTagResponse(tags, genres, rules)
+        return SearchTagResponse(tags, genres, rules, publishingTypes)
     }
 
     @GetMapping("/{alias}")
