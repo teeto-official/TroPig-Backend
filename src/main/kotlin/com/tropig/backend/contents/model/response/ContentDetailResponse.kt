@@ -5,6 +5,7 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.model.serialize.PublishingInfo
@@ -25,6 +26,7 @@ data class ContentDetailResponse(
     val playerCountType: PlayerCountType,
     val termType: TermType,
     val tags: List<TagDto>,
+    val publishingType: PublishingType,
     val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
@@ -65,6 +67,7 @@ fun Content.toDetailResponse(
         playerCountType = playerCountType,
         termType = termType,
         tags = tags,
+        publishingType = publishingType,
         publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
         nonFreeContent = purchasedContent,

@@ -7,6 +7,7 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import jakarta.persistence.EntityManager
@@ -34,6 +35,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
         return runSearchCount(
             common = common,
+            publishingTypes = request.publishingTypes,
             filterAppender = request.filterAppender(),
         )
     }
@@ -154,6 +156,8 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
             if (this.level?.size != 4) {
                 appendInEnum(sql, params, "c.level", "level", this.level)
             }
+
+            appendInEnum(sql, params, "c.publishing_type", "publishingTypes", this.publishingTypes)
         }
 
     private fun runSearchSlice(
@@ -184,9 +188,10 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
     private fun runSearchCount(
         common: CommonSearchReq,
+        publishingTypes: List<PublishingType>? = null,
         filterAppender: (StringBuilder, MutableMap<String, Any?>) -> Unit,
     ): CountSearchContentsResult {
-        val (sql, params) = buildBaseCountSqlCommon(common)
+        val (sql, params) = buildBaseCountSqlCommon(common, publishingTypes)
         filterAppender(sql, params)
 
         val (scenarioCount, resourceCount) = executeCountPair(sql.toString(), params)
@@ -236,12 +241,21 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         return sql to params
     }
 
-    private fun buildBaseCountSqlCommon(common: CommonSearchReq): Pair<StringBuilder, MutableMap<String, Any?>> {
+    private fun buildBaseCountSqlCommon(
+        common: CommonSearchReq,
+        publishingTypes: List<PublishingType>? = null,
+    ): Pair<StringBuilder, MutableMap<String, Any?>> {
+        val resourceCase = if (!publishingTypes.isNullOrEmpty()) {
+            "COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' AND c.publishing_type IN (:countPublishingTypes) THEN c.id END)"
+        } else {
+            "COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN c.id END)"
+        }
+
         val sql = StringBuilder(
             """
             SELECT
                 COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN c.id END) AS scenario_count,
-                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN c.id END) AS resource_count
+                $resourceCase AS resource_count
             FROM content c
             """.trimIndent(),
         )
@@ -260,6 +274,10 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val params = mutableMapOf<String, Any?>(
             "status" to ContentsStatus.PUBLISHED.name,
         )
+
+        if (!publishingTypes.isNullOrEmpty()) {
+            params["countPublishingTypes"] = publishingTypes.map { it.name }
+        }
 
         if (!common.isAdult) {
             sql.append("\n  AND c.adult = false")

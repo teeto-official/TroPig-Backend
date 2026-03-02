@@ -24,6 +24,8 @@ data class Content(
     var playerCountType: PlayerCountType,
     @Enumerated(value = EnumType.STRING)
     var termType: TermType,
+    @Enumerated(value = EnumType.STRING)
+    var publishingType: PublishingType,
     var publishingInfo: String?,
     @Enumerated(value = EnumType.STRING)
     var status: ContentsStatus,

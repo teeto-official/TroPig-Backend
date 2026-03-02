@@ -5,6 +5,7 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import java.time.LocalDateTime
 
 data class SearchContentRequestDto(
@@ -14,6 +15,7 @@ data class SearchContentRequestDto(
     val genres: List<Genre>? = null,
     val playerCountTypes: List<PlayerCountType>? = null,
     val tags: List<Long>? = null,
+    val publishingTypes: List<PublishingType>? = null,
 
     val isAdult: Boolean,
     val type: ContentType = ContentType.SCENARIO,

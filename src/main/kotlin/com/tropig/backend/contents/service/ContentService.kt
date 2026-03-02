@@ -12,10 +12,7 @@ import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentTag
 import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.entity.RelatedContent
-import com.tropig.backend.contents.enums.ContentType
-import com.tropig.backend.contents.enums.ContentsStatus
-import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.enums.TermType
+import com.tropig.backend.contents.enums.*
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
@@ -79,6 +76,7 @@ class ContentService(
                 tags = tags[it.id] ?: emptyList(),
                 rule = it.rule,
                 playerCountType = it.playerCountType,
+                publishingType = it.publishingType,
                 publishingInfo = it.publishingInfo
             )
         }
@@ -158,16 +156,8 @@ class ContentService(
             genre = request.genre ?: Genre.NONE,
             playerCountType = request.playerCountType ?: PlayerCountType.NONE,
             termType = request.termType ?: TermType.NONE,
-            publishingInfo =
-            if (request.type == ContentType.SCENARIO) {
-                request.publishingInfo?.toJson()
-            } else {
-                val list = request.publishingType?.let { mutableListOf(PublishingInfo(type = it, path = null, originalName = null)) } ?: mutableListOf()
-                request.publishingInfo?.let {
-                    list.addAll(it)
-                }
-                list.toJson()
-            },
+            publishingType = request.publishingType ?: PublishingType.SCENARIO,
+            publishingInfo = request.publishingInfo?.toJson(),
             status = request.status,
             adult = request.adult,
             publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
@@ -312,16 +302,10 @@ class ContentService(
         request.genre?.let { content.genre = it }
         request.playerCountType?.let { content.playerCountType = it }
         request.termType?.let { content.termType = it }
-        content.publishingInfo =
-            if (request.type == ContentType.SCENARIO) {
-                request.publishingInfo?.toJson()
-            } else {
-                val list = request.publishingType?.let { mutableListOf(PublishingInfo(type = it, path = null, originalName = null)) } ?: mutableListOf()
-                request.publishingInfo?.let {
-                    list.addAll(it)
-                }
-                list.toJson()
-            }
+        content.publishingType =
+            if (request.type == ContentType.SCENARIO) PublishingType.SCENARIO
+            else request.publishingType ?: PublishingType.ETC
+        content.publishingInfo = request.publishingInfo?.toJson()
         content.status = request.status
         content.adult = request.adult
         content.publishedAt =

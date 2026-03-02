@@ -112,9 +112,7 @@ class ContentController(
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) {
-                    it.publishingInfo?.let { info ->
-                        info.toPublishingInfoList().firstOrNull()?.type?.displayName ?: PublishingType.ETC.displayName
-                    } ?: PublishingType.ETC.displayName
+                    it.publishingType.displayName
                 } else {
                     null
                 }
@@ -136,7 +134,6 @@ class ContentController(
                 .map { it.id }
                 .toList()
         }
-
         val dto = request.toCountDto(isAdult, tagIds)
         return contentService.countSearchContents(dto).toResponse()
     }

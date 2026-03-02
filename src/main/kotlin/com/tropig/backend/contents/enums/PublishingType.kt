@@ -4,6 +4,7 @@ enum class PublishingType(val displayName: String) {
     PDF("PDF"),
     EXTERNAL_LINK("외부 링크"),
     EXTERNAL_FILE(""),
+    SCENARIO(""),
     IMAGE("이미지"),
     BGM("BGM"),
     COCOFORIA("코코포리아"),
