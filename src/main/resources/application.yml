@@ -15,11 +15,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none  # 수동 DB 관리: 스키마 변경은 migration 도구나 수동 SQL 실행으로 관리
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
   sql:
     init:
       platform: postgresql

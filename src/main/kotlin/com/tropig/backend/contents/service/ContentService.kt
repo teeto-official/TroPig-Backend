@@ -258,6 +258,9 @@ class ContentService(
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
+        if (request.type == ContentType.RESOURCE) {
+            searchTextParts.add(request.publishingType!!.displayName)
+        }
 
         val searchText = searchTextParts.joinToString(" ")
 
@@ -458,6 +461,9 @@ class ContentService(
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
+        if (request.type == ContentType.RESOURCE) {
+            searchTextParts.add(request.publishingType!!.displayName)
+        }
 
         content.searchText = searchTextParts.joinToString(" ")
 

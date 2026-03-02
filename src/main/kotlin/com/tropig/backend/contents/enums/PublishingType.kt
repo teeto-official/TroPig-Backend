@@ -1,6 +1,6 @@
 package com.tropig.backend.contents.enums
 
-enum class PublishingType(private val displayName: String) {
+enum class PublishingType(val displayName: String) {
     PDF("PDF"),
     EXTERNAL_LINK("외부 링크"),
     IMAGE("이미지"),
