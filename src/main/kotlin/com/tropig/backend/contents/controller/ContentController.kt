@@ -17,6 +17,7 @@ import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.*
+import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
@@ -70,6 +71,13 @@ class ContentController(
                 rule = content.rule,
                 playerCountType = content.playerCountType,
                 isBookmark = isBookmark,
+                publishingType = if (type == ContentType.RESOURCE) {
+                    content.publishingInfo?.let { info ->
+                        info.toPublishingInfoList().firstOrNull()?.type?.displayName ?: PublishingType.ETC.displayName
+                    } ?: PublishingType.ETC.displayName
+                } else {
+                    null
+                }
             )
         }.sortedBy { it.orderNo }
     }
@@ -103,6 +111,13 @@ class ContentController(
                 rule = it.rule,
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
+                publishingType = if (type == ContentType.RESOURCE) {
+                    it.publishingInfo?.let { info ->
+                        info.toPublishingInfoList().firstOrNull()?.type?.displayName ?: PublishingType.ETC.displayName
+                    } ?: PublishingType.ETC.displayName
+                } else {
+                    null
+                }
             )
         }
     }

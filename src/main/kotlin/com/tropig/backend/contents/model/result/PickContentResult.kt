@@ -12,4 +12,5 @@ data class PickContentResult(
     val tags: List<ContentTagResult>,
     val rule: Rule,
     val playerCountType: PlayerCountType,
+    val publishingInfo: String?,
 )

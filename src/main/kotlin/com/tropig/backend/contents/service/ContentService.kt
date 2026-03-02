@@ -24,6 +24,7 @@ import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
+import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
@@ -78,6 +79,7 @@ class ContentService(
                 tags = tags[it.id] ?: emptyList(),
                 rule = it.rule,
                 playerCountType = it.playerCountType,
+                publishingInfo = it.publishingInfo
             )
         }
     }
