@@ -7,6 +7,7 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.result.BookmarkContentResult
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -34,6 +35,7 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 c.genre,
                 c.member_id,
                 c.player_count_type,
+                c.publishing_type,
                 bc.updated_at
             FROM content c
             INNER JOIN bookmark_content bc ON c.id = bc.content_id
@@ -106,7 +108,8 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 genre = Genre.valueOf(r[4] as String),
                 memberId = (r[5] as Number).toLong(),
                 playerCountType = PlayerCountType.valueOf(r[6] as String),
-                updatedAt = (r[7] as java.sql.Timestamp).toLocalDateTime(),
+                publishingType = PublishingType.valueOf(r[7] as String),
+                updatedAt = (r[8] as java.sql.Timestamp).toLocalDateTime(),
             )
         }
     }

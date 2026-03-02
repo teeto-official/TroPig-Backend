@@ -14,7 +14,7 @@ data class PickContentResponse(
     val tags: List<ContentTagResult>,
     val rule: Rule,
     val playerCountType: PlayerCountType,
-    val publishingType: String?,
+    val publishingType: PublishingType?,
     val isBookmark: Boolean,
     val orderNo: Int,
 )

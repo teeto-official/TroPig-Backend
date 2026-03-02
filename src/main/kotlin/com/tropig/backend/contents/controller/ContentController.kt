@@ -72,9 +72,7 @@ class ContentController(
                 playerCountType = content.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) {
-                    content.publishingInfo?.let { info ->
-                        info.toPublishingInfoList().firstOrNull()?.type?.displayName ?: PublishingType.ETC.displayName
-                    } ?: PublishingType.ETC.displayName
+                    content.publishingType
                 } else {
                     null
                 }
@@ -111,11 +109,7 @@ class ContentController(
                 rule = it.rule,
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
-                publishingType = if (type == ContentType.RESOURCE) {
-                    it.publishingType.displayName
-                } else {
-                    null
-                }
+                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null
             )
         }
     }

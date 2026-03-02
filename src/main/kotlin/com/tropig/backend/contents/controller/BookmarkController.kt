@@ -93,6 +93,9 @@ class BookmarkController(
                 thumbnailPath = ctx.thumbnailPaths[content.id],
                 tags = ctx.tagsByContentId[content.id].orEmpty(),
                 updatedAt = content.updatedAt,
+                publishingType = if (type == ContentType.RESOURCE) {
+                    content.publishingType
+                } else null
             )
         }
     }

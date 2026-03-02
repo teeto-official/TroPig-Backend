@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 data class PublishingInfo(
     var type: PublishingType,
     var path: String?,
-    var originalName: String?,
+    var originalName: String? = null,
 )
 
 /**
