@@ -257,9 +257,12 @@ class CreatorController(
             s3Service.getFileAsString(path)
         }
 
+        val thumbnailPath = contentService.getThumbnailPath(content.id)?.path
+
         return content.toCreatorContentDetailResponse(
             tags = tags,
             nonFreeContent = nonFreeContent,
+            thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) }
         )
     }
 

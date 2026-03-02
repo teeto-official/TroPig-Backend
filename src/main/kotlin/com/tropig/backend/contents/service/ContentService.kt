@@ -94,7 +94,10 @@ class ContentService(
     }
 
     fun getThumbnailPath(contentIds: List<Long>): List<ContentThumbnail> =
-        contentThumbnailRepository.findByContentIdIn(contentIds)
+        contentThumbnailRepository.findByContentIdIn(contentIds).filter { it.cover }
+
+    fun getThumbnailPath(contentId: Long): ContentThumbnail? =
+        contentThumbnailRepository.findTopByContentIdAndCover(contentId, true)
 
     @Cacheable(value = ["getDraftContent"], key = "#memberId")
     fun getDraftContent(memberId: Long): List<Content> =
@@ -377,6 +380,17 @@ class ContentService(
                     relatedContentRepository.saveAll(relatedContents)
                 }
             }
+        }
+
+        val baseUrl = s3Service.baseUrl
+        request.thumbnails?.forEach {
+            val path = it.path.substringAfter(baseUrl)
+            contentThumbnailRepository.updateByContentIdAndPath(
+                contentId = contentId,
+                path = path,
+                orderNo = it.orderNo,
+                isCover = it.isCover
+            )
         }
 
         // 5. tag 정보 삭제 후 신규 저장
