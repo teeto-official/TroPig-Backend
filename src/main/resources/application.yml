@@ -69,7 +69,7 @@ management:
 
 logging:
   level:
-    com.tropig.backend: DEBUG
+    com.tropig.backend: WARN
     org.springframework.web: INFO
     org.springframework.web.servlet.resource: WARN
   pattern:
