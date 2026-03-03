@@ -23,7 +23,7 @@ data class CreatorContentDetailResponse(
     val playerCountType: PlayerCountType,
     val termType: TermType,
     val tags: List<TagDto>,
-    val publishingType: PublishingType?,
+    val publishingType: String?,
     val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
@@ -43,11 +43,7 @@ fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: S
         termType = termType,
         tags = tags,
         publishingType =
-        if (type == ContentType.RESOURCE) {
-            publishingInfo?.toPublishingInfoList()?.firstOrNull()?.type
-        } else {
-            null
-        },
+        if (type == ContentType.RESOURCE) { publishingType.displayName } else null,
         publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
         nonFreeContent = nonFreeContent,

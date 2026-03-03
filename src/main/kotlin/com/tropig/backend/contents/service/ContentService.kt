@@ -12,10 +12,7 @@ import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.entity.ContentTag
 import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.entity.RelatedContent
-import com.tropig.backend.contents.enums.ContentType
-import com.tropig.backend.contents.enums.ContentsStatus
-import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.enums.TermType
+import com.tropig.backend.contents.enums.*
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
 import com.tropig.backend.contents.model.request.UpdateContentRequest
@@ -24,6 +21,7 @@ import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
+import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
@@ -78,6 +76,8 @@ class ContentService(
                 tags = tags[it.id] ?: emptyList(),
                 rule = it.rule,
                 playerCountType = it.playerCountType,
+                publishingType = it.publishingType,
+                publishingInfo = it.publishingInfo
             )
         }
     }
@@ -156,12 +156,8 @@ class ContentService(
             genre = request.genre ?: Genre.NONE,
             playerCountType = request.playerCountType ?: PlayerCountType.NONE,
             termType = request.termType ?: TermType.NONE,
-            publishingInfo =
-            if (request.type == ContentType.SCENARIO) {
-                request.publishingInfo?.toJson()
-            } else {
-                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
-            },
+            publishingType = request.publishingType ?: PublishingType.SCENARIO,
+            publishingInfo = request.publishingInfo?.toJson(),
             status = request.status,
             adult = request.adult,
             publishedAt = if (request.status == ContentsStatus.PUBLISHED) LocalDateTime.now() else request.publishedAt,
@@ -258,6 +254,9 @@ class ContentService(
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
+        if (request.type == ContentType.RESOURCE) {
+            searchTextParts.add(request.publishingType!!.displayName)
+        }
 
         val searchText = searchTextParts.joinToString(" ")
 
@@ -303,12 +302,10 @@ class ContentService(
         request.genre?.let { content.genre = it }
         request.playerCountType?.let { content.playerCountType = it }
         request.termType?.let { content.termType = it }
-        content.publishingInfo =
-            if (request.type == ContentType.SCENARIO) {
-                request.publishingInfo?.toJson()
-            } else {
-                request.publishingType?.let { listOf(PublishingInfo(type = it, path = null)).toJson() }
-            }
+        content.publishingType =
+            if (request.type == ContentType.SCENARIO) PublishingType.SCENARIO
+            else request.publishingType ?: PublishingType.ETC
+        content.publishingInfo = request.publishingInfo?.toJson()
         content.status = request.status
         content.adult = request.adult
         content.publishedAt =
@@ -458,6 +455,9 @@ class ContentService(
         searchTextParts.addAll(tagNames)
         searchTextParts.add(request.genre?.displayName ?: "")
         searchTextParts.add(request.rule?.displayName ?: "")
+        if (request.type == ContentType.RESOURCE) {
+            searchTextParts.add(request.publishingType!!.displayName)
+        }
 
         content.searchText = searchTextParts.joinToString(" ")
 

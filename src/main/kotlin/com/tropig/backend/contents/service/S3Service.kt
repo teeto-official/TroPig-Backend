@@ -303,7 +303,7 @@ class S3Service(
                 contentId,
                 it.type.path,
             )
-                .thenApply { s3Key -> FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType) }
+                .thenApply { s3Key -> FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType, it.originalFileName) }
                 .exceptionally { throwable ->
                     logger.error("파일 업로드 실패: orderNo=${it.orderNo}", throwable)
                     throw RuntimeException("파일 업로드에 실패했습니다: ${throwable.message}", throwable)

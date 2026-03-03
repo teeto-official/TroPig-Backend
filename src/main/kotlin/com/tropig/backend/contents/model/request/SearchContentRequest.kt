@@ -5,6 +5,7 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
@@ -20,6 +21,8 @@ data class SearchContentRequest(
     val playerCountTypes: List<PlayerCountType>? = null,
     @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
     val tags: List<String>? = null,
+    @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
+    val publishingTypes: List<PublishingType>? = null,
 
     val sortMode: SortMode,
     val cursorPublishedAt: LocalDateTime? = null,
@@ -28,7 +31,11 @@ data class SearchContentRequest(
 
     val size: Int = 15,
 ) {
-    fun toDto(isAdult: Boolean, type: ContentType, tagIds: List<Long>?): SearchContentRequestDto =
+    fun toDto(
+        isAdult: Boolean,
+        type: ContentType,
+        tagIds: List<Long>?,
+    ): SearchContentRequestDto =
         SearchContentRequestDto(
             searchText = this.searchText,
             level = this.level,
@@ -38,6 +45,7 @@ data class SearchContentRequest(
             tags = tagIds,
             isAdult = isAdult,
             type = type,
+            publishingTypes = this.publishingTypes,
             sortMode = this.sortMode,
             cursorPublishedAt = this.cursorPublishedAt,
             cursorTitle = this.cursorTitle,

@@ -8,4 +8,5 @@ data class UploadFileResponse(
     val uploadedFileName: String,
     val fileType: FileType,
     val publishingType: PublishingType? = null,
+    val originalName: String?,
 )

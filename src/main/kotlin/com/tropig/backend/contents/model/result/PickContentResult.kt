@@ -2,6 +2,7 @@ package com.tropig.backend.contents.model.result
 
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 
 data class PickContentResult(
     val id: Long,
@@ -12,4 +13,6 @@ data class PickContentResult(
     val tags: List<ContentTagResult>,
     val rule: Rule,
     val playerCountType: PlayerCountType,
+    val publishingType: PublishingType,
+    val publishingInfo: String?,
 )

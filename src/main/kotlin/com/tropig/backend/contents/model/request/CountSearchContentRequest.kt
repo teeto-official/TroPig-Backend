@@ -3,6 +3,7 @@ package com.tropig.backend.contents.model.request
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import jakarta.validation.constraints.Size
 
@@ -17,6 +18,7 @@ data class CountSearchContentRequest(
     val playerCountTypes: List<PlayerCountType>? = null,
     @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
     val tags: List<String>? = null,
+    val publishingTypes: List<PublishingType>? = null,
 ) {
     fun toCountDto(isAdult: Boolean, tagIds: List<Long>?) = SearchContentRequestDto(
         searchText = this.searchText,
@@ -24,6 +26,7 @@ data class CountSearchContentRequest(
         rules = this.rules,
         genres = this.genres,
         playerCountTypes = this.playerCountTypes,
+        publishingTypes = publishingTypes,
         tags = tagIds,
         isAdult = isAdult,
     )
