@@ -22,6 +22,9 @@ class PaymentContentService(private val purchaseRepository: PurchaseRepository) 
             status = PurchaseStatus.COMPLETED,
         )
 
+    fun getPurchaseCount(memberId: Long): Long =
+        purchaseRepository.countByMemberIdAndStatus(memberId, PurchaseStatus.COMPLETED)
+
     fun getPurchasedContents(
         memberId: Long,
         request: PurchasedContentListRequest,

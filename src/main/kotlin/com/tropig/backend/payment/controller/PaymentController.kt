@@ -101,6 +101,16 @@ class PaymentController(
     }
 
     @RequireAuth
+    @GetMapping("/purchase/count")
+    @Operation(summary = "구매 건수 조회", description = "회원의 총 구매 건수를 조회합니다.")
+    fun getPurchaseCount(
+        @LoginMember authMember: AuthMember,
+    ): ResponseEntity<Map<String, Long>> {
+        val count = paymentContentService.getPurchaseCount(authMember.memberId)
+        return ResponseEntity.ok(mapOf("count" to count))
+    }
+
+    @RequireAuth
     @GetMapping("/purchase")
     @Operation(summary = "구매한 컨텐츠 목록 조회", description = "회원이 구매한 컨텐츠 목록을 조회합니다.")
     fun getPurchasedContents(

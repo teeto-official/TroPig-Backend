@@ -15,6 +15,7 @@ interface PurchaseRepository :
     fun findByMemberIdAndContentId(memberId: Long, contentId: Long): Purchase?
     fun existsByMemberIdAndContentIdAndStatus(memberId: Long, contentId: Long, status: PurchaseStatus): Boolean
     fun findByMemberIdAndPaymentId(memberId: Long, paymentId: Long): Purchase?
+    fun countByMemberIdAndStatus(memberId: Long, status: PurchaseStatus): Long
     fun findByContentIdInAndStatus(contentIds: List<Long>, status: PurchaseStatus): List<Purchase>
 
     fun findByContentIdInAndStatusOrderByCreatedAtDesc(
