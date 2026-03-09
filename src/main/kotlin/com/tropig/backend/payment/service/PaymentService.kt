@@ -34,7 +34,7 @@ class PaymentService(
     private val storeId get() = portOneProperties.storeId
 
     private fun resolveChannelKey(channel: PaymentChannel): String = when (channel) {
-        PaymentChannel.KCP -> portOneProperties.channels.kcp
+        PaymentChannel.KG -> portOneProperties.channels.kgInicis
         PaymentChannel.KAKAO_PAY -> portOneProperties.channels.kakaoPay
     }
 

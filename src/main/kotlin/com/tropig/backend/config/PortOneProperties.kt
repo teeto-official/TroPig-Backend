@@ -4,5 +4,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "portone")
 data class PortOneProperties(val storeId: String = "", val channels: ChannelProperties = ChannelProperties()) {
-    data class ChannelProperties(val kcp: String = "", val kakaoPay: String = "")
+    data class ChannelProperties(val kgInicis: String = "", val kakaoPay: String = "")
 }

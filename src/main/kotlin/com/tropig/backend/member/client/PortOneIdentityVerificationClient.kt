@@ -110,16 +110,7 @@ class PortOneIdentityVerificationClient(
             ConfirmVerificationResponse(
                 id = jsonNode.get("id").asText(),
                 status = jsonNode.get("status").asText(),
-                verifiedCustomer = VerifiedCustomer(
-                    name = verifiedCustomer.get("name").asText(),
-                    phoneNumber = verifiedCustomer.get("phoneNumber").asText(),
-                    birthDate = verifiedCustomer.get("birthDate").asText(),
-                    gender = verifiedCustomer.get("gender").asText(),
-                    isForeigner = verifiedCustomer.get("isForeigner").asBoolean(),
-                    ci = verifiedCustomer.get("ci").asText(),
-                    di = verifiedCustomer.get("di").asText(),
-                    operator = verifiedCustomer.get("operator").asText(),
-                ),
+                verifiedCustomer = parseVerifiedCustomer(verifiedCustomer),
                 verifiedAt = LocalDateTime.parse(jsonNode.get("verifiedAt").asText()),
             )
         } catch (e: HttpClientErrorException) {
@@ -139,6 +130,55 @@ class PortOneIdentityVerificationClient(
                 cause = e,
                 errorCode = errorCode,
             )
+        } catch (e: HttpServerErrorException) {
+            logger.error("PortOne API server error: ${e.statusCode} - ${e.responseBodyAsString}")
+            throw PortOneIdentityVerificationException("PortOne service error: ${e.message}", e)
+        } catch (e: Exception) {
+            logger.error("Unexpected error calling PortOne API", e)
+            throw PortOneIdentityVerificationException("Unexpected error: ${e.message}", e)
+        }
+    }
+
+    /**
+     * 본인인증 결과 조회 (SDK 방식)
+     * GET /identity-verifications/{identityVerificationId}
+     */
+    fun getVerification(identityVerificationId: String): ConfirmVerificationResponse {
+        val url = "$baseUrl/identity-verifications/$identityVerificationId"
+        val headers = createHeaders()
+
+        logger.info("Getting identity verification result: identityVerificationId=$identityVerificationId")
+
+        return try {
+            val response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                String::class.java,
+            )
+
+            val jsonNode = objectMapper.readTree(response.body)
+            val status = jsonNode.get("status").asText()
+
+            if (status != "VERIFIED") {
+                throw PortOneIdentityVerificationException(
+                    message = "본인인증이 완료되지 않았습니다. 현재 상태: $status",
+                    errorCode = "IDENTITY_VERIFICATION_NOT_VERIFIED",
+                )
+            }
+
+            val verifiedCustomer = jsonNode.get("verifiedCustomer")
+            ConfirmVerificationResponse(
+                id = jsonNode.get("id").asText(),
+                status = status,
+                verifiedCustomer = parseVerifiedCustomer(verifiedCustomer),
+                verifiedAt = LocalDateTime.parse(jsonNode.get("verifiedAt").asText()),
+            )
+        } catch (e: PortOneIdentityVerificationException) {
+            throw e
+        } catch (e: HttpClientErrorException) {
+            logger.error("PortOne API client error: ${e.statusCode} - ${e.responseBodyAsString}")
+            throw PortOneIdentityVerificationException("Failed to get verification: ${e.message}", e)
         } catch (e: HttpServerErrorException) {
             logger.error("PortOne API server error: ${e.statusCode} - ${e.responseBodyAsString}")
             throw PortOneIdentityVerificationException("PortOne service error: ${e.message}", e)
@@ -181,6 +221,23 @@ class PortOneIdentityVerificationClient(
             logger.error("Unexpected error calling PortOne API", e)
             throw PortOneIdentityVerificationException("Unexpected error: ${e.message}", e)
         }
+    }
+
+    /**
+     * PortOne 응답에서 VerifiedCustomer를 파싱합니다.
+     * ci, di, operator는 nullable하게 처리합니다.
+     */
+    private fun parseVerifiedCustomer(node: com.fasterxml.jackson.databind.JsonNode): VerifiedCustomer {
+        return VerifiedCustomer(
+            name = node.get("name").asText(),
+            phoneNumber = node.get("phoneNumber").asText(),
+            birthDate = node.get("birthDate").asText(),
+            gender = node.get("gender").asText(),
+            isForeigner = node.get("isForeigner").asBoolean(),
+            ci = node.get("ci").asText(),
+            di = node.get("di").asText(),
+            operator = node.get("operator").asText(),
+        )
     }
 
     /**

@@ -7,6 +7,7 @@ import com.tropig.backend.member.client.PortOneIdentityVerificationClient
 import com.tropig.backend.member.client.PortOneIdentityVerificationException
 import com.tropig.backend.member.client.SendVerificationRequest
 import com.tropig.backend.member.entity.MemberAuthInfo
+import com.tropig.backend.member.model.request.IdentityVerificationCompleteDto
 import com.tropig.backend.member.model.request.VerificationConfirmDto
 import com.tropig.backend.member.model.request.VerificationRequestDto
 import com.tropig.backend.member.model.request.VerificationResendDto
@@ -114,18 +115,22 @@ class IdentityVerificationService(
 
             // 5. CI/DI 중복 확인
             val verifiedCustomer = confirmResponse.verifiedCustomer
-            if (memberAuthInfoRepository.existsByCi(verifiedCustomer.ci)) {
-                throw MemberException(
-                    "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
-                    MessageCode.CI_ALREADY_EXISTS,
-                )
+            verifiedCustomer.ci?.let { ci ->
+                if (memberAuthInfoRepository.existsByCi(ci)) {
+                    throw MemberException(
+                        "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
+                        MessageCode.CI_ALREADY_EXISTS,
+                    )
+                }
             }
 
-            if (memberAuthInfoRepository.existsByDi(verifiedCustomer.di)) {
-                throw MemberException(
-                    "이미 등록된 본인인증 정보입니다.",
-                    MessageCode.DI_ALREADY_EXISTS,
-                )
+            verifiedCustomer.di?.let { di ->
+                if (memberAuthInfoRepository.existsByDi(di)) {
+                    throw MemberException(
+                        "이미 등록된 본인인증 정보입니다.",
+                        MessageCode.DI_ALREADY_EXISTS,
+                    )
+                }
             }
 
             // 6. 나이 계산
@@ -182,6 +187,86 @@ class IdentityVerificationService(
                     MessageCode.OTP_ATTEMPTS_EXCEEDED,
                 )
             }
+        }
+    }
+
+    /**
+     * PortOne SDK 방식 본인인증을 완료합니다.
+     * 프론트엔드에서 PortOne SDK로 인증 완료 후 identityVerificationId를 전달받아 처리합니다.
+     */
+    @Transactional
+    fun completeVerification(memberId: Long, request: IdentityVerificationCompleteDto): VerificationResult {
+        logger.info("Completing identity verification (SDK): member=$memberId, id=${request.identityVerificationId}")
+
+        // 1. 이미 인증된 사용자 체크
+        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+            throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
+        }
+
+        // 2. PortOne API에서 인증 결과 조회
+        return try {
+            val response = portOneClient.getVerification(request.identityVerificationId)
+            val verifiedCustomer = response.verifiedCustomer
+
+            // 3. CI/DI 중복 확인
+            verifiedCustomer.ci?.let { ci ->
+                if (memberAuthInfoRepository.existsByCi(ci)) {
+                    throw MemberException(
+                        "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
+                        MessageCode.CI_ALREADY_EXISTS,
+                    )
+                }
+            }
+
+            verifiedCustomer.di?.let { di ->
+                if (memberAuthInfoRepository.existsByDi(di)) {
+                    throw MemberException(
+                        "이미 등록된 본인인증 정보입니다.",
+                        MessageCode.DI_ALREADY_EXISTS,
+                    )
+                }
+            }
+
+            // 4. 나이 계산
+            val isAdult = MemberAuthInfo.isAdult(verifiedCustomer.birthDate)
+
+            // 5. MemberAuthInfo 저장
+            val authInfo = MemberAuthInfo(
+                memberId = memberId,
+                name = verifiedCustomer.name,
+                birthDate = verifiedCustomer.birthDate,
+                phoneNumber = verifiedCustomer.phoneNumber,
+                ci = verifiedCustomer.ci,
+                di = verifiedCustomer.di,
+                verifiedAt = LocalDateTime.now(),
+            )
+            memberAuthInfoRepository.save(authInfo)
+
+            // 6. Member의 adult 플래그 업데이트
+            val member = memberRepository.findById(memberId)
+                .orElseThrow { MemberException("회원을 찾을 수 없습니다.", MessageCode.NOT_FOUND_MEMBER) }
+            member.adult = isAdult
+            memberRepository.save(member)
+
+            logger.info("Identity verification (SDK) completed: member=$memberId, adult=$isAdult")
+
+            VerificationResult(
+                verified = true,
+                adult = isAdult,
+                name = verifiedCustomer.name,
+                birthDate = verifiedCustomer.birthDate,
+                phoneNumber = MemberAuthInfo.maskPhoneNumber(verifiedCustomer.phoneNumber),
+                verifiedAt = LocalDateTime.now(),
+                message = "본인인증이 완료되었습니다.",
+            )
+        } catch (e: MemberException) {
+            throw e
+        } catch (e: PortOneIdentityVerificationException) {
+            logger.error("Failed to complete verification from PortOne", e)
+            throw MemberException(
+                "본인인증 확인 중 오류가 발생했습니다: ${e.message}",
+                MessageCode.EXTERNAL_SERVICE_ERROR,
+            )
         }
     }
 
