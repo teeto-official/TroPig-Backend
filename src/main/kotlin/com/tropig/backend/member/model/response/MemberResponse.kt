@@ -23,6 +23,8 @@ data class MemberResponse(
     val authDateAt: LocalDateTime?,
     val creator: Boolean,
     val authCreatorAt: LocalDateTime?,
+    val name: String?,
+    val phoneNumber: String?,
 ) {
     companion object {
         fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse = MemberResponse(
@@ -43,6 +45,8 @@ data class MemberResponse(
             authDateAt = memberAuthInfo?.verifiedAt,
             creator = memberAuthInfo?.creator ?: false,
             authCreatorAt = memberAuthInfo?.authCreatorAt,
+            name = memberAuthInfo?.name,
+            phoneNumber = memberAuthInfo?.phoneNumber
         )
     }
 }
