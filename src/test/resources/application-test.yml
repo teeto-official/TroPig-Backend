@@ -20,22 +20,14 @@ spring:
 
   sql:
     init:
-      mode: always
-      schema-locations: classpath:schema-h2.sql
+      mode: never
   
   cache:
     type: simple
 
-# Disable external API calls during tests
-toss:
-  api:
-    key: test-key
-    secret: test-secret
-    base-url: http://localhost:9999
-    timeout: 1000
-    retry-count: 1
-    account-validation:
-      enabled: false
+  mail:
+    username: test-smtp-username
+    password: test-smtp-password
 
 account-validation:
   methods:
@@ -55,8 +47,40 @@ logging:
     com.tropig.backend: WARN
     org.springframework: WARN
     org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 jwt:
   secret: "your256bitSecretKeyPleaseChangeItThisIsTestTest"
   expiration: 3600000
   refresh-expiration: 86400000
+
+# Test environment variables (dummy values for testing)
+mail:
+  sender:
+    address: test@example.com
+    name: Test Sender
+  subjects:
+    sign_up: "가입을 환영합니다"
+    receipt: "구매 확정 안내"
+
+aws:
+  s3:
+    bucket: test-bucket
+    region: ap-northeast-2
+    access-key: test-access-key
+    secret-key: test-secret-key
+
+portone:
+  key:
+    secret-v2: test-portone-secret-v2
+  base-url: http://localhost:9999
+  store-id: test-store-id
+  identity-verification:
+    channel-key: test-chennel-key
+  channels:
+    kcp: ${PORTONE_KCP_CHANNEL_KEY}
+    kakao-pay: ${PORTONE_KAKAO_PAY_CHANNEL_KEY}
+
+encryption:
+  secret-key: WA2U2V0nO/a/puEzjgLmzdojyeO3a+r7KcXSoImjVmk=

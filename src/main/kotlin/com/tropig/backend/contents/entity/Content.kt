@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "content")
 data class Content(
-    val alias: String,
+    var alias: String,
     var title: String,
     @Enumerated(value = EnumType.STRING)
     var type: ContentType,
@@ -24,6 +24,8 @@ data class Content(
     var playerCountType: PlayerCountType,
     @Enumerated(value = EnumType.STRING)
     var termType: TermType,
+    @Enumerated(value = EnumType.STRING)
+    var publishingType: PublishingType,
     var publishingInfo: String?,
     @Enumerated(value = EnumType.STRING)
     var status: ContentsStatus,

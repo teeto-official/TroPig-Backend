@@ -15,10 +15,21 @@ COPY src/ src/
 RUN ./gradlew bootJar --no-daemon
 
 # Runtime stage
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl, locales, and tzdata for Korean support
+RUN apt-get update && apt-get install -y \
+    curl \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && locale-gen ko_KR.UTF-8
+
+# Set locale and timezone environment variables
+ENV LANG=ko_KR.UTF-8
+ENV LC_ALL=ko_KR.UTF-8
+ENV LANGUAGE=ko_KR:ko
+ENV TZ=Asia/Seoul
 
 # Create app user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
@@ -30,6 +41,7 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 # ARG 값을 ENV로 전달 (컨테이너 실행 시 사용 가능)
+ARG PROFILE
 ENV SPRING_PROFILES_ACTIVE=${PROFILE}
 
 # Change ownership to app user
@@ -42,8 +54,8 @@ USER appuser
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=10m --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application with UTF-8 encoding and Korean timezone
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-Duser.language=ko", "-Duser.country=KR", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]

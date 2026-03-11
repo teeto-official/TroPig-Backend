@@ -9,15 +9,14 @@ import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.response.BookmarkContentResponse
-import com.tropig.backend.contents.model.response.SearchContentResponse
 import com.tropig.backend.contents.service.BookmarkContentService
 import com.tropig.backend.contents.service.ContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
-import com.tropig.backend.member.service.MemberService
+import com.tropig.backend.member.service.CreatorService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
@@ -25,15 +24,15 @@ import java.time.LocalDateTime
 @RequestMapping("/api/bookmark")
 class BookmarkController(
     private val bookmarkContentService: BookmarkContentService,
-    private val memberService: MemberService,
+    private val creatorService: CreatorService,
     private val tagService: TagService,
     private val contentService: ContentService,
+    private val s3Service: S3Service,
 ) {
 
     @RequireAuth
     @GetMapping("/{type}")
     fun getBookmarkList(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "type", description = "시나리오/자료", `in` = ParameterIn.PATH)
         @PathVariable
@@ -43,27 +42,36 @@ class BookmarkController(
         @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
         cursorCreatedAt: LocalDateTime? = null,
         @Parameter(
-            name = "sortMode", description = "정렬 순서", `in` = ParameterIn.QUERY,
+            name = "sortMode",
+            description = "정렬 순서",
+            `in` = ParameterIn.QUERY,
             schema = Schema(
                 allowableValues = ["LATEST", "OLDEST"],
-                defaultValue = "LATEST"
-            )
+                defaultValue = "LATEST",
+            ),
         )
         sortMode: SortMode = SortMode.LATEST,
         @Parameter(name = "size", description = "페이지 크기", `in` = ParameterIn.QUERY)
         size: Int = 15,
     ): CursorSlice<BookmarkContentResponse> {
-        val bookmarkList = bookmarkContentService.getBookmarkList(authMember.memberId, type, cursorId, cursorCreatedAt, sortMode, size)
+        val bookmarkList = bookmarkContentService.getBookmarkList(
+            authMember.memberId,
+            type,
+            cursorId,
+            cursorCreatedAt,
+            sortMode,
+            size,
+        )
 
         return bookmarkList.mapWith(
             buildContext = { items ->
                 val contentIds = items.map { it.id }
                 val writerIds = items.map { it.memberId }.distinct()
 
-                val nickByMemberId = memberService.getWritersName(writerIds)
+                val nickByMemberId = creatorService.getWritersName(writerIds)
                 val tagsByContentId = tagService.findTagNamesByContentIds(contentIds)
                 val thumbnailPaths = contentService.getThumbnailPath(contentIds)
-                    .associateBy({ it.contentId }, { it.path })
+                    .associateBy({ it.contentId }, { s3Service.toUrl(it.path) })
 
                 SearchContext(
                     nickByMemberId = nickByMemberId,
@@ -72,7 +80,7 @@ class BookmarkController(
                     favoriteCounts = emptyMap(),
                     thumbnailPaths = thumbnailPaths,
                 )
-            }
+            },
         ) { content, ctx ->
             BookmarkContentResponse(
                 id = content.id,
@@ -85,6 +93,9 @@ class BookmarkController(
                 thumbnailPath = ctx.thumbnailPaths[content.id],
                 tags = ctx.tagsByContentId[content.id].orEmpty(),
                 updatedAt = content.updatedAt,
+                publishingType = if (type == ContentType.RESOURCE) {
+                    content.publishingType
+                } else null
             )
         }
     }
@@ -92,7 +103,6 @@ class BookmarkController(
     @RequireAuth
     @PostMapping("/{contentId}")
     fun insertBookmark(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "contentId", description = "시나리오/자료 id", `in` = ParameterIn.PATH)
         @PathVariable
@@ -104,7 +114,6 @@ class BookmarkController(
     @RequireAuth
     @DeleteMapping("/{contentId}")
     fun deleteBookmark(
-        @AuthenticationPrincipal
         @LoginMember authMember: AuthMember,
         @Parameter(name = "contentId", description = "시나리오/자료 id", `in` = ParameterIn.PATH)
         @PathVariable

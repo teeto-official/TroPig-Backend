@@ -4,11 +4,10 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
-import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.model.request.SearchContentRequest
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.result.BookmarkContentResult
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -16,19 +15,18 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class BookmarkContentCustomRepositoryImpl(
-    @PersistenceContext private val em: EntityManager
-): BookmarkContentCustomRepository {
+class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) :
+    BookmarkContentCustomRepository {
     override fun getBookmarkList(
         memberId: Long,
         type: ContentType,
         cursorId: Long?,
         cursorCreatedAt: LocalDateTime?,
         sortMode: SortMode,
-        size: Int
+        size: Int,
     ): CursorSlice<BookmarkContentResult> {
         val sql = StringBuilder(
-        """
+            """
             SELECT
                 c.id,
                 c.alias,
@@ -37,6 +35,7 @@ class BookmarkContentCustomRepositoryImpl(
                 c.genre,
                 c.member_id,
                 c.player_count_type,
+                c.publishing_type,
                 bc.updated_at
             FROM content c
             INNER JOIN bookmark_content bc ON c.id = bc.content_id
@@ -48,12 +47,12 @@ class BookmarkContentCustomRepositoryImpl(
                 bc.member_id = :memberId
             AND
                 bc.deleted = false
-            """.trimIndent()
+            """.trimIndent(),
         )
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "memberId" to memberId
+            "memberId" to memberId,
         )
 
         when (sortMode) {
@@ -89,7 +88,7 @@ class BookmarkContentCustomRepositoryImpl(
             items = items,
             hasNext = hasNext,
             nextCursorDateAt = last?.updatedAt,
-            nextCursorId = last?.id
+            nextCursorId = last?.id,
         )
     }
 
@@ -109,7 +108,8 @@ class BookmarkContentCustomRepositoryImpl(
                 genre = Genre.valueOf(r[4] as String),
                 memberId = (r[5] as Number).toLong(),
                 playerCountType = PlayerCountType.valueOf(r[6] as String),
-                updatedAt = (r[7] as java.sql.Timestamp).toLocalDateTime(),
+                publishingType = PublishingType.valueOf(r[7] as String),
+                updatedAt = (r[8] as java.sql.Timestamp).toLocalDateTime(),
             )
         }
     }

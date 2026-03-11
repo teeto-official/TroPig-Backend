@@ -1,10 +1,13 @@
 package com.tropig.backend.contents.repository
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import jakarta.persistence.EntityManager
@@ -14,9 +17,7 @@ import java.time.LocalDateTime
 import kotlin.math.min
 
 @Repository
-class ContentCustomRepositoryImpl(
-    @PersistenceContext private val em: EntityManager
-) : ContentCustomRepository {
+class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) : ContentCustomRepository {
 
     override fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> {
         val common = request.toCommon()
@@ -25,7 +26,7 @@ class ContentCustomRepositoryImpl(
             common = common,
             type = request.type,
             sortSpec = request.sortSpec(),
-            filterAppender = request.filterAppender()
+            filterAppender = request.filterAppender(),
         )
     }
 
@@ -34,8 +35,79 @@ class ContentCustomRepositoryImpl(
 
         return runSearchCount(
             common = common,
-            filterAppender = request.filterAppender()
+            publishingTypes = request.publishingTypes,
+            filterAppender = request.filterAppender(),
         )
+    }
+
+    override fun findRandomGenreContent(genres: List<Genre>, isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            AND c.genre IN (:genres)
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+            "genres" to genres,
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
+    }
+
+    override fun findRandomRuleContent(rules: List<Rule>, isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            AND c.rule IN (:rules)
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+            "rules" to rules,
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
+    }
+
+    override fun findRandomContent(isAdult: Boolean): Content {
+        var sql = """
+            SELECT *
+            FROM content c
+            WHERE
+                c.type = :type
+            AND c.status = :status
+            {adultCondition}
+            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
+            ORDER BY c.id
+            LIMIT 1
+        """.trimIndent()
+
+        val params = mutableMapOf<String, Any?>(
+            "type" to ContentType.SCENARIO.name,
+            "status" to ContentsStatus.PUBLISHED.name,
+        )
+
+        sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
+        return execute(sql, params)
     }
 
     private data class CommonSearchReq(
@@ -49,46 +121,50 @@ class ContentCustomRepositoryImpl(
         val isIncludeTags: Boolean,
     )
 
-    private fun SearchContentRequestDto.toCommon(): CommonSearchReq =
-        CommonSearchReq(
-            size = this.size,
-            isAdult = this.isAdult,
-            searchText = this.searchText,
-            sortMode = this.sortMode,
-            cursorId = this.cursorId,
-            cursorDateAt = this.cursorPublishedAt,
-            cursorTitle = this.cursorTitle,
-            isIncludeTags = !this.tags.isNullOrEmpty(),
-        )
+    private fun SearchContentRequestDto.toCommon(): CommonSearchReq = CommonSearchReq(
+        size = this.size,
+        isAdult = this.isAdult,
+        searchText = this.searchText,
+        sortMode = this.sortMode,
+        cursorId = this.cursorId,
+        cursorDateAt = this.cursorPublishedAt,
+        cursorTitle = this.cursorTitle,
+        isIncludeTags = !this.tags.isNullOrEmpty(),
+    )
 
-    private fun SearchContentRequestDto.sortSpec(): SortSpec =
-        when (this.sortMode) {
-            SortMode.LATEST -> SortSpec.latest()
-            SortMode.TITLE -> SortSpec.title()
-            SortMode.OLDEST -> SortSpec.oldest()
-        }
+    private fun SearchContentRequestDto.sortSpec(): SortSpec = when (this.sortMode) {
+        SortMode.LATEST -> SortSpec.latest()
+        SortMode.TITLE -> SortSpec.title()
+        SortMode.OLDEST -> SortSpec.oldest()
+    }
 
     /**
      * search/count에서 중복되던 필터 로직을 request 확장으로 뽑아둠
      */
-    private fun SearchContentRequestDto.filterAppender(): (StringBuilder, MutableMap<String, Any?>) -> Unit = { sql, params ->
-        appendInEnum(sql, params, "c.rule", "rules", this.rules)
-        appendInEnum(sql, params, "c.genre", "genres", this.genres)
-        appendInEnum(sql, params, "c.player_count_type", "playerCountTypes", this.playerCountTypes)
+    private fun SearchContentRequestDto.filterAppender(): (
+        StringBuilder,
+        MutableMap<String, Any?>,
+    ) -> Unit =
+        { sql, params ->
+            appendInEnum(sql, params, "c.rule", "rules", this.rules)
+            appendInEnum(sql, params, "c.genre", "genres", this.genres)
+            appendInEnum(sql, params, "c.player_count_type", "playerCountTypes", this.playerCountTypes)
 
-        // tag 필터가 있으면 ct 조인이 필요 (buildBase...에서 isIncludeTags로 조인 여부 결정)
-        appendInEnum(sql, params, "ct.tag_id", "tagIds", this.tags)
+            // tag 필터가 있으면 ct 조인이 필요 (buildBase...에서 isIncludeTags로 조인 여부 결정)
+            appendInEnum(sql, params, "ct.tag_id", "tagIds", this.tags)
 
-        if (this.level?.size != 4) {
-            appendInEnum(sql, params, "c.level", "level", this.level)
+            if (this.level?.size != 4) {
+                appendInEnum(sql, params, "c.level", "level", this.level)
+            }
+
+            appendInEnum(sql, params, "c.publishing_type", "publishingTypes", this.publishingTypes)
         }
-    }
 
     private fun runSearchSlice(
         common: CommonSearchReq,
         type: ContentType,
         sortSpec: SortSpec,
-        filterAppender: (StringBuilder, MutableMap<String, Any?>) -> Unit
+        filterAppender: (StringBuilder, MutableMap<String, Any?>) -> Unit,
     ): CursorSlice<Content> {
         val size = min(common.size.coerceAtLeast(1), 30)
         val fetchSize = size + 1
@@ -112,16 +188,17 @@ class ContentCustomRepositoryImpl(
 
     private fun runSearchCount(
         common: CommonSearchReq,
-        filterAppender: (StringBuilder, MutableMap<String, Any?>) -> Unit
+        publishingTypes: List<PublishingType>? = null,
+        filterAppender: (StringBuilder, MutableMap<String, Any?>) -> Unit,
     ): CountSearchContentsResult {
-        val (sql, params) = buildBaseCountSqlCommon(common)
+        val (sql, params) = buildBaseCountSqlCommon(common, publishingTypes)
         filterAppender(sql, params)
 
         val (scenarioCount, resourceCount) = executeCountPair(sql.toString(), params)
 
         return CountSearchContentsResult(
             scenarioCount = scenarioCount,
-            resourceCount = resourceCount
+            resourceCount = resourceCount,
         )
     }
 
@@ -136,7 +213,7 @@ class ContentCustomRepositoryImpl(
             """
             SELECT c.*
             FROM content c
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         if (common.isIncludeTags) {
@@ -148,12 +225,12 @@ class ContentCustomRepositoryImpl(
             
             WHERE c.type = :type
               AND c.status = :status
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
-            "status" to ContentsStatus.PUBLISHED.name
+            "status" to ContentsStatus.PUBLISHED.name,
         )
 
         if (!common.isAdult) {
@@ -166,14 +243,21 @@ class ContentCustomRepositoryImpl(
 
     private fun buildBaseCountSqlCommon(
         common: CommonSearchReq,
+        publishingTypes: List<PublishingType>? = null,
     ): Pair<StringBuilder, MutableMap<String, Any?>> {
+        val resourceCase = if (!publishingTypes.isNullOrEmpty()) {
+            "COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' AND c.publishing_type IN (:countPublishingTypes) THEN c.id END)"
+        } else {
+            "COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN c.id END)"
+        }
+
         val sql = StringBuilder(
             """
             SELECT
-                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN 1 END) AS scenario_count,
-                COUNT(DISTINCT CASE WHEN c.type = 'RESOURCE' THEN 1 END) AS resource_count
+                COUNT(DISTINCT CASE WHEN c.type = 'SCENARIO' THEN c.id END) AS scenario_count,
+                $resourceCase AS resource_count
             FROM content c
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         if (common.isIncludeTags) {
@@ -184,12 +268,16 @@ class ContentCustomRepositoryImpl(
             """
             
             WHERE c.status = :status
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val params = mutableMapOf<String, Any?>(
-            "status" to ContentsStatus.PUBLISHED.name
+            "status" to ContentsStatus.PUBLISHED.name,
         )
+
+        if (!publishingTypes.isNullOrEmpty()) {
+            params["countPublishingTypes"] = publishingTypes.map { it.name }
+        }
 
         if (!common.isAdult) {
             sql.append("\n  AND c.adult = false")
@@ -208,6 +296,12 @@ class ContentCustomRepositoryImpl(
         val q = em.createNativeQuery(sql, Content::class.java)
         params.forEach { (k, v) -> q.setParameter(k, v) }
         return q.resultList as List<Content>
+    }
+
+    private fun execute(sql: String, params: Map<String, Any?>): Content {
+        val q = em.createNativeQuery(sql, Content::class.java)
+        params.forEach { (k, v) -> q.setParameter(k, v) }
+        return q.singleResult as Content
     }
 
     private fun executeCountPair(sql: String, params: Map<String, Any?>): Pair<Long, Long> {
@@ -229,7 +323,7 @@ class ContentCustomRepositoryImpl(
         val mode: SortMode,
         val appendCursor: (StringBuilder, MutableMap<String, Any?>, CommonSearchReq) -> Unit,
         val appendOrderBy: (StringBuilder) -> Unit,
-        val buildSlice: (List<Content>, Boolean, Content?) -> CursorSlice<Content>
+        val buildSlice: (List<Content>, Boolean, Content?) -> CursorSlice<Content>,
     ) {
         companion object {
             fun latest(): SortSpec = SortSpec(
@@ -249,9 +343,9 @@ class ContentCustomRepositoryImpl(
                         items = items,
                         hasNext = hasNext,
                         nextCursorDateAt = last?.publishedAt,
-                        nextCursorId = last?.id
+                        nextCursorId = last?.id,
                     )
-                }
+                },
             )
 
             fun oldest(): SortSpec = SortSpec(
@@ -271,9 +365,9 @@ class ContentCustomRepositoryImpl(
                         items = items,
                         hasNext = hasNext,
                         nextCursorDateAt = last?.publishedAt,
-                        nextCursorId = last?.id
+                        nextCursorId = last?.id,
                     )
-                }
+                },
             )
 
             fun title(): SortSpec = SortSpec(
@@ -293,9 +387,9 @@ class ContentCustomRepositoryImpl(
                         items = items,
                         hasNext = hasNext,
                         nextCursorTitle = last?.title,
-                        nextCursorId = last?.id
+                        nextCursorId = last?.id,
                     )
-                }
+                },
             )
         }
     }
@@ -314,7 +408,7 @@ class ContentCustomRepositoryImpl(
         params: MutableMap<String, Any?>,
         column: String,
         paramName: String,
-        values: Collection<Any>?
+        values: Collection<Any>?,
     ) {
         if (values.isNullOrEmpty()) return
         val converted = values.mapNotNull { toDbParamValue(it) }
@@ -324,11 +418,10 @@ class ContentCustomRepositoryImpl(
         params[paramName] = converted
     }
 
-    private fun toDbParamValue(value: Any?): Any? =
-        when (value) {
-            null -> null
-            is Enum<*> -> value.name
-            is Int, is Long, is String -> value
-            else -> error("지원하지 않는 타입: ${value::class}")
-        }
+    private fun toDbParamValue(value: Any?): Any? = when (value) {
+        null -> null
+        is Enum<*> -> value.name
+        is Int, is Long, is String -> value
+        else -> error("지원하지 않는 타입: ${value::class}")
+    }
 }

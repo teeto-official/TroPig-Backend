@@ -8,10 +8,7 @@ import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Service
 
 @Service
-class EmailUtil(
-    private val mailSender: JavaMailSender,
-    private val properties: MailProperties,
-) {
+class EmailUtil(private val mailSender: JavaMailSender, private val properties: MailProperties) {
 
     fun send(to: String, mailType: MailType, html: String) {
         val message = mailSender.createMimeMessage()
@@ -25,8 +22,8 @@ class EmailUtil(
         helper.setFrom(
             InternetAddress(
                 properties.sender.address,
-                properties.sender.name
-            )
+                properties.sender.name,
+            ),
         )
         helper.setTo(to)
         helper.setSubject(subject)

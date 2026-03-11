@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url:
+    username:
+    password:
+  data:
+    redis:
+      host:
+      port:
+      password:
+
+jwt:
+  secret:
+
+mail:
+  sender:
+    address:
+    name:
+
+aws:
+  s3:
+    bucket:
+    region:
+    access-key:
+    secret-key:
+
+ses:
+  smtp:
+    username:
+    password:
+
+portone:
+  key:
+    secret-v2:
+  store-id:
+  identity-verification:
+    channel-key:
+  channels:
+    kcp:
+    kakao-pay:
+
+encryption:
+  secret-key:

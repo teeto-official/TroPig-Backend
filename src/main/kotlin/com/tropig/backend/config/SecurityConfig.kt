@@ -14,7 +14,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val requestLoggingFilter: RequestLoggingFilter,
 ) {
 
     @Bean
@@ -22,6 +23,8 @@ class SecurityConfig(
         http
             .csrf { it.disable() }
             .cors { } // swagger / localhost 호출시 필수
+            .formLogin { it.disable() } // JWT 기반 인증 사용으로 formLogin 비활성화
+            .httpBasic { it.disable() } // HTTP Basic 인증 비활성화
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it.requestMatchers(
@@ -30,17 +33,17 @@ class SecurityConfig(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/error"
+                    "/error",
                 ).permitAll()
                     .anyRequest().permitAll()
             }
+            .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
     }
 
     @Bean
-    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
-        return authConfig.authenticationManager
-    }
+    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager =
+        authConfig.authenticationManager
 }

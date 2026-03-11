@@ -25,7 +25,4 @@ data class SearchContentResponse(
     val freeContent: String?,
 )
 
-data class CountSearchContentResponse(
-    val scenarioCount: Long,
-    val resourceCount: Long,
-)
+data class CountSearchContentResponse(val scenarioCount: Long, val resourceCount: Long)

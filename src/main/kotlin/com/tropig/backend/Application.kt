@@ -13,5 +13,5 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 class Application
 
 fun main(args: Array<String>) {
-	runApplication<Application>(*args)
+    runApplication<Application>(*args)
 }

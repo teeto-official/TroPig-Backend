@@ -17,13 +17,13 @@ data class Member(
 
     @Column(nullable = false, unique = true)
     val email: String,
-    
+
     @Column(nullable = false)
     var nickname: String,
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
-    val role: Role,
+    var role: Role,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

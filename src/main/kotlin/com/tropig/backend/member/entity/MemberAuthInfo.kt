@@ -1,32 +1,111 @@
 package com.tropig.backend.member.entity
 
-import com.tropig.backend.common.enums.BankCode
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.Period
+import java.time.format.DateTimeFormatter
 
+/**
+ * 본인인증 정보 엔티티
+ * 사용자의 신원 확인 정보를 저장합니다.
+ * PortOne Identity Verification API를 통해 검증된 정보입니다.
+ */
 @Entity
-@Table(name = "member_auth_info")
+@Table(
+    name = "member_auth_info",
+    indexes = [
+        Index(name = "idx_member_auth_info_member_id", columnList = "member_id", unique = true),
+        Index(name = "idx_member_auth_info_phone_number", columnList = "phone_number"),
+    ],
+)
 data class MemberAuthInfo(
-    val userId: Long,
-    val di: String,
-    val birthedAt: LocalDateTime,
-    val authUserAt: LocalDateTime,
-    val isCreator: Boolean,
-    val authCreatorAt: LocalDateTime,
-    @Enumerated(value = EnumType.STRING)
-    val bankCode: BankCode,
-    val bankAccount: String
-) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L
+    val id: Long = 0L,
+
+    @Column(name = "member_id", nullable = false, unique = true)
+    val memberId: Long,
+
+    @Column(nullable = false, length = 20)
+    val name: String,
+
+    @Column(name = "birth_date", nullable = false, length = 10)
+    val birthDate: String, // YYYY-MM-DD format
+
+    @Column(name = "phone_number", nullable = false, length = 11)
+    val phoneNumber: String, // 01012345678 format (no hyphens)
+
+    @Column(length = 200, unique = true)
+    val ci: String? = null, // Correlation ID (encrypted for privacy)
+
+    @Column(length = 200, unique = true)
+    val di: String? = null, // Site-specific ID (encrypted for privacy)
+
+    @Column(name = "verified_at", nullable = false)
+    var verifiedAt: LocalDateTime,
 
     @CreatedDate
-    val createdAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+    @Column(name = "created_at", nullable = false, updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(nullable = false)
+    var creator: Boolean = false,
+
+    @Column(name = "auth_creator_at")
+    var authCreatorAt: LocalDateTime? = null,
+
+    @Column(name = "auth_user_at")
+    var authUserAt: LocalDateTime? = null,
+
+    @Column(name = "bank_account", length = 255)
+    var bankAccount: String? = null,
 
     @LastModifiedDate
-    val updatedAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+    @Column(name = "updated_at")
+    val updatedAt: LocalDateTime? = null,
+) {
+
+    companion object {
+        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        /**
+         * 휴대폰 번호를 마스킹 처리합니다.
+         * 예: "01012345678" -> "010-****-5678"
+         */
+        fun maskPhoneNumber(phone: String): String {
+            require(phone.length >= 10) { "Phone number must be at least 10 digits" }
+            return "${phone.substring(0, 3)}-****-${phone.substring(phone.length - 4)}"
+        }
+
+        /**
+         * 생년월일로부터 나이를 계산합니다.
+         */
+        fun calculateAge(birthDate: String): Int {
+            val birth = java.time.LocalDate.parse(birthDate, DATE_FORMATTER)
+            val now = java.time.LocalDate.now()
+            return Period.between(birth, now).years
+        }
+
+        /**
+         * 성인 여부를 판단합니다 (만 19세 이상).
+         */
+        fun isAdult(birthDate: String): Boolean = calculateAge(birthDate) >= 19
+    }
+
+    /**
+     * 현재 나이를 반환합니다.
+     */
+    fun getAge(): Int = calculateAge(birthDate)
+
+    /**
+     * 성인 여부를 반환합니다.
+     */
+    fun isAdult(): Boolean = isAdult(birthDate)
+
+    /**
+     * 마스킹 처리된 휴대폰 번호를 반환합니다.
+     */
+    fun getMaskedPhoneNumber(): String = maskPhoneNumber(phoneNumber)
 }

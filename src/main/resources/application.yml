@@ -1,25 +1,41 @@
 spring:
   profiles:
     active: ${PROFILES_ACTIVE:local}
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
 
   datasource:
-    url: jdbc:postgresql://postgresql-dev-service.tropig-dev.svc.cluster.local:5432/tropig_dev
+    url: ${DB_URL}
     username: ${DB_USERNAME:tropig_user}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: none  # 수동 DB 관리: 스키마 변경은 migration 도구나 수동 SQL 실행으로 관리
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
   sql:
     init:
       platform: postgresql
-      mode: always
-      schema-locations: classpath:schema-postgresql.sql
+      mode: never  # 자동 초기화 비활성화
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
   cache:
     type: caffeine
@@ -47,11 +63,15 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:
-    com.tropig.backend: DEBUG
-    org.springframework.web: DEBUG
+    com.tropig.backend: WARN
+    org.springframework.web: INFO
+    org.springframework.web.servlet.resource: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
@@ -67,3 +87,23 @@ mail:
   subjects:
     sign_up: "가입을 환영합니다"
     receipt: "구매 확정 안내"
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_S3_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+portone:
+  key:
+    secret-v2: ${PORTONE_SECRET_V2}
+  base-url: ${PORTONE_BASE_URL:https://api.portone.io}
+  store-id: ${PORTONE_STORE_ID}
+  identity-verification:
+    channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
+  channels:
+    kg-inicis: ${PORTONE_KG_INICIS_CHANNEL_KEY}
+
+encryption:
+  secret-key: ${ENCRYPTION_SECRET_KEY}

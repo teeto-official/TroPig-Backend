@@ -1,0 +1,140 @@
+name: CICD-PROD
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/teeto-official/tropig-backend
+
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            PROFILE=${{ secrets.PROFILES_ACTIVE }}
+
+  deploy-prod:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      # 레포에 있는 docker-compose.yml을 서버로 올리려면 checkout이 필요
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # (중요) 서버의 /opt/prod/docker-compose.yml을 항상 최신으로 유지
+      - name: Upload docker-compose.yml to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/opt/prod"
+          overwrite: true
+
+      # Nginx 디렉토리 권한 정리 (Docker가 root로 생성한 경우 대비)
+      - name: Fix nginx directory permissions
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            sudo rm -rf /opt/prod/nginx
+            mkdir -p /opt/prod/nginx/conf.d
+
+      # Nginx 설정 파일들 업로드
+      - name: Upload nginx configuration to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "nginx/*"
+          target: "/opt/prod"
+          overwrite: true
+
+      - name: Create .env on Lightsail
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cat > /opt/prod/.env << EOF
+            # Spring Profile
+            SPRING_PROFILES_ACTIVE=${{ secrets.PROFILES_ACTIVE }}
+
+            # JWT Configuration
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+            # Database Configuration (Spring Boot 형식)
+            SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            # Redis Configuration
+            SPRING_DATA_REDIS_HOST=redis
+            SPRING_DATA_REDIS_PORT=6379
+
+            # AWS SES Configuration
+            SES_SMTP_USERNAME=${{ secrets.SES_SMTP_USERNAME }}
+            SES_SMTP_PASSWORD=${{ secrets.SES_SMTP_PASSWORD }}
+            MAIL_ADDRESS=${{ secrets.MAIL_ADDRESS }}
+            MAIL_NAME=${{ secrets.MAIL_NAME }}
+
+            # AWS S3 Configuration
+            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            AWS_S3_REGION=${{ secrets.AWS_S3_REGION }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+            # PortOne Configuration
+            PORTONE_SECRET_V2=${{ secrets.PORTONE_SECRET_V2 }}
+            PORTONE_BASE_URL=${{ secrets.PORTONE_BASE_URL }}
+            PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
+            PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY=${{ secrets.PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY }}
+            PORTONE_KG_INICIS_CHANNEL_KEY=${{ secrets.PORTONE_KG_INICIS_CHANNEL_KEY }}
+
+            # Encryption
+            ENCRYPTION_SECRET_KEY=${{ secrets.ENCRYPTION_SECRET_KEY }}
+
+            INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
+
+            EOF
+
+      - name: Restart prod containers (pull & recreate)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/prod
+            docker compose -f /opt/prod/docker-compose.yml pull
+            docker compose -f /opt/prod/docker-compose.yml up -d --force-recreate
+            docker compose -f /opt/prod/docker-compose.yml ps
+
+            # Nginx 설정 reload
+            docker exec nginx nginx -t && docker exec nginx nginx -s reload || echo "Nginx reload failed"

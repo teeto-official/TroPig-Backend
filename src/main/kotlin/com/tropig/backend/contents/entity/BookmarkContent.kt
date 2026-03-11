@@ -11,15 +11,11 @@ import java.time.LocalDateTime
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_bookmark_content_member_content",
-            columnNames = ["member_id", "content_id"]
-        )
-    ]
+            columnNames = ["member_id", "content_id"],
+        ),
+    ],
 )
-data class BookmarkContent(
-    val contentId: Long,
-    val memberId: Long,
-    val deleted: Boolean,
-) {
+data class BookmarkContent(val contentId: Long, val memberId: Long, val deleted: Boolean) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L

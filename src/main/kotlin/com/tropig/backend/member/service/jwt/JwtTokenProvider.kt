@@ -29,20 +29,17 @@ class JwtTokenProvider(
         return Triple(access, refresh, expireAt)
     }
 
-    private fun generateToken(expiration: Long, now: Date, member: Member): String {
-        return Jwts.builder()
-            .setSubject(member.id.toString())
-            .claim("memberId", member.id)
-            .claim("email", member.email)
-            .claim("snsProvider", member.snsProvider)
-            .claim("role", member.role)
-            .claim("adult", member.adult)
-            .setIssuedAt(now)
-            .setExpiration(Date(now.time + expiration))
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact()
-    }
-
+    private fun generateToken(expiration: Long, now: Date, member: Member): String = Jwts.builder()
+        .setSubject(member.id.toString())
+        .claim("memberId", member.id)
+        .claim("email", member.email)
+        .claim("snsProvider", member.snsProvider)
+        .claim("role", member.role)
+        .claim("adult", member.adult)
+        .setIssuedAt(now)
+        .setExpiration(Date(now.time + expiration))
+        .signWith(key, SignatureAlgorithm.HS256)
+        .compact()
 
     fun getUserIdFromToken(token: String): Long {
         val claims = Jwts.parserBuilder()
@@ -53,16 +50,14 @@ class JwtTokenProvider(
         return claims.subject.toLong()
     }
 
-    fun validateToken(token: String): Boolean {
-        return try {
-            Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun validateToken(token: String): Boolean = try {
+        Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+        true
+    } catch (e: Exception) {
+        false
     }
 
     fun parseToken(token: String): Map<String, Any> {

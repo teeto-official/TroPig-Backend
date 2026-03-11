@@ -1,6 +1,6 @@
 package com.tropig.backend.common.enums
 
-enum class Rule(name: String) {
+enum class Rule(val displayName: String) {
     DND("디앤디"),
     COC("크툴루의 부름"),
     FIASCO("피아스코"),
@@ -45,14 +45,14 @@ enum class Rule(name: String) {
     NECRONICA("네크로니카"),
     RED_BLACK("적과흑"),
     BLOOD_PASS("블러드 패스 RPG"),
-    UNSUNG_DUET("언성 듀엣")
+    UNSUNG_DUET("언성 듀엣"),
+    RESOURCE(""),
+    NONE(""),
     ;
 
     companion object {
-        fun fromList(rules: String?): List<Rule> {
-            return rules?.split(",")
-                ?.map { Rule.valueOf(it) }
-                ?: emptyList()
-        }
+        fun fromList(rules: String?): List<Rule> = rules?.split(",")
+            ?.map { Rule.valueOf(it) }
+            ?: emptyList()
     }
 }
