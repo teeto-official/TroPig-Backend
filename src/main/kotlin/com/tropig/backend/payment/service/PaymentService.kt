@@ -35,7 +35,6 @@ class PaymentService(
 
     private fun resolveChannelKey(channel: PaymentChannel): String = when (channel) {
         PaymentChannel.KG -> portOneProperties.channels.kgInicis
-        PaymentChannel.KAKAO_PAY -> portOneProperties.channels.kakaoPay
     }
 
     /**
