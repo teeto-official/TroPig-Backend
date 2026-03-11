@@ -103,8 +103,7 @@ portone:
   identity-verification:
     channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
   channels:
-    kcp: ${PORTONE_KCP_CHANNEL_KEY}
-    kakao-pay: ${PORTONE_KAKAO_PAY_CHANNEL_KEY}
+    kg-inicis: ${PORTONE_KG_INICIS_CHANNEL_KEY}
 
 encryption:
   secret-key: ${ENCRYPTION_SECRET_KEY}

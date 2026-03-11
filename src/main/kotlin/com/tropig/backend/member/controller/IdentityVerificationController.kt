@@ -4,6 +4,7 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.member.model.request.IdentityVerificationCompleteDto
 import com.tropig.backend.member.model.request.VerificationConfirmDto
 import com.tropig.backend.member.model.request.VerificationRequestDto
 import com.tropig.backend.member.model.request.VerificationResendDto
@@ -102,6 +103,42 @@ class IdentityVerificationController(private val identityVerificationService: Id
         @Valid @RequestBody request: VerificationConfirmDto,
     ): ResponseEntity<VerificationResult> {
         val result = identityVerificationService.confirmVerification(authMember.memberId, request)
+        return ResponseEntity.ok(result)
+    }
+
+    @RequireAuth
+    @PostMapping("/complete")
+    @Operation(
+        summary = "본인인증 완료 (SDK 방식)",
+        description = "프론트엔드에서 PortOne SDK로 본인인증 완료 후 identityVerificationId를 전달하여 인증 결과를 저장합니다.",
+        security = [SecurityRequirement(name = "bearerAuth")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "본인인증 완료",
+                content = [Content(schema = Schema(implementation = VerificationResult::class))],
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청 (인증이 완료되지 않은 identityVerificationId 등)",
+            ),
+            ApiResponse(
+                responseCode = "409",
+                description = "이미 본인인증이 완료되었거나 중복된 CI/DI",
+            ),
+            ApiResponse(
+                responseCode = "503",
+                description = "외부 서비스 오류 (PortOne API)",
+            ),
+        ],
+    )
+    fun completeVerification(
+        @LoginMember authMember: AuthMember,
+        @Valid @RequestBody request: IdentityVerificationCompleteDto,
+    ): ResponseEntity<VerificationResult> {
+        val result = identityVerificationService.completeVerification(authMember.memberId, request)
         return ResponseEntity.ok(result)
     }
 
