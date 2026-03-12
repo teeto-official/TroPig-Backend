@@ -31,11 +31,7 @@ data class SearchContentRequest(
 
     val size: Int = 15,
 ) {
-    fun toDto(
-        isAdult: Boolean,
-        type: ContentType,
-        tagIds: List<Long>?,
-    ): SearchContentRequestDto =
+    fun toDto(isAdult: Boolean, type: ContentType, tagIds: List<Long>?): SearchContentRequestDto =
         SearchContentRequestDto(
             searchText = this.searchText,
             level = this.level,

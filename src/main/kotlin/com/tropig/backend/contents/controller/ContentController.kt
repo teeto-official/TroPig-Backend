@@ -6,6 +6,7 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
@@ -17,7 +18,6 @@ import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.request.CountSearchContentRequest
 import com.tropig.backend.contents.model.request.SearchContentRequest
 import com.tropig.backend.contents.model.response.*
-import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.service.*
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
@@ -25,6 +25,7 @@ import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.*
 
 @ApiController
@@ -75,7 +76,7 @@ class ContentController(
                     content.publishingType
                 } else {
                     null
-                }
+                },
             )
         }.sortedBy { it.orderNo }
     }
@@ -109,7 +110,7 @@ class ContentController(
                 rule = it.rule,
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
-                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null
+                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null,
             )
         }
     }
@@ -265,7 +266,7 @@ class ContentController(
 
     private fun buildContentDetailResponse(content: Content, authMember: AuthMember?): ContentDetailResponse {
         val writer = creatorService.getWriter(content.memberId)
-
+        val thumbnailPath = contentService.getThumbnailPath(content.id)?.path
         val tags = tagService.findByContentId(content.id)
         val bookmark = authMember?.let {
             bookmarkContentService.existsBookmark(it.memberId, content.id)
@@ -291,35 +292,70 @@ class ContentController(
             tags,
             purchased,
             bookmark,
+            thumbnailPath = s3Service.toUrl(thumbnailPath),
             writerProfileUrl = s3Service.toUrl(writer?.profile),
         )
     }
 
-    @GetMapping("/random/scenario")
-    fun getRandomScenario(
+    @GetMapping("/random/{contentType}")
+    @Cacheable(
+        cacheNames = ["randomContentByViewer"],
+        key = "#contentType + '_' + (#type != null ? #type.toUpperCase() : 'NONE') + '_' + " +
+            "(#authMember == null ? 'GUEST' : (#authMember.memberId + '_' + #authMember.adult))",
+    )
+    fun getRandomContent(
         @LoginMember authMember: AuthMember?,
+        @PathVariable contentType: String,
         @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
         type: String? = null,
-    ): ContentDetailResponse {
-        val content = authMember?.let {
+    ): List<ContentDetailResponse> {
+        val parsedContentType = try {
+            ContentType.fromString(contentType)
+        } catch (_: java.lang.IllegalArgumentException) {
+            throw IllegalArgumentException(
+                message = "유효하지 않은 콘텐츠 타입입니다. 시나리오 또는 자료만 가능합니다. (입력값: $contentType)",
+                code = MessageCode.INVALID_PARAMS,
+            )
+        }
+        val recommendType = type?.uppercase()
+
+        if (authMember == null) {
+            val contents = contentService.getRandomContents(parsedContentType, false)
+            return contents.map { buildContentDetailResponse(it, null) }
+        }
+
+        val contents = authMember.let {
             val member = memberService.getUserById(it.memberId)
                 ?: throw NotFoundException(
                     message = "${MessageCode.NOT_FOUND_MEMBER} memberId = ${it.memberId}",
                     code = MessageCode.NOT_FOUND_MEMBER,
                 )
 
-            if (type == "GENRE" && member.favoriteGenres != null) {
-                contentService.getRandomGenreContent(member.favoriteGenres!!, it.adult)
-            } else if (type == "RULE" && member.favoriteRules != null) {
-                contentService.getRandomRuleContent(member.favoriteRules!!, it.adult)
-            } else {
-                contentService.getRandomContent(it.adult)
+            when (parsedContentType) {
+                ContentType.SCENARIO -> {
+                    if (recommendType == "GENRE" && !member.favoriteGenres.isNullOrBlank()) {
+                        contentService.getRandomGenreContents(ContentType.SCENARIO, member.favoriteGenres!!, it.adult)
+                    } else if (recommendType == "RULE" && !member.favoriteRules.isNullOrBlank()) {
+                        contentService.getRandomRuleContents(member.favoriteRules!!, it.adult)
+                    } else {
+                        contentService.getRandomContents(ContentType.SCENARIO, it.adult)
+                    }
+                }
+                ContentType.RESOURCE -> {
+                    if (!member.favoriteGenres.isNullOrBlank()) {
+                        contentService.getRandomGenreContents(ContentType.RESOURCE, member.favoriteGenres!!, it.adult)
+                    } else {
+                        contentService.getRandomContents(ContentType.RESOURCE, it.adult)
+                    }
+                }
             }
-        } ?: run {
-            contentService.getRandomContent(false)
         }
 
-        return buildContentDetailResponse(content, authMember)
+        val fallbackContents = contents.ifEmpty {
+            contentService.getRandomContents(parsedContentType, authMember.adult)
+        }
+
+        return fallbackContents.map { buildContentDetailResponse(it, authMember) }
     }
 
     @GetMapping("/{contentId}/purchased")

@@ -54,11 +54,13 @@ class S3Service(
 
     val baseUrl = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
 
-    fun toUrl(key: String?): String? =
-        key?.let {
-            if (it.startsWith(baseUrl)) it
-            else baseUrl + it.trimStart('/')
+    fun toUrl(key: String?): String? = key?.let {
+        if (it.startsWith(baseUrl)) {
+            it
+        } else {
+            baseUrl + it.trimStart('/')
         }
+    }
 
     /**
      * S3에서 파일을 삭제합니다.
@@ -303,7 +305,9 @@ class S3Service(
                 contentId,
                 it.type.path,
             )
-                .thenApply { s3Key -> FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType, it.originalFileName) }
+                .thenApply { s3Key ->
+                    FileResult(it.orderNo, s3Key, it.type, it.isCover, it.publishingType, it.originalFileName)
+                }
                 .exceptionally { throwable ->
                     logger.error("파일 업로드 실패: orderNo=${it.orderNo}", throwable)
                     throw RuntimeException("파일 업로드에 실패했습니다: ${throwable.message}", throwable)

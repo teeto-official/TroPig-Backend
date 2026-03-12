@@ -31,6 +31,10 @@ class CacheConfig {
                         .expireAfterWrite(3, TimeUnit.MINUTES) // TTL 3분
                         .maximumSize(20)
 
+                    "randomContentByViewer" -> Caffeine.newBuilder()
+                        .expireAfterWrite(3, TimeUnit.MINUTES) // TTL 3분 (홈 추천 콘텐츠)
+                        .maximumSize(10_000)
+
                     "nicknameComponent" -> Caffeine.newBuilder()
                         .expireAfterWrite(30, TimeUnit.MINUTES) // TTL 30분 (닉네임 리스트는 자주 변경되지 않음)
 

@@ -28,12 +28,7 @@ interface ContentThumbnailRepository : JpaRepository<ContentThumbnail, Long> {
                 content_id = :contentId
             AND
                 path = :path
-        """
+        """,
     )
-    fun updateByContentIdAndPath(
-        contentId: Long,
-        path: String,
-        orderNo: Int,
-        isCover: Boolean,
-    ): Int
+    fun updateByContentIdAndPath(contentId: Long, path: String, orderNo: Int, isCover: Boolean): Int
 }

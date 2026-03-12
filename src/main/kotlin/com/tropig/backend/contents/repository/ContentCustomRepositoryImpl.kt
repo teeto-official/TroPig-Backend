@@ -18,6 +18,9 @@ import kotlin.math.min
 
 @Repository
 class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) : ContentCustomRepository {
+    private companion object {
+        const val RANDOM_CONTENT_LIMIT = 8
+    }
 
     override fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> {
         val common = request.toCommon()
@@ -40,7 +43,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         )
     }
 
-    override fun findRandomGenreContent(genres: List<Genre>, isAdult: Boolean): Content {
+    override fun findRandomGenreContents(type: ContentType, genres: List<Genre>, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
@@ -49,22 +52,20 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
             AND c.status = :status
             AND c.genre IN (:genres)
             {adultCondition}
-            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
-            ORDER BY c.id
-            LIMIT 1
+            ORDER BY RANDOM()
         """.trimIndent()
 
         val params = mutableMapOf<String, Any?>(
-            "type" to ContentType.SCENARIO.name,
+            "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "genres" to genres,
+            "genres" to genres.map { it.name },
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
-        return execute(sql, params)
+        return executeRandomList(sql, params)
     }
 
-    override fun findRandomRuleContent(rules: List<Rule>, isAdult: Boolean): Content {
+    override fun findRandomRuleContents(rules: List<Rule>, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
@@ -73,22 +74,20 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
             AND c.status = :status
             AND c.rule IN (:rules)
             {adultCondition}
-            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
-            ORDER BY c.id
-            LIMIT 1
+            ORDER BY RANDOM()
         """.trimIndent()
 
         val params = mutableMapOf<String, Any?>(
             "type" to ContentType.SCENARIO.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "rules" to rules,
+            "rules" to rules.map { it.name },
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
-        return execute(sql, params)
+        return executeRandomList(sql, params)
     }
 
-    override fun findRandomContent(isAdult: Boolean): Content {
+    override fun findRandomContents(type: ContentType, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
@@ -96,18 +95,16 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
                 c.type = :type
             AND c.status = :status
             {adultCondition}
-            AND c.id >= FLOOR(RANDOM() * (SELECT max(id) FROM content))
-            ORDER BY c.id
-            LIMIT 1
+            ORDER BY RANDOM()
         """.trimIndent()
 
         val params = mutableMapOf<String, Any?>(
-            "type" to ContentType.SCENARIO.name,
+            "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
-        return execute(sql, params)
+        return executeRandomList(sql, params)
     }
 
     private data class CommonSearchReq(
@@ -298,10 +295,12 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         return q.resultList as List<Content>
     }
 
-    private fun execute(sql: String, params: Map<String, Any?>): Content {
+    private fun executeRandomList(sql: String, params: Map<String, Any?>): List<Content> {
         val q = em.createNativeQuery(sql, Content::class.java)
         params.forEach { (k, v) -> q.setParameter(k, v) }
-        return q.singleResult as Content
+        q.maxResults = RANDOM_CONTENT_LIMIT
+        @Suppress("UNCHECKED_CAST")
+        return q.resultList as List<Content>
     }
 
     private fun executeCountPair(sql: String, params: Map<String, Any?>): Pair<Long, Long> {

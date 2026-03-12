@@ -227,8 +227,8 @@ class PortOneIdentityVerificationClient(
      * PortOne 응답에서 VerifiedCustomer를 파싱합니다.
      * ci, di, operator는 nullable하게 처리합니다.
      */
-    private fun parseVerifiedCustomer(node: com.fasterxml.jackson.databind.JsonNode): VerifiedCustomer {
-        return VerifiedCustomer(
+    private fun parseVerifiedCustomer(node: com.fasterxml.jackson.databind.JsonNode): VerifiedCustomer =
+        VerifiedCustomer(
             name = node.get("name").asText(),
             phoneNumber = node.get("phoneNumber").asText(),
             birthDate = node.get("birthDate").asText(),
@@ -238,7 +238,6 @@ class PortOneIdentityVerificationClient(
             di = node.get("di").asText(),
             operator = node.get("operator").asText(),
         )
-    }
 
     /**
      * HTTP 헤더 생성
