@@ -6,6 +6,7 @@ import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.model.AuthMember
+import com.tropig.backend.contents.model.response.DownloadResponse
 import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.S3Service
@@ -34,7 +35,7 @@ class FileDownloadController(
         @LoginMember authMember: AuthMember,
         @PathVariable contentId: Long,
         @RequestParam s3Key: String,
-    ): Map<String, String> {
+    ): DownloadResponse {
         val content = contentService.findById(contentId)
             ?: throw ContentException("컨텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
 
@@ -52,14 +53,11 @@ class FileDownloadController(
         // 요청된 s3Key가 해당 컨텐츠의 다운로드 파일인지 검증
         val publishingInfoList = content.publishingInfo?.toPublishingInfoList() ?: emptyList()
         val matchedFile = publishingInfoList.find { it.path == s3Key }
-
-        if (matchedFile == null) {
-            throw ContentException("해당 컨텐츠의 다운로드 파일이 아닙니다.", MessageCode.NOT_FOUND_CONTENT_INFO)
-        }
+            ?: throw ContentException("해당 컨텐츠의 다운로드 파일이 아닙니다.", MessageCode.NOT_FOUND_CONTENT_INFO)
 
         val fileName = matchedFile.originalName?.takeIf { it.isNotBlank() }
         val presignedUrl = s3Service.generatePresignedUrl(s3Key, fileName = fileName)
 
-        return mapOf("url" to presignedUrl)
+        return DownloadResponse(presignedUrl)
     }
 }

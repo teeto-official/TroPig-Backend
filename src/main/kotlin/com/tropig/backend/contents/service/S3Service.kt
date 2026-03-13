@@ -54,6 +54,7 @@ class S3Service(
             "application/xml",
         )
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+        private val UUID_PREFIX_REGEX = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-")
     }
 
     val baseUrl = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
@@ -73,8 +74,8 @@ class S3Service(
     fun generatePresignedUrl(s3Key: String, expirationMinutes: Long = 10, fileName: String? = null): String {
         val key = if (s3Key.contains("amazonaws.com/")) extractS3Key(s3Key) else s3Key
 
-        val dispositionFileName = fileName
-            ?: key.substringAfterLast('/').substringAfter('-', key.substringAfterLast('/'))
+        val rawName = key.substringAfterLast('/')
+        val dispositionFileName = fileName ?: rawName.replace(UUID_PREFIX_REGEX, "")
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(s3Properties.bucket)
             .key(key)
