@@ -13,6 +13,9 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
+import java.time.Duration
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -21,6 +24,7 @@ import java.util.concurrent.CompletableFuture
 @Service
 class S3Service(
     private val s3Client: S3Client,
+    private val s3Presigner: S3Presigner,
     private val s3Properties: S3Properties,
     private val s3AsyncUploadService: S3AsyncUploadService,
 ) {
@@ -50,6 +54,7 @@ class S3Service(
             "application/xml",
         )
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+        private val UUID_PREFIX_REGEX = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-")
     }
 
     val baseUrl = "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/"
@@ -59,6 +64,31 @@ class S3Service(
             if (it.startsWith(baseUrl)) it
             else baseUrl + it.trimStart('/')
         }
+
+    /**
+     * S3 key에 대한 Presigned URL을 생성합니다.
+     * @param s3Key S3 키 (또는 S3 URL)
+     * @param expirationMinutes URL 만료 시간 (분), 기본 10분
+     * @return Presigned URL 문자열
+     */
+    fun generatePresignedUrl(s3Key: String, expirationMinutes: Long = 10, fileName: String? = null): String {
+        val key = if (s3Key.contains("amazonaws.com/")) extractS3Key(s3Key) else s3Key
+
+        val rawName = key.substringAfterLast('/')
+        val dispositionFileName = fileName ?: rawName.replace(UUID_PREFIX_REGEX, "")
+        val getObjectRequest = GetObjectRequest.builder()
+            .bucket(s3Properties.bucket)
+            .key(key)
+            .responseContentDisposition("attachment; filename=\"$dispositionFileName\"")
+            .build()
+
+        val presignRequest = GetObjectPresignRequest.builder()
+            .signatureDuration(Duration.ofMinutes(expirationMinutes))
+            .getObjectRequest(getObjectRequest)
+            .build()
+
+        return s3Presigner.presignGetObject(presignRequest).url().toString()
+    }
 
     /**
      * S3에서 파일을 삭제합니다.
