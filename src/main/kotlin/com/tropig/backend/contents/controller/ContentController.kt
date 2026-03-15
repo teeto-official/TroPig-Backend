@@ -308,7 +308,7 @@ class ContentController(
         @PathVariable contentType: String,
         @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
         type: String? = null,
-    ): List<ContentDetailResponse> {
+    ): List<PickContentResponse> {
         val parsedContentType = try {
             ContentType.fromString(contentType)
         } catch (_: java.lang.IllegalArgumentException) {
@@ -321,7 +321,7 @@ class ContentController(
 
         if (authMember == null) {
             val contents = contentService.getRandomContents(parsedContentType, false)
-            return contents.map { buildContentDetailResponse(it, null) }
+            return buildPickContentResponses(contents, null, parsedContentType)
         }
 
         val contents = authMember.let {
@@ -355,7 +355,37 @@ class ContentController(
             contentService.getRandomContents(parsedContentType, authMember.adult)
         }
 
-        return fallbackContents.map { buildContentDetailResponse(it, authMember) }
+        return buildPickContentResponses(fallbackContents, authMember, parsedContentType)
+    }
+
+    private fun buildPickContentResponses(
+        contents: List<Content>,
+        authMember: AuthMember?,
+        contentType: ContentType,
+    ): List<PickContentResponse> {
+        val contentIds = contents.map { it.id }
+        val writerName = creatorService.getWritersName(contents.map { it.memberId })
+        val tags = contentService.getTags(contentIds)
+        val thumbnails = contentService.getThumbnailPath(contentIds).associateBy { it.contentId }
+        val bookmarks = authMember?.let {
+            bookmarkContentService.getBookmarkList(it.memberId, contentIds)
+        } ?: emptyMap()
+
+        return contents.map {
+            PickContentResponse(
+                id = it.id,
+                title = it.title,
+                alias = it.alias,
+                thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
+                writer = writerName[it.memberId] ?: "",
+                tags = tags[it.id] ?: emptyList(),
+                orderNo = 0,
+                rule = it.rule,
+                playerCountType = it.playerCountType,
+                isBookmark = bookmarks[it.id] != null,
+                publishingType = if (contentType == ContentType.RESOURCE) it.publishingType else null,
+            )
+        }
     }
 
     @GetMapping("/{contentId}/purchased")
