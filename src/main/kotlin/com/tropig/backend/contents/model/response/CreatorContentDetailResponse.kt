@@ -5,7 +5,6 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
-import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.model.serialize.PublishingInfo
@@ -27,25 +26,32 @@ data class CreatorContentDetailResponse(
     val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
-    val thumbnailPath: String? = null
+    val thumbnailPath: String? = null,
 )
 
-fun Content.toCreatorContentDetailResponse(tags: List<TagDto>, nonFreeContent: String?, thumbnailPath: String?): CreatorContentDetailResponse =
-    CreatorContentDetailResponse(
-        id = id,
-        type = type,
-        publishedAt = publishedAt,
-        title = title,
-        rule = if (type == ContentType.SCENARIO) rule else null,
-        genre = genre,
-        level = if (type == ContentType.SCENARIO) level else null,
-        playerCountType = playerCountType,
-        termType = termType,
-        tags = tags,
-        publishingType =
-        if (type == ContentType.RESOURCE) { publishingType.displayName } else null,
-        publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
-        freeContent = freeContent,
-        nonFreeContent = nonFreeContent,
-        thumbnailPath = thumbnailPath
-    )
+fun Content.toCreatorContentDetailResponse(
+    tags: List<TagDto>,
+    nonFreeContent: String?,
+    thumbnailPath: String?,
+): CreatorContentDetailResponse = CreatorContentDetailResponse(
+    id = id,
+    type = type,
+    publishedAt = publishedAt,
+    title = title,
+    rule = if (type == ContentType.SCENARIO) rule else null,
+    genre = genre,
+    level = if (type == ContentType.SCENARIO) level else null,
+    playerCountType = playerCountType,
+    termType = termType,
+    tags = tags,
+    publishingType =
+    if (type == ContentType.RESOURCE) {
+        publishingType.displayName
+    } else {
+        null
+    },
+    publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
+    freeContent = freeContent,
+    nonFreeContent = nonFreeContent,
+    thumbnailPath = thumbnailPath,
+)

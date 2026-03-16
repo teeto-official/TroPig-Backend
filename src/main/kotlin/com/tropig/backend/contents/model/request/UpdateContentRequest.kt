@@ -41,8 +41,4 @@ data class UpdateContentRequest(
     val thumbnails: List<ContentThumbnailInfo>? = null,
 )
 
-data class ContentThumbnailInfo(
-    val path: String,
-    val orderNo: Int,
-    val isCover: Boolean,
-)
+data class ContentThumbnailInfo(val path: String, val orderNo: Int, val isCover: Boolean)

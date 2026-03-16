@@ -31,6 +31,7 @@ data class Content(
     var status: ContentsStatus,
     var adult: Boolean,
     var publishedAt: LocalDateTime?,
+    @Column(columnDefinition = "TEXT")
     var freeContent: String?,
     var nonFreeContent: String?,
     var price: Double,

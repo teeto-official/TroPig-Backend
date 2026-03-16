@@ -262,7 +262,7 @@ class CreatorController(
         return content.toCreatorContentDetailResponse(
             tags = tags,
             nonFreeContent = nonFreeContent,
-            thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) }
+            thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) },
         )
     }
 
