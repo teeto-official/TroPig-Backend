@@ -13,9 +13,9 @@ interface ContentCustomRepository {
     fun searchContents(request: SearchContentRequestDto): CursorSlice<Content>
     fun countSearchContents(request: SearchContentRequestDto): CountSearchContentsResult
 
-    fun findRandomGenreContents(type: ContentType, genres: List<Genre>, isAdult: Boolean): List<Content>
+    fun findRandomGenreContents(type: ContentType, genre: Genre, isAdult: Boolean): List<Content>
 
-    fun findRandomRuleContents(rules: List<Rule>, isAdult: Boolean): List<Content>
+    fun findRandomRuleContents(rule: Rule, isAdult: Boolean): List<Content>
 
     fun findRandomContents(type: ContentType, isAdult: Boolean): List<Content>
 }

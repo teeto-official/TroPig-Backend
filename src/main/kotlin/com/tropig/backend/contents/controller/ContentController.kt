@@ -25,7 +25,6 @@ import com.tropig.backend.member.service.MemberService
 import com.tropig.backend.payment.service.PaymentContentService
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.*
 
 @ApiController
@@ -298,11 +297,6 @@ class ContentController(
     }
 
     @GetMapping("/random/{contentType}")
-    @Cacheable(
-        cacheNames = ["randomContentByViewer"],
-        key = "#contentType + '_' + (#type != null ? #type.toUpperCase() : 'NONE') + '_' + " +
-            "(#authMember == null ? 'GUEST' : (#authMember.memberId + '_' + #authMember.adult))",
-    )
     fun getRandomContent(
         @LoginMember authMember: AuthMember?,
         @PathVariable contentType: String,

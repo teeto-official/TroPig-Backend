@@ -12,6 +12,7 @@ import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import kotlin.math.min
@@ -19,7 +20,7 @@ import kotlin.math.min
 @Repository
 class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityManager) : ContentCustomRepository {
     private companion object {
-        const val RANDOM_CONTENT_LIMIT = 8
+        const val RANDOM_CONTENT_LIMIT = 20
     }
 
     override fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> {
@@ -43,14 +44,15 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         )
     }
 
-    override fun findRandomGenreContents(type: ContentType, genres: List<Genre>, isAdult: Boolean): List<Content> {
+    @Cacheable(cacheNames = ["randomGenreContents"], key = "#type.name + '_' + #genre.name + '_' + #isAdult")
+    override fun findRandomGenreContents(type: ContentType, genre: Genre, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
             WHERE
                 c.type = :type
             AND c.status = :status
-            AND c.genre IN (:genres)
+            AND c.genre = :genre
             {adultCondition}
             ORDER BY RANDOM()
         """.trimIndent()
@@ -58,21 +60,22 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "genres" to genres.map { it.name },
+            "genre" to genre.name,
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
         return executeRandomList(sql, params)
     }
 
-    override fun findRandomRuleContents(rules: List<Rule>, isAdult: Boolean): List<Content> {
+    @Cacheable(cacheNames = ["randomRuleContents"], key = "#rule.name + '_' + #isAdult")
+    override fun findRandomRuleContents(rule: Rule, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
             WHERE
                 c.type = :type
             AND c.status = :status
-            AND c.rule IN (:rules)
+            AND c.rule = :rule
             {adultCondition}
             ORDER BY RANDOM()
         """.trimIndent()
@@ -80,13 +83,14 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val params = mutableMapOf<String, Any?>(
             "type" to ContentType.SCENARIO.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "rules" to rules.map { it.name },
+            "rule" to rule.name,
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
         return executeRandomList(sql, params)
     }
 
+    @Cacheable(cacheNames = ["randomContents"], key = "#type.name + '_' + #isAdult")
     override fun findRandomContents(type: ContentType, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
@@ -219,7 +223,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
         sql.append(
             """
-            
+
             WHERE c.type = :type
               AND c.status = :status
             """.trimIndent(),
@@ -263,7 +267,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
         sql.append(
             """
-            
+
             WHERE c.status = :status
             """.trimIndent(),
         )
@@ -309,8 +313,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
         val arr = when (val row = q.singleResult) {
             is Array<*> -> row
-            is Any -> (row as Array<*>) // 방어용
-            else -> error("Unexpected count result type: ${row::class}")
+            else -> error("Unexpected count result type: ${row?.let { it::class } ?: "null"}")
         }
 
         val scenario = (arr[0] as Number).toLong()

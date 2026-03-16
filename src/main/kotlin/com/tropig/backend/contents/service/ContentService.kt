@@ -529,27 +529,37 @@ class ContentService(
     fun getRandomGenreContents(type: ContentType, genres: String, isAdult: Boolean): List<Content> {
         val genreList = Genre.fromList(genres)
             .filter { it != Genre.NONE && it != Genre.RESOURCE }
+            .shuffled()
+            .take(3)
 
         if (genreList.isEmpty()) {
             return getRandomContents(type, isAdult)
         }
 
-        return contentRepository.findRandomGenreContents(type, genreList, isAdult)
+        return genreList
+            .flatMap { contentRepository.findRandomGenreContents(type, it, isAdult) }
+            .shuffled()
+            .take(8)
     }
 
     fun getRandomRuleContents(rules: String, isAdult: Boolean): List<Content> {
         val ruleList = Rule.fromList(rules)
             .filter { it != Rule.NONE && it != Rule.RESOURCE }
+            .shuffled()
+            .take(3)
 
         if (ruleList.isEmpty()) {
             return getRandomContents(ContentType.SCENARIO, isAdult)
         }
 
-        return contentRepository.findRandomRuleContents(ruleList, isAdult)
+        return ruleList
+            .flatMap { contentRepository.findRandomRuleContents(it, isAdult) }
+            .shuffled()
+            .take(8)
     }
 
     fun getRandomContents(type: ContentType, isAdult: Boolean): List<Content> =
-        contentRepository.findRandomContents(type, isAdult)
+        contentRepository.findRandomContents(type, isAdult).shuffled().take(8)
 
     /**
      * non_free_content를 조회합니다.

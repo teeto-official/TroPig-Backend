@@ -31,9 +31,20 @@ class CacheConfig {
                         .expireAfterWrite(3, TimeUnit.MINUTES) // TTL 3분
                         .maximumSize(20)
 
-                    "randomContentByViewer" -> Caffeine.newBuilder()
-                        .expireAfterWrite(3, TimeUnit.MINUTES) // TTL 3분 (홈 추천 콘텐츠)
-                        .maximumSize(10_000)
+                    // 비로그인(GUEST) 및 장르/룰 미설정 회원 랜덤 컨텐츠 캐시 (type+isAdult 기준)
+                    "randomContents" -> Caffeine.newBuilder()
+                        .expireAfterWrite(10, TimeUnit.MINUTES)
+                        .maximumSize(10)
+
+                    // 장르 기반 랜덤 컨텐츠 캐시 (type+isAdult+genres 기준)
+                    "randomGenreContents" -> Caffeine.newBuilder()
+                        .expireAfterWrite(10, TimeUnit.MINUTES)
+                        .maximumSize(100)
+
+                    // 룰 기반 랜덤 컨텐츠 캐시 (isAdult+rules 기준)
+                    "randomRuleContents" -> Caffeine.newBuilder()
+                        .expireAfterWrite(10, TimeUnit.MINUTES)
+                        .maximumSize(100)
 
                     "nicknameComponent" -> Caffeine.newBuilder()
                         .expireAfterWrite(30, TimeUnit.MINUTES) // TTL 30분 (닉네임 리스트는 자주 변경되지 않음)
