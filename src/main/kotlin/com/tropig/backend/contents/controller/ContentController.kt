@@ -76,6 +76,7 @@ class ContentController(
                 } else {
                     null
                 },
+                price = content.price,
             )
         }.sortedBy { it.orderNo }
     }
@@ -110,6 +111,7 @@ class ContentController(
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) it.publishingType else null,
+                price = it.price.toInt()
             )
         }
     }
@@ -378,6 +380,7 @@ class ContentController(
                 playerCountType = it.playerCountType,
                 isBookmark = bookmarks[it.id] != null,
                 publishingType = if (contentType == ContentType.RESOURCE) it.publishingType else null,
+                price = it.price.toInt(),
             )
         }
     }

@@ -17,4 +17,5 @@ data class PickContentResponse(
     val publishingType: PublishingType?,
     val isBookmark: Boolean,
     val orderNo: Int,
+    val price: Int,
 )

@@ -23,4 +23,5 @@ data class PurchasedContentListResponse(
     val freeContent: String?,
     val purchasedAt: LocalDateTime,
     val purchaseAmount: Long,
+    val price: Int,
 )

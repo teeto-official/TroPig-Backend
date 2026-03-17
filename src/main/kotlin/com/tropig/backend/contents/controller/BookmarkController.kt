@@ -98,6 +98,7 @@ class BookmarkController(
                 } else {
                     null
                 },
+                price = content.price.toInt(),
             )
         }
     }

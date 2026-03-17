@@ -15,4 +15,5 @@ data class PickContentResult(
     val playerCountType: PlayerCountType,
     val publishingType: PublishingType,
     val publishingInfo: String?,
+    val price: Int,
 )

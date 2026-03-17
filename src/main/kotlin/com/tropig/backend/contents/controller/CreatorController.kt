@@ -209,6 +209,7 @@ class CreatorController(
                 tags = tags[it.id] ?: emptyList(),
                 publishedAt = it.publishedAt ?: it.updatedAt,
                 freeContent = it.freeContent,
+                price = it.price.toInt(),
             )
         }
     }
