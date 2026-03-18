@@ -111,7 +111,7 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 playerCountType = PlayerCountType.valueOf(r[6] as String),
                 publishingType = PublishingType.valueOf(r[7] as String),
                 updatedAt = (r[8] as java.sql.Timestamp).toLocalDateTime(),
-                price = (r[9] as Number).toInt()
+                price = (r[9] as Number).toInt(),
             )
         }
     }
