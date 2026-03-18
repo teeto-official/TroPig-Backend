@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.service
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.Rule
@@ -19,9 +17,7 @@ import com.tropig.backend.contents.model.request.UpdateContentRequest
 import com.tropig.backend.contents.model.result.ContentTagResult
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
-import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
-import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
@@ -44,8 +40,6 @@ class ContentService(
     private val relatedContentRepository: RelatedContentRepository,
     private val s3Service: S3Service,
 ) {
-    private val typeToken = object : TypeToken<List<String>>() {}.type
-
     fun findById(id: Long): Content? = contentRepository.findById(id).getOrNull()
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
@@ -77,7 +71,8 @@ class ContentService(
                 rule = it.rule,
                 playerCountType = it.playerCountType,
                 publishingType = it.publishingType,
-                publishingInfo = it.publishingInfo
+                publishingInfo = it.publishingInfo,
+                price = it.price.toInt(),
             )
         }
     }
@@ -303,8 +298,11 @@ class ContentService(
         request.playerCountType?.let { content.playerCountType = it }
         request.termType?.let { content.termType = it }
         content.publishingType =
-            if (request.type == ContentType.SCENARIO) PublishingType.SCENARIO
-            else request.publishingType ?: PublishingType.ETC
+            if (request.type == ContentType.SCENARIO) {
+                PublishingType.SCENARIO
+            } else {
+                request.publishingType ?: PublishingType.ETC
+            }
         content.publishingInfo = request.publishingInfo?.toJson()
         content.status = request.status
         content.adult = request.adult
@@ -386,7 +384,7 @@ class ContentService(
                 contentId = contentId,
                 path = path,
                 orderNo = it.orderNo,
-                isCover = it.isCover
+                isCover = it.isCover,
             )
         }
 
@@ -529,21 +527,40 @@ class ContentService(
         return save(content)
     }
 
-    fun getRandomGenreContent(genres: String, isAdult: Boolean): Content {
-        val genreNames: List<String> = Gson().fromJson(genres, typeToken)
-        val genreList = genreNames.map { Genre.valueOf(it) }
+    fun getRandomGenreContents(type: ContentType, genres: String, isAdult: Boolean, size: Int = 8): List<Content> {
+        val genreList = Genre.fromList(genres)
+            .filter { it != Genre.NONE && it != Genre.RESOURCE }
+            .shuffled()
+            .take(3)
 
-        return contentRepository.findRandomGenreContent(genreList, isAdult)
+        if (genreList.isEmpty()) {
+            return getRandomContents(type, isAdult, size)
+        }
+
+        return genreList
+            .flatMap { contentRepository.findRandomGenreContents(type, it, isAdult) }
+            .shuffled()
+            .take(size)
     }
 
-    fun getRandomRuleContent(rules: String, isAdult: Boolean): Content {
-        val ruleNames: List<String> = Gson().fromJson(rules, typeToken)
-        val ruleList = ruleNames.map { Rule.valueOf(it) }
+    fun getRandomRuleContents(rules: String, isAdult: Boolean, size: Int = 8): List<Content> {
+        val ruleList = Rule.fromList(rules)
+            .filter { it != Rule.NONE && it != Rule.RESOURCE }
+            .shuffled()
+            .take(3)
 
-        return contentRepository.findRandomRuleContent(ruleList, isAdult)
+        if (ruleList.isEmpty()) {
+            return getRandomContents(ContentType.SCENARIO, isAdult, size)
+        }
+
+        return ruleList
+            .flatMap { contentRepository.findRandomRuleContents(it, isAdult) }
+            .shuffled()
+            .take(size)
     }
 
-    fun getRandomContent(isAdult: Boolean): Content = contentRepository.findRandomContent(isAdult)
+    fun getRandomContents(type: ContentType, isAdult: Boolean, size: Int = 8): List<Content> =
+        contentRepository.findRandomContents(type, isAdult).shuffled().take(size)
 
     /**
      * non_free_content를 조회합니다.

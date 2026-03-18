@@ -36,7 +36,8 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 c.member_id,
                 c.player_count_type,
                 c.publishing_type,
-                bc.updated_at
+                bc.updated_at,
+                c.price
             FROM content c
             INNER JOIN bookmark_content bc ON c.id = bc.content_id
             WHERE
@@ -110,6 +111,7 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 playerCountType = PlayerCountType.valueOf(r[6] as String),
                 publishingType = PublishingType.valueOf(r[7] as String),
                 updatedAt = (r[8] as java.sql.Timestamp).toLocalDateTime(),
+                price = (r[9] as Number).toInt(),
             )
         }
     }

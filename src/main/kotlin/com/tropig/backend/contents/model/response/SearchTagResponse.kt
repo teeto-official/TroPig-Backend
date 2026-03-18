@@ -9,7 +9,7 @@ data class SearchTagResponse(
     val tags: List<TagResponse>,
     val genres: List<GenreResponse>,
     val rules: List<RuleResponse>,
-    val publishingType: List<PublishingTypeResponse>
+    val publishingType: List<PublishingTypeResponse>,
 ) {
     data class TagResponse(val tagId: Long, val displayName: String, val type: TagType)
 

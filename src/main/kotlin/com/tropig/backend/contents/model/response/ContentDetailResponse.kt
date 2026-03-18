@@ -18,6 +18,7 @@ data class ContentDetailResponse(
     val alias: String,
     val type: ContentType,
     val writer: WriterInfo,
+    val thumbnailPath: String?,
     val publishedAt: LocalDateTime?,
     val title: String,
     val rule: Rule,
@@ -39,6 +40,7 @@ fun Content.toDetailResponse(
     tags: List<TagDto>,
     purchasedContent: String?,
     isBookmark: Boolean,
+    thumbnailPath: String? = null,
     writerProfileUrl: String? = null,
 ): ContentDetailResponse {
     val writerInfo = writer?.let {
@@ -59,6 +61,7 @@ fun Content.toDetailResponse(
         alias = alias,
         type = type,
         writer = writerInfo,
+        thumbnailPath = thumbnailPath,
         publishedAt = publishedAt,
         title = title,
         rule = rule,

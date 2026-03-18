@@ -209,6 +209,7 @@ class CreatorController(
                 tags = tags[it.id] ?: emptyList(),
                 publishedAt = it.publishedAt ?: it.updatedAt,
                 freeContent = it.freeContent,
+                price = it.price.toInt(),
             )
         }
     }
@@ -262,7 +263,7 @@ class CreatorController(
         return content.toCreatorContentDetailResponse(
             tags = tags,
             nonFreeContent = nonFreeContent,
-            thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) }
+            thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) },
         )
     }
 

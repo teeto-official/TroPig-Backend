@@ -21,6 +21,8 @@ interface ContentRepository :
 
     fun findByAliasAndStatusIn(alias: String, status: List<ContentsStatus>): Content?
 
+    fun findByIdAndStatusNot(id: Long, status: ContentsStatus): Content?
+
     fun findByIdAndStatus(id: Long, status: ContentsStatus): Content?
 
     fun findByMemberIdAndTypeAndStatusIn(memberId: Long, type: ContentType, status: List<ContentsStatus>): List<Content>

@@ -22,4 +22,5 @@ data class CreatorContentResponse(
     val tags: List<TagDto>,
     val publishedAt: LocalDateTime,
     val freeContent: String?,
+    val price: Int,
 )

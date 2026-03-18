@@ -95,7 +95,10 @@ class BookmarkController(
                 updatedAt = content.updatedAt,
                 publishingType = if (type == ContentType.RESOURCE) {
                     content.publishingType
-                } else null
+                } else {
+                    null
+                },
+                price = content.price.toInt(),
             )
         }
     }

@@ -46,7 +46,7 @@ data class MemberResponse(
             creator = memberAuthInfo?.creator ?: false,
             authCreatorAt = memberAuthInfo?.authCreatorAt,
             name = memberAuthInfo?.name,
-            phoneNumber = memberAuthInfo?.phoneNumber
+            phoneNumber = memberAuthInfo?.phoneNumber,
         )
     }
 }
