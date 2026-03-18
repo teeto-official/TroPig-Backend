@@ -527,40 +527,40 @@ class ContentService(
         return save(content)
     }
 
-    fun getRandomGenreContents(type: ContentType, genres: String, isAdult: Boolean): List<Content> {
+    fun getRandomGenreContents(type: ContentType, genres: String, isAdult: Boolean, size: Int = 8): List<Content> {
         val genreList = Genre.fromList(genres)
             .filter { it != Genre.NONE && it != Genre.RESOURCE }
             .shuffled()
             .take(3)
 
         if (genreList.isEmpty()) {
-            return getRandomContents(type, isAdult)
+            return getRandomContents(type, isAdult, size)
         }
 
         return genreList
             .flatMap { contentRepository.findRandomGenreContents(type, it, isAdult) }
             .shuffled()
-            .take(8)
+            .take(size)
     }
 
-    fun getRandomRuleContents(rules: String, isAdult: Boolean): List<Content> {
+    fun getRandomRuleContents(rules: String, isAdult: Boolean, size: Int = 8): List<Content> {
         val ruleList = Rule.fromList(rules)
             .filter { it != Rule.NONE && it != Rule.RESOURCE }
             .shuffled()
             .take(3)
 
         if (ruleList.isEmpty()) {
-            return getRandomContents(ContentType.SCENARIO, isAdult)
+            return getRandomContents(ContentType.SCENARIO, isAdult, size)
         }
 
         return ruleList
             .flatMap { contentRepository.findRandomRuleContents(it, isAdult) }
             .shuffled()
-            .take(8)
+            .take(size)
     }
 
-    fun getRandomContents(type: ContentType, isAdult: Boolean): List<Content> =
-        contentRepository.findRandomContents(type, isAdult).shuffled().take(8)
+    fun getRandomContents(type: ContentType, isAdult: Boolean, size: Int = 8): List<Content> =
+        contentRepository.findRandomContents(type, isAdult).shuffled().take(size)
 
     /**
      * non_free_content를 조회합니다.

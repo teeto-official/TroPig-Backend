@@ -23,6 +23,7 @@ data class SearchContentResponse(
     val favoriteCount: Long,
     val publishedAt: LocalDateTime,
     val freeContent: String?,
+    val price: Double?,
 )
 
 data class CountSearchContentResponse(val scenarioCount: Long, val resourceCount: Long)

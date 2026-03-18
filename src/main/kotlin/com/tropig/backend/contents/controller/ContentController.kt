@@ -34,6 +34,7 @@ class ContentController(
     private val pickContentService: PickContentService,
     private val bookmarkContentService: BookmarkContentService,
     private val favoriteContentService: FavoriteContentService,
+    private val relatedContentService: RelatedContentService,
     private val creatorService: CreatorService,
     private val memberService: MemberService,
     private val paymentContentService: PaymentContentService,
@@ -111,7 +112,7 @@ class ContentController(
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) it.publishingType else null,
-                price = it.price.toInt()
+                price = it.price.toInt(),
             )
         }
     }
@@ -195,6 +196,7 @@ class ContentController(
                 favoriteCount = ctx.favoriteCounts[content.id] ?: 0L,
                 publishedAt = content.publishedAt!!,
                 freeContent = content.freeContent,
+                price = content.price,
             )
         }
     }
@@ -303,8 +305,11 @@ class ContentController(
         @LoginMember authMember: AuthMember?,
         @PathVariable contentType: String,
         @Parameter(name = "type", description = "타입", `in` = ParameterIn.QUERY, example = "GENRE, RULE")
-        type: String? = null,
+        @RequestParam(required = false) type: String? = null,
+        @Parameter(name = "size", description = "반환할 콘텐츠 수", `in` = ParameterIn.QUERY, example = "8")
+        @RequestParam(defaultValue = "8") size: Int,
     ): List<PickContentResponse> {
+        val clampedSize = size.coerceIn(1, 50)
         val parsedContentType = try {
             ContentType.fromString(contentType)
         } catch (_: java.lang.IllegalArgumentException) {
@@ -316,7 +321,7 @@ class ContentController(
         val recommendType = type?.uppercase()
 
         if (authMember == null) {
-            val contents = contentService.getRandomContents(parsedContentType, false)
+            val contents = contentService.getRandomContents(parsedContentType, false, clampedSize)
             return buildPickContentResponses(contents, null, parsedContentType)
         }
 
@@ -330,28 +335,48 @@ class ContentController(
             when (parsedContentType) {
                 ContentType.SCENARIO -> {
                     if (recommendType == "GENRE" && !member.favoriteGenres.isNullOrBlank()) {
-                        contentService.getRandomGenreContents(ContentType.SCENARIO, member.favoriteGenres!!, it.adult)
+                        contentService.getRandomGenreContents(
+                            ContentType.SCENARIO,
+                            member.favoriteGenres!!,
+                            it.adult,
+                            clampedSize,
+                        )
                     } else if (recommendType == "RULE" && !member.favoriteRules.isNullOrBlank()) {
-                        contentService.getRandomRuleContents(member.favoriteRules!!, it.adult)
+                        contentService.getRandomRuleContents(member.favoriteRules!!, it.adult, clampedSize)
                     } else {
-                        contentService.getRandomContents(ContentType.SCENARIO, it.adult)
+                        contentService.getRandomContents(ContentType.SCENARIO, it.adult, clampedSize)
                     }
                 }
                 ContentType.RESOURCE -> {
                     if (!member.favoriteGenres.isNullOrBlank()) {
-                        contentService.getRandomGenreContents(ContentType.RESOURCE, member.favoriteGenres!!, it.adult)
+                        contentService.getRandomGenreContents(
+                            ContentType.RESOURCE,
+                            member.favoriteGenres!!,
+                            it.adult,
+                            clampedSize,
+                        )
                     } else {
-                        contentService.getRandomContents(ContentType.RESOURCE, it.adult)
+                        contentService.getRandomContents(ContentType.RESOURCE, it.adult, clampedSize)
                     }
                 }
             }
         }
 
         val fallbackContents = contents.ifEmpty {
-            contentService.getRandomContents(parsedContentType, authMember.adult)
+            contentService.getRandomContents(parsedContentType, authMember.adult, clampedSize)
         }
 
         return buildPickContentResponses(fallbackContents, authMember, parsedContentType)
+    }
+
+    @GetMapping("/{contentId}/related-resources")
+    fun getRelatedResources(
+        @LoginMember authMember: AuthMember?,
+        @PathVariable contentId: Long,
+    ): List<PickContentResponse> {
+        val isAdult = authMember?.adult ?: false
+        val resources = relatedContentService.getRelatedContents(contentId, isAdult).resources
+        return buildPickContentResponses(resources, authMember, ContentType.RESOURCE)
     }
 
     private fun buildPickContentResponses(

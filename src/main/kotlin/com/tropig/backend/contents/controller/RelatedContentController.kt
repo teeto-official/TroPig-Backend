@@ -58,7 +58,7 @@ class RelatedContentController(
             thumbnailPath = thumbnailPaths[content.id],
             tags = tagsByContentId[content.id].orEmpty(),
             writer = writerNames[content.memberId] ?: "탈퇴한 작가입니다.",
-            price = content.price.toInt()
+            price = content.price.toInt(),
         )
 
         return RelatedContentsResponse(
