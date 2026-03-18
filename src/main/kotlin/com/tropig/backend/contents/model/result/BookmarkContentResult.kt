@@ -16,4 +16,5 @@ data class BookmarkContentResult(
     val playerCountType: PlayerCountType,
     val publishingType: PublishingType,
     val updatedAt: LocalDateTime,
+    val price: Int,
 )

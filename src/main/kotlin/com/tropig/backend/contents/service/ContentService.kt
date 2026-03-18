@@ -72,6 +72,7 @@ class ContentService(
                 playerCountType = it.playerCountType,
                 publishingType = it.publishingType,
                 publishingInfo = it.publishingInfo,
+                price = it.price.toInt(),
             )
         }
     }

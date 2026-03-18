@@ -19,4 +19,5 @@ data class BookmarkContentResponse(
     val thumbnailPath: String?,
     val tags: List<TagDto>,
     val updatedAt: LocalDateTime,
+    val price: Int,
 )

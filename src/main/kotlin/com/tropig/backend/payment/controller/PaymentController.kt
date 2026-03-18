@@ -175,6 +175,7 @@ class PaymentController(
                 freeContent = content.freeContent,
                 purchasedAt = item.purchasedAt,
                 purchaseAmount = item.purchaseAmount,
+                price = content.price.toInt(),
             )
         }
     }

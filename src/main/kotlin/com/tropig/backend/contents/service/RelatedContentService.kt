@@ -16,7 +16,7 @@ class RelatedContentService(
 ) {
 
     fun getRelatedContents(contentId: Long, isAdult: Boolean): RelatedContentsResult {
-        val baseContent = contentRepository.findByIdAndStatus(contentId, ContentsStatus.PUBLISHED)
+        val baseContent = contentRepository.findByIdAndStatusNot(contentId, ContentsStatus.DELETED)
             ?: throw NotFoundException(
                 "해당 시나리오/자료를 찾을 수 없습니다.",
                 MessageCode.NOT_FOUND_CONTENT,

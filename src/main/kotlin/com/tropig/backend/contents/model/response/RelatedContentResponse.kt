@@ -13,6 +13,7 @@ data class RelatedContentItemResponse(
     val thumbnailPath: String?,
     val tags: List<TagDto>,
     val writer: String,
+    val price: Int,
 )
 
 data class RelatedContentsResponse(
