@@ -37,7 +37,7 @@ import java.util.UUID
  * 계좌 변경 잠금은 auth_creator_at 기준 30일입니다.
  * local, development 프로파일에서만 활성화됩니다.
  */
-@Profile("local", "development")
+// @Profile("local", "development")
 @ApiController
 @RequestMapping("/api/member/creator-verification/mock")
 @Tag(name = "Creator Verification (Mock)", description = "로컬 개발 전용 창작자 인증 Mock API")

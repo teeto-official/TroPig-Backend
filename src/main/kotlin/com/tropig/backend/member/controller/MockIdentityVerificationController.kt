@@ -24,7 +24,7 @@ import java.util.UUID
  * KCP 테스트 모드에서 PASS 앱 알림 없이 본인인증을 테스트하기 위한 엔드포인트입니다.
  * local, development 프로파일에서만 활성화됩니다.
  */
-@Profile("local", "development")
+// @Profile("local", "development")
 @ApiController
 @RequestMapping("/api/member/identity-verification")
 @Tag(name = "Identity Verification (Mock)", description = "로컬 개발 전용 본인인증 Mock API")
