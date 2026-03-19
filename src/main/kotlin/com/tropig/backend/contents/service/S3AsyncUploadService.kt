@@ -72,8 +72,9 @@ class S3AsyncUploadService(private val s3Client: S3Client, private val s3Propert
             throw IllegalArgumentException("파일 크기가 너무 큽니다. 최대 크기: ${MAX_FILE_SIZE / 1024 / 1024}MB")
         }
 
-        // 파일명 생성 (UUID + 원본 파일명)
-        val fileName = "${UUID.randomUUID()}-$originalFileName"
+        // 파일명 생성 (UUID + 확장자)
+        val extension = originalFileName.substringAfterLast(".")
+        val fileName = "${UUID.randomUUID()}.$extension"
         val s3Key = "$prefix/$contentId/$fileName"
 
         try {
