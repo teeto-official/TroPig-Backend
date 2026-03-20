@@ -11,7 +11,9 @@ import com.tropig.backend.contents.entity.ContentThumbnail
 import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.request.DeleteFileRequest
 import com.tropig.backend.contents.model.request.UploadFilesForm
+import com.tropig.backend.contents.model.request.UploadPresignerUrlRequest
 import com.tropig.backend.contents.model.response.UploadFileResponse
+import com.tropig.backend.contents.model.response.UploadPresignerUrlResponse
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.model.serialize.toPublishingInfoList
@@ -21,10 +23,14 @@ import com.tropig.backend.member.enums.Role
 import jakarta.transaction.Transactional
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
+import kotlin.math.log
 
 @ApiController
 @RequestMapping("/api/files")
-class FileUploadController(private val s3Service: S3Service, private val contentService: ContentService) {
+class FileUploadController(
+    private val s3Service: S3Service,
+    private val contentService: ContentService,
+) {
 
     @RequireAuth
     @PostMapping("/uploads/{contentId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -110,6 +116,64 @@ class FileUploadController(private val s3Service: S3Service, private val content
                 it.publishingType,
                 it.originalName,
             )
+        }
+    }
+
+    @RequireAuth
+    @PostMapping("/uploads/presigner/{contentId}")
+    @Transactional
+    fun uploadPresigner(
+        @LoginMember authMember: AuthMember,
+        @RequestBody form: UploadPresignerUrlRequest,
+        @PathVariable contentId: Long,
+    ): List<UploadPresignerUrlResponse> {
+        if (authMember.role != Role.CREATOR) {
+            throw MemberException(
+                "작가가 아닌 유저입니다.",
+                MessageCode.INCORRECT_ROLE,
+            )
+        }
+
+        contentService.findById(contentId)?.let {
+            if (it.memberId != authMember.memberId) {
+                throw MemberException(
+                    "유저가 작성한 작품이 아닙니다. memberId: ${authMember.memberId}, contentId: ${it.id}",
+                    MessageCode.NOT_OWN_CONTENT,
+                )
+            }
+        }
+
+        if (form.requests.isEmpty()) {
+            throw IllegalArgumentException("업로드할 파일이 없습니다.")
+        }
+
+        return form.requests.mapNotNull {
+            runCatching {
+                s3Service.validate(it)
+                val extension = s3Service.extractExtension(it.fileName)
+
+                val s3Key = s3Service.generateS3Key(
+                    directory = it.fileType.path,
+                    extension = extension,
+                    contentId = contentId
+                )
+
+                val presignedUrl = s3Service.generateUploadPresignerUrl(
+                    s3Key = s3Key,
+                    contentType = it.contentType,
+                )
+
+                UploadPresignerUrlResponse(
+                    publicUrl = s3Service.toUrl(s3Key) ?: s3Key,
+                    s3Key = s3Key,
+                    presignedUrl = presignedUrl,
+                    expiresInSeconds = 300,
+                    uuid = it.uuid,
+                )
+            }.onFailure {
+                println("${it.message}")
+                return@mapNotNull null
+            }.getOrNull()
         }
     }
 
