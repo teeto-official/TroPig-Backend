@@ -31,4 +31,6 @@ interface ContentThumbnailRepository : JpaRepository<ContentThumbnail, Long> {
         """,
     )
     fun updateByContentIdAndPath(contentId: Long, path: String, orderNo: Int, isCover: Boolean): Int
+
+    fun existsByContentId(contentId: Long): Boolean
 }
