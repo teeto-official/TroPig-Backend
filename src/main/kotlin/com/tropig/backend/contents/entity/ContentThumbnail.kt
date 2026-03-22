@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "content_thumbnail")
-data class ContentThumbnail(val contentId: Long, val path: String, val orderNo: Int, val cover: Boolean) {
+data class ContentThumbnail(val contentId: Long, var path: String, val orderNo: Int, val cover: Boolean) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L

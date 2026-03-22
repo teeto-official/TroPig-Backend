@@ -378,25 +378,21 @@ class ContentService(
         }
 
         val baseUrl = s3Service.baseUrl
-        request.thumbnail?.let {
+        request.thumbnail?.also {
             val path = it.substringAfter(baseUrl)
-            if (contentThumbnailRepository.existsByContentId(contentId)) {
-                contentThumbnailRepository.updateByContentIdAndPath(
+            val thumbnail = contentThumbnailRepository.findTopByContentIdAndCover(contentId, true)?.let { t ->
+                t.path = path
+                t
+            } ?: run {
+                ContentThumbnail(
                     contentId = contentId,
                     path = path,
                     orderNo = 0,
-                    isCover = true,
-                )
-            } else {
-                contentThumbnailRepository.save(
-                    ContentThumbnail(
-                        contentId = contentId,
-                        path = path,
-                        orderNo = 0,
-                        cover = true,
-                    )
+                    cover = true,
                 )
             }
+
+            contentThumbnailRepository.save(thumbnail)
         }
 
         // 5. tag 정보 삭제 후 신규 저장

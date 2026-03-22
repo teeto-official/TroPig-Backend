@@ -23,7 +23,6 @@ import com.tropig.backend.member.enums.Role
 import jakarta.transaction.Transactional
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
-import kotlin.math.log
 
 @ApiController
 @RequestMapping("/api/files")
@@ -171,7 +170,6 @@ class FileUploadController(
                     uuid = it.uuid,
                 )
             }.onFailure {
-                println("${it.message}")
                 return@mapNotNull null
             }.getOrNull()
         }

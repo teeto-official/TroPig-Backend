@@ -32,6 +32,7 @@ class S3Service(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(S3Service::class.java)
+        private val regex = Regex("[^a-z0-9]")
         private val ALLOWED_FILE_TYPES = setOf(
             // 이미지
             "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
@@ -95,7 +96,7 @@ class S3Service(
     }
 
     fun validate(request: UploadPresignerUrlForm) {
-        require(request.contentType in ALLOWED_FILE_TYPES) {
+        require(request.contentType.lowercase() in ALLOWED_FILE_TYPES) {
             "허용되지 않은 파일 형식입니다."
         }
         require(request.fileName.isNotBlank()) {
@@ -106,7 +107,7 @@ class S3Service(
     fun extractExtension(fileName: String): String {
         val ext = fileName.substringAfterLast('.', "")
             .lowercase()
-            .replace(Regex("[^a-z0-9]"), "")
+            .replace(regex, "")
 
         require(ext.isNotBlank()) { "확장자를 확인할 수 없습니다." }
         return ext
