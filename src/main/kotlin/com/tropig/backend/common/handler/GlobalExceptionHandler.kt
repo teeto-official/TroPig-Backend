@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.NoHandlerFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -54,6 +55,12 @@ class GlobalExceptionHandler {
         logger.debug("ResponseStatusException: ${e.reason}")
         return ResponseEntity.status(e.statusCode)
             .body(ErrorResponse(message = e.reason ?: "요청 처리 중 오류가 발생했습니다."))
+    }
+
+    @ExceptionHandler(NoHandlerFoundException::class)
+    fun handleNoHandlerFoundException(e: NoHandlerFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(message = "요청한 경로를 찾을 수 없습니다."))
     }
 
     @ExceptionHandler(Exception::class)

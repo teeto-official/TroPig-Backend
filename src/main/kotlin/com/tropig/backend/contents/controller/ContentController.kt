@@ -276,12 +276,9 @@ class ContentController(
         } ?: false
 
         val purchased = authMember?.let { member ->
+            val isOwner = member.memberId == content.memberId
             val isPurchased = paymentContentService.isContentPurchased(member.memberId, content.id)
-            if (isPurchased) {
-                content.nonFreeContent?.let { purchase ->
-                    s3Service.getFileAsString(purchase)
-                }
-            } else if (content.price == 0.00) {
+            if (isOwner || isPurchased || content.price == 0.00) {
                 content.nonFreeContent?.let { purchase ->
                     s3Service.getFileAsString(purchase)
                 }
