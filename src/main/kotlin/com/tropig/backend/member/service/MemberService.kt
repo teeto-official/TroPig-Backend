@@ -5,7 +5,9 @@ import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.util.StringUtil
+import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.service.S3Service
+import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.MemberAuthInfo
 import com.tropig.backend.member.entity.WithdrawMember
@@ -29,6 +31,7 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val memberAuthInfoRepository: MemberAuthInfoRepository,
     private val withdrawMemberRepository: WithdrawMemberRepository,
+    private val contentRepository: ContentRepository,
     private val s3Service: S3Service,
     private val jwtTokenProvider: JwtTokenProvider,
     private val stringUtil: StringUtil,
@@ -140,6 +143,12 @@ class MemberService(
     @Transactional
     fun updateUser(member: Member, request: UpdateMemberRequest): Member {
         request.nickname?.let {
+            if (it.length > 16) {
+                throw IllegalArgumentException(
+                    "닉네임은 16자 이하로 입력해주세요.",
+                    MessageCode.INVALID_PARAMS,
+                )
+            }
             if (memberRepository.existsByNicknameAndIdNot(it, member.id)) {
                 throw IllegalArgumentException(
                     "이미 존재하는 닉네임입니다.",
@@ -147,6 +156,7 @@ class MemberService(
                 )
             }
         }
+        val oldNickname = member.nickname
         member.apply {
             request.nickname?.let { this.nickname = it }
             request.bio?.let { this.bio = it }
@@ -177,6 +187,17 @@ class MemberService(
                 } else if (!it && (this.marketingAt != null)) {
                     this.marketingAt = null
                 }
+            }
+        }
+
+        // CREATOR인 경우 닉네임 변경 시 본인 콘텐츠의 searchText에서 이전 닉네임을 새 닉네임으로 치환
+        if (request.nickname != null && member.role == Role.CREATOR && oldNickname != request.nickname) {
+            val contents = contentRepository.findByMemberId(member.id)
+            if (contents.isNotEmpty()) {
+                contents.forEach { content ->
+                    content.searchText = content.searchText.replace(oldNickname, request.nickname)
+                }
+                contentRepository.saveAll(contents)
             }
         }
 
