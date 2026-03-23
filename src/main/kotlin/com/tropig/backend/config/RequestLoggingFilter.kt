@@ -37,6 +37,8 @@ class RequestLoggingFilter : OncePerRequestFilter() {
         val uri = request.requestURI
         return uri.startsWith("/swagger-ui") ||
             uri.startsWith("/v3/api-docs") ||
-            uri.startsWith("/actuator")
+            uri.startsWith("/actuator") ||
+            uri == "/favicon.ico" ||
+            uri == "/"
     }
 }
