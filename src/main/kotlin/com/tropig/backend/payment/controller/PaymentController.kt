@@ -6,6 +6,7 @@ import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.service.BookmarkContentService
@@ -176,6 +177,7 @@ class PaymentController(
                 purchasedAt = item.purchasedAt,
                 purchaseAmount = item.purchaseAmount,
                 price = content.price.toInt(),
+                publishingType = if (content.type == ContentType.RESOURCE) content.publishingType else null
             )
         }
     }

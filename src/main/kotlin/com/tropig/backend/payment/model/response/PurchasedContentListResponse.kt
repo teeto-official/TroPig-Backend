@@ -4,6 +4,7 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.result.TagDto
 import java.time.LocalDateTime
 
@@ -24,4 +25,5 @@ data class PurchasedContentListResponse(
     val purchasedAt: LocalDateTime,
     val purchaseAmount: Long,
     val price: Int,
+    val publishingType: PublishingType?,
 )
