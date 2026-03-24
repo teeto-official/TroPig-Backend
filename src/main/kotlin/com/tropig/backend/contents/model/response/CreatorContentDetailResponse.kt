@@ -14,6 +14,7 @@ import java.time.LocalDateTime
 data class CreatorContentDetailResponse(
     val id: Long,
     val type: ContentType,
+    val writer: WriterInfo,
     val publishedAt: LocalDateTime?,
     val title: String,
     val rule: Rule?,
@@ -33,9 +34,11 @@ fun Content.toCreatorContentDetailResponse(
     tags: List<TagDto>,
     nonFreeContent: String?,
     thumbnailPath: String?,
+    writer: WriterInfo,
 ): CreatorContentDetailResponse = CreatorContentDetailResponse(
     id = id,
     type = type,
+    writer = writer,
     publishedAt = publishedAt,
     title = title,
     rule = if (type == ContentType.SCENARIO) rule else null,

@@ -259,11 +259,17 @@ class CreatorController(
         }
 
         val thumbnailPath = contentService.getThumbnailPath(content.id)?.path
+        val writer = creatorService.getWriter(authMember.memberId)!!
 
         return content.toCreatorContentDetailResponse(
             tags = tags,
             nonFreeContent = nonFreeContent,
             thumbnailPath = thumbnailPath?.let { s3Service.toUrl(it) },
+            writer = WriterInfo(
+                writerId = writer.id,
+                nickname = writer.nickname,
+                profilePath = s3Service.toUrl(writer.profile)
+            )
         )
     }
 
