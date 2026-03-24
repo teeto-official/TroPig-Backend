@@ -210,6 +210,7 @@ class CreatorController(
                 publishedAt = it.publishedAt ?: it.updatedAt,
                 freeContent = it.freeContent,
                 price = it.price.toInt(),
+                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null
             )
         }
     }

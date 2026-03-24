@@ -5,6 +5,7 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.result.TagDto
 import java.time.LocalDateTime
 
@@ -23,4 +24,5 @@ data class CreatorContentResponse(
     val publishedAt: LocalDateTime,
     val freeContent: String?,
     val price: Int,
+    val publishingType: PublishingType?,
 )

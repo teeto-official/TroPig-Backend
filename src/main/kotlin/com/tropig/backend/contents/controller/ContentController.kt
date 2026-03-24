@@ -197,6 +197,7 @@ class ContentController(
                 publishedAt = content.publishedAt!!,
                 freeContent = content.freeContent,
                 price = content.price,
+                publishingType = if (type == ContentType.RESOURCE) content.publishingType else null
             )
         }
     }

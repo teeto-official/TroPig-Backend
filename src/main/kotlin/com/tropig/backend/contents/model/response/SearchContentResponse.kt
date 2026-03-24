@@ -4,6 +4,7 @@ import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.model.result.TagDto
 import java.time.LocalDateTime
 
@@ -12,6 +13,7 @@ data class SearchContentResponse(
     val alias: String,
     val title: String,
     val type: ContentType,
+    val publishingType: PublishingType?,
     val rule: Rule,
     val genre: Genre,
     val writer: String,
