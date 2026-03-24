@@ -24,6 +24,8 @@ class SwaggerConfig(private val environment: Environment) {
         val activeProfiles = environment.activeProfiles
         val serverUrl = if (activeProfiles.contains("local")) {
             "http://localhost:8080"
+        } else if (activeProfiles.contains("prod")) {
+            "https://api.triquest.me"
         } else {
             "https://api-dev.triquest.me"
         }
