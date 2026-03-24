@@ -5,6 +5,7 @@ import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
+import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.result.TagDto
 import com.tropig.backend.contents.model.serialize.PublishingInfo
@@ -23,11 +24,12 @@ data class CreatorContentDetailResponse(
     val playerCountType: PlayerCountType,
     val termType: TermType,
     val tags: List<TagDto>,
-    val publishingType: String?,
+    val publishingType: PublishingType?,
     val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
     val thumbnailPath: String? = null,
+    val price: Int,
 )
 
 fun Content.toCreatorContentDetailResponse(
@@ -49,7 +51,7 @@ fun Content.toCreatorContentDetailResponse(
     tags = tags,
     publishingType =
     if (type == ContentType.RESOURCE) {
-        publishingType.displayName
+        publishingType
     } else {
         null
     },
@@ -57,4 +59,5 @@ fun Content.toCreatorContentDetailResponse(
     freeContent = freeContent,
     nonFreeContent = nonFreeContent,
     thumbnailPath = thumbnailPath,
+    price = price.toInt(),
 )
