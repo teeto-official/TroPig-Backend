@@ -11,6 +11,7 @@ import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.common.model.SearchContext
+import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.request.CreateContentRequest
@@ -208,7 +209,7 @@ class CreatorController(
                 thumbnailPath = thumbnailPaths[it.id],
                 tags = tags[it.id] ?: emptyList(),
                 publishedAt = it.publishedAt ?: it.updatedAt,
-                freeContent = it.freeContent,
+                freeContent = Content.removeSpoilers(it.freeContent),
                 price = it.price.toInt(),
                 publishingType = if (type == ContentType.RESOURCE) it.publishingType else null
             )

@@ -195,7 +195,7 @@ class ContentController(
                 bookmarkCount = bookmarkInfo?.bookmarkCount ?: 0L,
                 favoriteCount = ctx.favoriteCounts[content.id] ?: 0L,
                 publishedAt = content.publishedAt!!,
-                freeContent = content.freeContent,
+                freeContent = Content.removeSpoilers(content.freeContent),
                 price = content.price,
                 publishingType = if (type == ContentType.RESOURCE) content.publishingType else null
             )
