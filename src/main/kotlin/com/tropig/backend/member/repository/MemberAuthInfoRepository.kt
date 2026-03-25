@@ -26,7 +26,7 @@ interface MemberAuthInfoRepository : JpaRepository<MemberAuthInfo, Long> {
     /**
      * CI 존재 여부를 확인합니다.
      */
-    fun existsByCi(ci: String): Boolean
+    fun existsByMemberIdNotAndCi(memberId: Long, ci: String): Boolean
 
     /**
      * DI(Site-specific ID)로 본인인증 정보를 조회합니다.
@@ -36,7 +36,7 @@ interface MemberAuthInfoRepository : JpaRepository<MemberAuthInfo, Long> {
     /**
      * DI 존재 여부를 확인합니다.
      */
-    fun existsByDi(di: String): Boolean
+    fun existsByMemberIdNotAndDi(memberId: Long, di: String): Boolean
 
     /**
      * 휴대폰 번호로 본인인증 정보를 조회합니다.

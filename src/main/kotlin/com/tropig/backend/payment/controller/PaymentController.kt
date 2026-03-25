@@ -6,6 +6,7 @@ import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
+import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.result.BookmarkContentInfo
 import com.tropig.backend.contents.model.result.TagDto
@@ -173,7 +174,7 @@ class PaymentController(
                 tags = ctx.tagsByContentId[content.id].orEmpty(),
                 isBookmark = ctx.bookmarkInfo[content.id]?.bookmarked ?: false,
                 publishedAt = content.publishedAt!!,
-                freeContent = content.freeContent,
+                freeContent = Content.removeSpoilers(content.freeContent),
                 purchasedAt = item.purchasedAt,
                 purchaseAmount = item.purchaseAmount,
                 price = content.price.toInt(),

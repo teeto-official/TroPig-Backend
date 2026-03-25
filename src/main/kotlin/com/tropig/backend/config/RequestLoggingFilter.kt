@@ -12,13 +12,27 @@ class RequestLoggingFilter : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    companion object {
+        private val BLOCKED_EXTENSIONS = listOf(".php", ".asp", ".aspx", ".jsp", ".cgi", ".env")
+        private val BLOCKED_PATHS = listOf(
+            "/wp-admin", "/wp-login", "/wp-content", "/wordpress",
+            "/admin", "/phpmyadmin", "/.git", "/.svn",
+        )
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
+        val uri = request.requestURI.lowercase()
+
+        if (BLOCKED_EXTENSIONS.any { uri.endsWith(it) } || BLOCKED_PATHS.any { uri.startsWith(it) }) {
+            response.status = HttpServletResponse.SC_FORBIDDEN
+            return
+        }
+
         val startTime = System.currentTimeMillis()
-        val uri = request.requestURI
         val query = request.queryString?.let { "?$it" } ?: ""
         val method = request.method
         val clientIp = request.getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim()

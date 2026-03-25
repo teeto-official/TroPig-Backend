@@ -94,7 +94,6 @@ class ContentService(
     fun getThumbnailPath(contentId: Long): ContentThumbnail? =
         contentThumbnailRepository.findTopByContentIdAndCover(contentId, true)
 
-    @Cacheable(value = ["getDraftContent"], key = "#memberId")
     fun getDraftContent(memberId: Long): List<Content> =
         contentRepository.findByMemberIdAndStatus(memberId, ContentsStatus.DRAFT)
 
@@ -131,10 +130,6 @@ class ContentService(
      * @return 생성된 Content
      */
     @Transactional
-    @CacheEvict(
-        cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #request.type.name()",
-    )
     fun createContent(request: CreateContentRequest, memberId: Long, writerNickname: String): Content {
         // 1. Content 엔티티 생성 (임시 ID로 alias 생성)
         val tempContent = Content(
@@ -143,11 +138,11 @@ class ContentService(
             type = request.type,
             memberId = memberId,
             rule =
-            if (request.type == ContentType.SCENARIO) {
-                request.rule!!
-            } else {
-                Rule.RESOURCE
-            },
+                if (request.type == ContentType.SCENARIO) {
+                    request.rule!!
+                } else {
+                    Rule.RESOURCE
+                },
             genre = request.genre ?: Genre.NONE,
             playerCountType = request.playerCountType ?: PlayerCountType.NONE,
             termType = request.termType ?: TermType.NONE,
@@ -271,10 +266,6 @@ class ContentService(
      * @return 수정된 Content
      */
     @Transactional
-    @CacheEvict(
-        cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #request.type.name()",
-    )
     fun updateContent(
         contentId: Long,
         request: UpdateContentRequest,
@@ -502,10 +493,6 @@ class ContentService(
     }
 
     @Transactional
-    @CacheEvict(
-        cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #content.type.name()",
-    )
     fun updateContentStatus(content: Content, memberId: Long, status: ContentsStatus): Content {
         if (content.memberId != memberId) {
             throw ContentException(
@@ -518,10 +505,6 @@ class ContentService(
         return save(content)
     }
 
-    @CacheEvict(
-        cacheNames = ["creatorContentsByMember"],
-        key = "#memberId + '-' + #content.type.name()",
-    )
     fun deleteContent(content: Content, memberId: Long): Content {
         if (content.memberId != memberId) {
             throw ContentException(

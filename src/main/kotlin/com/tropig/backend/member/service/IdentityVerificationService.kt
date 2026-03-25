@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.util.*
 
 /**
  * 본인인증 서비스
@@ -42,7 +43,8 @@ class IdentityVerificationService(
         logger.info("Starting identity verification for member: $memberId")
 
         // 1. 이미 인증된 사용자 체크
-        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+        val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
+        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
@@ -116,7 +118,7 @@ class IdentityVerificationService(
             // 5. CI/DI 중복 확인
             val verifiedCustomer = confirmResponse.verifiedCustomer
             verifiedCustomer.ci?.let { ci ->
-                if (memberAuthInfoRepository.existsByCi(ci)) {
+                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, ci)) {
                     throw MemberException(
                         "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.CI_ALREADY_EXISTS,
@@ -125,9 +127,9 @@ class IdentityVerificationService(
             }
 
             verifiedCustomer.di?.let { di ->
-                if (memberAuthInfoRepository.existsByDi(di)) {
+                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, di)) {
                     throw MemberException(
-                        "이미 등록된 본인인증 정보입니다.",
+                        "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.DI_ALREADY_EXISTS,
                     )
                 }
@@ -199,7 +201,8 @@ class IdentityVerificationService(
         logger.info("Completing identity verification (SDK): member=$memberId, id=${request.identityVerificationId}")
 
         // 1. 이미 인증된 사용자 체크
-        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+        val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
+        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
@@ -210,7 +213,7 @@ class IdentityVerificationService(
 
             // 3. CI/DI 중복 확인
             verifiedCustomer.ci?.let { ci ->
-                if (memberAuthInfoRepository.existsByCi(ci)) {
+                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, ci)) {
                     throw MemberException(
                         "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.CI_ALREADY_EXISTS,
@@ -219,7 +222,7 @@ class IdentityVerificationService(
             }
 
             verifiedCustomer.di?.let { di ->
-                if (memberAuthInfoRepository.existsByDi(di)) {
+                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, di)) {
                     throw MemberException(
                         "이미 등록된 본인인증 정보입니다.",
                         MessageCode.DI_ALREADY_EXISTS,
@@ -231,7 +234,13 @@ class IdentityVerificationService(
             val isAdult = MemberAuthInfo.isAdult(verifiedCustomer.birthDate)
 
             // 5. MemberAuthInfo 저장
-            val authInfo = MemberAuthInfo(
+            val authInfo = lastVerified?.let {
+                it.phoneNumber = verifiedCustomer.phoneNumber
+                it.ci = verifiedCustomer.ci
+                it.di = verifiedCustomer.di
+                it.verifiedAt = LocalDateTime.now()
+                it
+            } ?: MemberAuthInfo(
                 memberId = memberId,
                 name = verifiedCustomer.name,
                 birthDate = verifiedCustomer.birthDate,

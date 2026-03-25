@@ -35,13 +35,13 @@ data class MemberAuthInfo(
     val birthDate: String, // YYYY-MM-DD format
 
     @Column(name = "phone_number", nullable = false, length = 11)
-    val phoneNumber: String, // 01012345678 format (no hyphens)
+    var phoneNumber: String, // 01012345678 format (no hyphens)
 
     @Column(length = 200, unique = true)
-    val ci: String? = null, // Correlation ID (encrypted for privacy)
+    var ci: String? = null, // Correlation ID (encrypted for privacy)
 
     @Column(length = 200, unique = true)
-    val di: String? = null, // Site-specific ID (encrypted for privacy)
+    var di: String? = null, // Site-specific ID (encrypted for privacy)
 
     @Column(name = "verified_at", nullable = false)
     var verifiedAt: LocalDateTime,
@@ -55,9 +55,6 @@ data class MemberAuthInfo(
 
     @Column(name = "auth_creator_at")
     var authCreatorAt: LocalDateTime? = null,
-
-    @Column(name = "auth_user_at")
-    var authUserAt: LocalDateTime? = null,
 
     @Column(name = "bank_account", length = 255)
     var bankAccount: String? = null,

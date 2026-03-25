@@ -47,4 +47,11 @@ data class Content(
 
     @LastModifiedDate
     val updatedAt: LocalDateTime = LocalDateTime.now()
+
+    companion object {
+        private val SPOILER_REGEX = Regex("<spoiler>.*?</spoiler>", RegexOption.DOT_MATCHES_ALL)
+
+        fun removeSpoilers(content: String?): String? =
+            content?.replace(SPOILER_REGEX, "")?.trim()?.ifEmpty { null }
+    }
 }
