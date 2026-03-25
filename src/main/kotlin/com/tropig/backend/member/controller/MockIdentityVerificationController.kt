@@ -42,7 +42,8 @@ class MockIdentityVerificationController(
     fun mockComplete(@LoginMember authMember: AuthMember): ResponseEntity<VerificationResult> {
         val memberId = authMember.memberId
 
-        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+        val lastVerifiedAt = memberAuthInfoRepository.findByMemberId(memberId)?.verifiedAt
+        if (lastVerifiedAt != null && lastVerifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
