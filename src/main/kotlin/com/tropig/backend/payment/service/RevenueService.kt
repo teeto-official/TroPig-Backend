@@ -127,7 +127,7 @@ class RevenueService(
     /**
      * CREATOR가 가진 작품 목록 (PUBLISHED, PRIVATE)을 memberId 기준으로 30분 캐싱
      */
-    @Cacheable(cacheNames = ["creatorAllContentsByMember"], key = "#memberId")
+//    @Cacheable(cacheNames = ["creatorAllContentsByMember"], key = "#memberId")
     fun getAllCreatorContents(memberId: Long): List<Content> = contentRepository.findByMemberIdAndStatusIn(
         memberId = memberId,
         status = ContentsStatus.purchasedStatuses,
