@@ -4,7 +4,9 @@ import com.tropig.backend.common.exception.*
 import com.tropig.backend.common.model.ErrorResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.web.HttpMediaTypeNotAcceptableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
@@ -61,6 +63,13 @@ class GlobalExceptionHandler {
     fun handleNoHandlerFoundException(e: NoHandlerFoundException): ResponseEntity<ErrorResponse> {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(ErrorResponse(message = "요청한 경로를 찾을 수 없습니다."))
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException::class)
+    fun handleMediaTypeNotAcceptable(e: HttpMediaTypeNotAcceptableException): ResponseEntity<String> {
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("""{"message":"Not Acceptable"}""")
     }
 
     @ExceptionHandler(Exception::class)
