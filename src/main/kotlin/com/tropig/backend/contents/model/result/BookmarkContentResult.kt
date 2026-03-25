@@ -14,7 +14,7 @@ data class BookmarkContentResult(
     val genre: Genre,
     val memberId: Long,
     val playerCountType: PlayerCountType,
-    val publishingType: PublishingType,
+    val publishingType: PublishingType?,
     val updatedAt: LocalDateTime,
     val price: Int,
 )
