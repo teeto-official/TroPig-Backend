@@ -42,15 +42,21 @@ class MockIdentityVerificationController(
     fun mockComplete(@LoginMember authMember: AuthMember): ResponseEntity<VerificationResult> {
         val memberId = authMember.memberId
 
-        val lastVerifiedAt = memberAuthInfoRepository.findByMemberId(memberId)?.verifiedAt
-        if (lastVerifiedAt != null && lastVerifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
+        val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
+        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
         val testBirthDate = "1995-01-01"
         val isAdult = MemberAuthInfo.isAdult(testBirthDate)
 
-        val authInfo = MemberAuthInfo(
+        val authInfo = lastVerified?.let {
+            it.phoneNumber = "01012345678"
+            it.ci = "MOCK_CI_${UUID.randomUUID()}"
+            it.di = "MOCK_DI_${UUID.randomUUID()}"
+            it.verifiedAt = LocalDateTime.now()
+            it
+        } ?: MemberAuthInfo(
             memberId = memberId,
             name = "테스트유저",
             birthDate = testBirthDate,
