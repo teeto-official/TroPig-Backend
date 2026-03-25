@@ -42,7 +42,8 @@ class IdentityVerificationService(
         logger.info("Starting identity verification for member: $memberId")
 
         // 1. 이미 인증된 사용자 체크
-        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+        val lastVerifiedAt = memberAuthInfoRepository.findByMemberId(memberId)?.verifiedAt
+        if (lastVerifiedAt != null && lastVerifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
@@ -199,7 +200,8 @@ class IdentityVerificationService(
         logger.info("Completing identity verification (SDK): member=$memberId, id=${request.identityVerificationId}")
 
         // 1. 이미 인증된 사용자 체크
-        if (memberAuthInfoRepository.existsByMemberId(memberId)) {
+        val lastVerifiedAt = memberAuthInfoRepository.findByMemberId(memberId)?.verifiedAt
+        if (lastVerifiedAt != null && lastVerifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 

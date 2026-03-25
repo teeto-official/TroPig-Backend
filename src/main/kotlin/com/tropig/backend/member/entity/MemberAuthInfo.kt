@@ -56,9 +56,6 @@ data class MemberAuthInfo(
     @Column(name = "auth_creator_at")
     var authCreatorAt: LocalDateTime? = null,
 
-    @Column(name = "auth_user_at")
-    var authUserAt: LocalDateTime? = null,
-
     @Column(name = "bank_account", length = 255)
     var bankAccount: String? = null,
 
