@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
@@ -52,9 +53,14 @@ class S3Service(
             // 텍스트
             "text/plain",
             "text/csv",
+            // 오디오
+            "audio/mpeg", "audio/wav", "audio/ogg", "audio/aac", "audio/flac", "audio/mp4",
+            // 비디오
+            "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-msvideo",
             // 기타
             "application/json",
             "application/xml",
+            "application/octet-stream",
         )
         private const val MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
         private val UUID_PREFIX_REGEX = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-")
@@ -79,12 +85,25 @@ class S3Service(
     fun generatePresignedUrl(s3Key: String, expirationMinutes: Long = 10, fileName: String? = null): String {
         val key = if (s3Key.contains("amazonaws.com/")) extractS3Key(s3Key) else s3Key
 
+        // S3 객체의 실제 Content-Type 조회
+        val actualContentType = try {
+            val headRequest = HeadObjectRequest.builder()
+                .bucket(s3Properties.bucket)
+                .key(key)
+                .build()
+            s3Client.headObject(headRequest).contentType() ?: "application/octet-stream"
+        } catch (e: Exception) {
+            logger.warn("S3 객체 메타데이터 조회 실패: key=$key, fallback to application/octet-stream", e)
+            "application/octet-stream"
+        }
+
         val rawName = key.substringAfterLast('/')
         val dispositionFileName = fileName ?: rawName.replace(UUID_PREFIX_REGEX, "")
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(s3Properties.bucket)
             .key(key)
             .responseContentDisposition("attachment; filename=\"$dispositionFileName\"")
+            .responseContentType(actualContentType)
             .build()
 
         val presignRequest = GetObjectPresignRequest.builder()
