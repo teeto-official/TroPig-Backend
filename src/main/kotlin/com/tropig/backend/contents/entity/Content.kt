@@ -37,6 +37,7 @@ data class Content(
     var price: Double,
     var level: Int,
     var searchText: String,
+    var preventRightClick: Boolean = false,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
