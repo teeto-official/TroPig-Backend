@@ -1,5 +1,6 @@
 package com.tropig.backend.payment.repository
 
+import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.payment.entity.Purchase
 import com.tropig.backend.payment.enums.PurchaseStatus
 import org.springframework.data.domain.Pageable
@@ -16,6 +17,13 @@ interface PurchaseRepository :
     fun existsByMemberIdAndContentIdAndStatus(memberId: Long, contentId: Long, status: PurchaseStatus): Boolean
     fun findByMemberIdAndPaymentId(memberId: Long, paymentId: Long): Purchase?
     fun countByMemberIdAndStatus(memberId: Long, status: PurchaseStatus): Long
+
+    @Query(
+        value = "SELECT COUNT(p) FROM purchase p JOIN content c ON p.content_id = c.id " +
+            "WHERE p.member_id = :memberId AND p.status = :status AND c.type = :type",
+        nativeQuery = true,
+    )
+    fun countByMemberIdAndStatusAndType(memberId: Long, status: String, type: String): Long
     fun findByContentIdInAndStatus(contentIds: List<Long>, status: PurchaseStatus): List<Purchase>
 
     fun findByContentIdInAndStatusOrderByCreatedAtDesc(
