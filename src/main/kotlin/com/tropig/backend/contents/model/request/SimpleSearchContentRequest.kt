@@ -13,6 +13,7 @@ data class SimpleSearchContentRequest(
     val cursorId: Long = 0L,
 
     val size: Int = 15,
+    val excludeContentId: Long? = null,
 ) {
     fun toDto(isAdult: Boolean): SearchContentRequestDto = SearchContentRequestDto(
         searchText = this.searchText,
@@ -23,5 +24,6 @@ data class SimpleSearchContentRequest(
         cursorTitle = this.cursorTitle,
         cursorId = this.cursorId,
         size = this.size,
+        excludeContentId = this.excludeContentId,
     )
 }

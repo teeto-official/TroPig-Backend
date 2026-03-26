@@ -120,6 +120,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val cursorDateAt: LocalDateTime?,
         val cursorTitle: String?,
         val isIncludeTags: Boolean,
+        val excludeContentId: Long? = null,
     )
 
     private fun SearchContentRequestDto.toCommon(): CommonSearchReq = CommonSearchReq(
@@ -131,6 +132,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         cursorDateAt = this.cursorPublishedAt,
         cursorTitle = this.cursorTitle,
         isIncludeTags = !this.tags.isNullOrEmpty(),
+        excludeContentId = this.excludeContentId,
     )
 
     private fun SearchContentRequestDto.sortSpec(): SortSpec = when (this.sortMode) {
@@ -236,6 +238,11 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
         if (!common.isAdult) {
             sql.append("\n  AND c.adult = false")
+        }
+
+        if (common.excludeContentId != null) {
+            sql.append("\n  AND c.id != :excludeContentId")
+            params["excludeContentId"] = common.excludeContentId
         }
 
         appendKeywordClause(sql, params, common.searchText)

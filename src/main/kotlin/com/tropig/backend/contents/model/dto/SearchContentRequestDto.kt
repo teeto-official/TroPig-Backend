@@ -25,4 +25,5 @@ data class SearchContentRequestDto(
     val cursorId: Long = 0L,
 
     val size: Int = 15,
+    val excludeContentId: Long? = null,
 )
