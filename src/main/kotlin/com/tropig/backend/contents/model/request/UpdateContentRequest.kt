@@ -39,4 +39,5 @@ data class UpdateContentRequest(
     val relatedContentIds: List<Long>? = null,
 
     val thumbnail: String? = null,
+    val preventRightClick: Boolean = false,
 )

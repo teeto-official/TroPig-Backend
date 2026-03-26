@@ -30,6 +30,7 @@ data class CreatorContentDetailResponse(
     val nonFreeContent: String? = null,
     val thumbnailPath: String? = null,
     val price: Int,
+    val preventRightClick: Boolean = false,
 )
 
 fun Content.toCreatorContentDetailResponse(
@@ -60,4 +61,5 @@ fun Content.toCreatorContentDetailResponse(
     nonFreeContent = nonFreeContent,
     thumbnailPath = thumbnailPath,
     price = price.toInt(),
+    preventRightClick = preventRightClick,
 )

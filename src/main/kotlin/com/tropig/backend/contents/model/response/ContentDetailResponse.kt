@@ -33,6 +33,7 @@ data class ContentDetailResponse(
     val nonFreeContent: String? = null,
     val isBookmark: Boolean,
     val price: Double,
+    val preventRightClick: Boolean = false,
 )
 
 fun Content.toDetailResponse(
@@ -76,6 +77,7 @@ fun Content.toDetailResponse(
         nonFreeContent = purchasedContent,
         isBookmark = isBookmark,
         price = price,
+        preventRightClick = preventRightClick,
     )
 }
 
