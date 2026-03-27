@@ -1,7 +1,5 @@
 package com.tropig.backend.member.model.response
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.MemberAuthInfo
 import com.tropig.backend.member.enums.Role
@@ -15,8 +13,8 @@ data class MemberResponse(
     val email: String,
     val role: Role,
     val profile: String?,
-    val favoriteGenres: List<Genre>,
-    val favoriteRules: List<Rule>,
+    val favoriteGenres: List<Long>?,
+    val favoriteRules: List<Long>?,
     val bio: String?,
     val isMarketing: Boolean,
     val isAuth: Boolean,
@@ -27,17 +25,20 @@ data class MemberResponse(
     val phoneNumber: String?,
 ) {
     companion object {
-        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse = MemberResponse(
-            member.id,
-            member.nickname,
-            member.snsProvider,
-            member.email,
-            member.role,
-            member.profile,
-            Genre.fromList(member.favoriteGenres),
-            Rule.fromList(member.favoriteRules),
-            member.bio,
-            member.marketingAt != null,
+        fun from(
+            member: Member,
+            memberAuthInfo: MemberAuthInfo?,
+        ): MemberResponse = MemberResponse(
+            id = member.id,
+            nickname = member.nickname,
+            snsProvider = member.snsProvider,
+            email = member.email,
+            role = member.role,
+            profile = member.profile,
+            favoriteGenres = member.favoriteGenres?.split(",")?.map { it.toLong() },
+            favoriteRules = member.favoriteRules?.split(",")?.map { it.toLong() },
+            bio = member.bio,
+            isMarketing = member.marketingAt != null,
             isAuth = (
                 memberAuthInfo?.verifiedAt != null &&
                     memberAuthInfo.verifiedAt.plusDays(365) >= LocalDateTime.now()

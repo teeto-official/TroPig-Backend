@@ -115,10 +115,13 @@ class IdentityVerificationService(
         return try {
             val confirmResponse = portOneClient.confirmVerification(session.portoneId, request.otp)
 
-            // 5. CI/DI 중복 확인
+            // 5. CI/DI 중복 확인 (해시값으로 비교)
             val verifiedCustomer = confirmResponse.verifiedCustomer
-            verifiedCustomer.ci?.let { ci ->
-                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, ci)) {
+            val ciHash = verifiedCustomer.ci?.let { MemberAuthInfo.sha256(it) }
+            val diHash = verifiedCustomer.di?.let { MemberAuthInfo.sha256(it) }
+
+            ciHash?.let { hash ->
+                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, hash)) {
                     throw MemberException(
                         "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.CI_ALREADY_EXISTS,
@@ -126,8 +129,8 @@ class IdentityVerificationService(
                 }
             }
 
-            verifiedCustomer.di?.let { di ->
-                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, di)) {
+            diHash?.let { hash ->
+                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, hash)) {
                     throw MemberException(
                         "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.DI_ALREADY_EXISTS,
@@ -138,14 +141,14 @@ class IdentityVerificationService(
             // 6. 나이 계산
             val isAdult = MemberAuthInfo.isAdult(verifiedCustomer.birthDate)
 
-            // 7. MemberAuthInfo 저장
+            // 7. MemberAuthInfo 저장 (CI/DI는 해시로 저장)
             val authInfo = MemberAuthInfo(
                 memberId = memberId,
                 name = verifiedCustomer.name,
                 birthDate = verifiedCustomer.birthDate,
                 phoneNumber = verifiedCustomer.phoneNumber,
-                ci = verifiedCustomer.ci,
-                di = verifiedCustomer.di,
+                ci = ciHash,
+                di = diHash,
                 verifiedAt = LocalDateTime.now(),
             )
             memberAuthInfoRepository.save(authInfo)
@@ -211,9 +214,12 @@ class IdentityVerificationService(
             val response = portOneClient.getVerification(request.identityVerificationId)
             val verifiedCustomer = response.verifiedCustomer
 
-            // 3. CI/DI 중복 확인
-            verifiedCustomer.ci?.let { ci ->
-                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, ci)) {
+            // 3. CI/DI 중복 확인 (해시값으로 비교)
+            val ciHash = verifiedCustomer.ci?.let { MemberAuthInfo.sha256(it) }
+            val diHash = verifiedCustomer.di?.let { MemberAuthInfo.sha256(it) }
+
+            ciHash?.let { hash ->
+                if (memberAuthInfoRepository.existsByMemberIdNotAndCi(memberId, hash)) {
                     throw MemberException(
                         "이미 다른 계정에서 본인인증이 완료된 정보입니다.",
                         MessageCode.CI_ALREADY_EXISTS,
@@ -221,8 +227,8 @@ class IdentityVerificationService(
                 }
             }
 
-            verifiedCustomer.di?.let { di ->
-                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, di)) {
+            diHash?.let { hash ->
+                if (memberAuthInfoRepository.existsByMemberIdNotAndDi(memberId, hash)) {
                     throw MemberException(
                         "이미 등록된 본인인증 정보입니다.",
                         MessageCode.DI_ALREADY_EXISTS,
@@ -233,11 +239,11 @@ class IdentityVerificationService(
             // 4. 나이 계산
             val isAdult = MemberAuthInfo.isAdult(verifiedCustomer.birthDate)
 
-            // 5. MemberAuthInfo 저장
+            // 5. MemberAuthInfo 저장 (CI/DI는 해시로 저장)
             val authInfo = lastVerified?.let {
                 it.phoneNumber = verifiedCustomer.phoneNumber
-                it.ci = verifiedCustomer.ci
-                it.di = verifiedCustomer.di
+                it.ci = ciHash
+                it.di = diHash
                 it.verifiedAt = LocalDateTime.now()
                 it
             } ?: MemberAuthInfo(
@@ -245,8 +251,8 @@ class IdentityVerificationService(
                 name = verifiedCustomer.name,
                 birthDate = verifiedCustomer.birthDate,
                 phoneNumber = verifiedCustomer.phoneNumber,
-                ci = verifiedCustomer.ci,
-                di = verifiedCustomer.di,
+                ci = ciHash,
+                di = diHash,
                 verifiedAt = LocalDateTime.now(),
             )
             memberAuthInfoRepository.save(authInfo)

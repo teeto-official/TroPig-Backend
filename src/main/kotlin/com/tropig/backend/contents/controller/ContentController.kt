@@ -2,9 +2,8 @@ package com.tropig.backend.contents.controller
 
 import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
-import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
-import com.tropig.backend.common.enums.Rule
+import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.NotFoundException
@@ -69,7 +68,7 @@ class ContentController(
                 writer = writerName[content.writerId] ?: "",
                 tags = content.tags,
                 orderNo = it.orderNo,
-                rule = content.rule,
+                ruleId = content.ruleId,
                 playerCountType = content.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) {
@@ -108,7 +107,7 @@ class ContentController(
                 writer = writerName[it.memberId] ?: "",
                 tags = tags[it.id] ?: emptyList(),
                 orderNo = 0,
-                rule = it.rule,
+                ruleId = it.ruleId,
                 playerCountType = it.playerCountType,
                 isBookmark = isBookmark,
                 publishingType = if (type == ContentType.RESOURCE) it.publishingType else null,
@@ -185,8 +184,8 @@ class ContentController(
                 alias = content.alias,
                 title = content.title,
                 type = content.type,
-                rule = content.rule,
-                genre = content.genre,
+                ruleId = content.ruleId,
+                genreId = content.genreId,
                 writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
                 playerCountType = content.playerCountType,
                 thumbnailPath = ctx.thumbnailPaths[content.id],
@@ -207,10 +206,11 @@ class ContentController(
         val tags = tagService.findAllTags().map {
             SearchTagResponse.TagResponse(it.id, it.name, it.type)
         }
-        val genres = Genre.entries.filter { it.displayName.isNotEmpty() }
-            .map { SearchTagResponse.GenreResponse(it, it.displayName) }
-        val rules = Rule.entries.filter { it.displayName.isNotEmpty() }
-            .map { SearchTagResponse.RuleResponse(it, it.displayName) }
+        val allOptions = contentService.findAllActiveOptions()
+        val genres = allOptions.filter { it.type == OptionType.GENRE }
+            .map { SearchTagResponse.GenreResponse(it.id, it.displayName) }
+        val rules = allOptions.filter { it.type == OptionType.RULE }
+            .map { SearchTagResponse.RuleResponse(it.id, it.displayName) }
         val publishingTypes = PublishingType.entries.filter { it.displayName.isNotEmpty() }
             .map { SearchTagResponse.PublishingTypeResponse(it, it.displayName) }
 
@@ -330,29 +330,22 @@ class ContentController(
                     code = MessageCode.NOT_FOUND_MEMBER,
                 )
 
+            val favoriteGenreIds = memberService.parseFavoriteIds(member.favoriteGenres, OptionType.GENRE)
+            val favoriteRuleIds = memberService.parseFavoriteIds(member.favoriteRules, OptionType.RULE)
+
             when (parsedContentType) {
                 ContentType.SCENARIO -> {
-                    if (recommendType == "GENRE" && !member.favoriteGenres.isNullOrBlank()) {
-                        contentService.getRandomGenreContents(
-                            ContentType.SCENARIO,
-                            member.favoriteGenres!!,
-                            it.adult,
-                            clampedSize,
-                        )
-                    } else if (recommendType == "RULE" && !member.favoriteRules.isNullOrBlank()) {
-                        contentService.getRandomRuleContents(member.favoriteRules!!, it.adult, clampedSize)
+                    if (recommendType == "GENRE" && favoriteGenreIds.isNotEmpty()) {
+                        contentService.getRandomGenreContents(ContentType.SCENARIO, favoriteGenreIds, it.adult, clampedSize)
+                    } else if (recommendType == "RULE" && favoriteRuleIds.isNotEmpty()) {
+                        contentService.getRandomRuleContents(favoriteRuleIds, it.adult, clampedSize)
                     } else {
                         contentService.getRandomContents(ContentType.SCENARIO, it.adult, clampedSize)
                     }
                 }
                 ContentType.RESOURCE -> {
-                    if (!member.favoriteGenres.isNullOrBlank()) {
-                        contentService.getRandomGenreContents(
-                            ContentType.RESOURCE,
-                            member.favoriteGenres!!,
-                            it.adult,
-                            clampedSize,
-                        )
+                    if (favoriteGenreIds.isNotEmpty()) {
+                        contentService.getRandomGenreContents(ContentType.RESOURCE, favoriteGenreIds, it.adult, clampedSize)
                     } else {
                         contentService.getRandomContents(ContentType.RESOURCE, it.adult, clampedSize)
                     }
@@ -399,7 +392,7 @@ class ContentController(
                 writer = writerName[it.memberId] ?: "",
                 tags = tags[it.id] ?: emptyList(),
                 orderNo = 0,
-                rule = it.rule,
+                ruleId = it.ruleId,
                 playerCountType = it.playerCountType,
                 isBookmark = bookmarks[it.id] != null,
                 publishingType = if (contentType == ContentType.RESOURCE) it.publishingType else null,

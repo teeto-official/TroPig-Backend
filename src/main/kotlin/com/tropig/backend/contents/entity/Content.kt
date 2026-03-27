@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.entity
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.*
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
@@ -16,10 +14,8 @@ data class Content(
     @Enumerated(value = EnumType.STRING)
     var type: ContentType,
     val memberId: Long,
-    @Enumerated(value = EnumType.STRING)
-    var rule: Rule,
-    @Enumerated(value = EnumType.STRING)
-    var genre: Genre,
+    var ruleId: Long? = null,
+    var genreId: Long? = null,
     @Enumerated(value = EnumType.STRING)
     var playerCountType: PlayerCountType,
     @Enumerated(value = EnumType.STRING)

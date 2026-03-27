@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.model.request
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.*
 import com.tropig.backend.contents.model.serialize.PublishingInfo
 import jakarta.validation.constraints.*
@@ -11,8 +9,8 @@ data class UpdateContentRequest(
     val title: String?,
     @field:NotNull(message = "타입은 필수입니다.")
     val type: ContentType,
-    val rule: Rule?,
-    val genre: Genre?,
+    val ruleId: Long?,
+    val genreId: Long?,
     val playerCountType: PlayerCountType?,
     val termType: TermType?,
     val publishingType: PublishingType? = null,
