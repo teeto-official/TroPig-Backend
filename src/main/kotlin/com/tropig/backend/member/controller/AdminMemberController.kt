@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 
 @ApiController
-@RequestMapping("/admin/member")
+@RequestMapping("/api/admin/member")
 @Tag(name = "Admin Member", description = "관리자 회원 API")
 class AdminMemberController(
     private val memberService: MemberService,

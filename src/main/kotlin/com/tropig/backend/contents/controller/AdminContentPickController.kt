@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 
 @ApiController
-@RequestMapping("/admin/content")
+@RequestMapping("/api/admin/content")
 class AdminContentPickController(
     private val contentService: ContentService,
     private val pickContentService: PickContentService,
