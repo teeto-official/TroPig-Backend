@@ -198,12 +198,12 @@ class MemberService(
             }
         }
 
-        if (request.favoriteRuleIds.isNotEmpty()) {
-            member.favoriteRules = request.favoriteRuleIds.joinToString(",")
+        if (request.favoriteRules.isNotEmpty()) {
+            member.favoriteRules = request.favoriteRules.joinToString(",")
         }
 
-        if (request.favoriteGenreIds.isNotEmpty()) {
-            member.favoriteGenres = request.favoriteGenreIds.joinToString(",")
+        if (request.favoriteGenres.isNotEmpty()) {
+            member.favoriteGenres = request.favoriteGenres.joinToString(",")
         }
 
         return memberRepository.save(member)
