@@ -19,7 +19,7 @@ interface PurchaseRepository :
     fun countByMemberIdAndStatus(memberId: Long, status: PurchaseStatus): Long
 
     @Query(
-        value = "SELECT COUNT(p) FROM purchase p JOIN content c ON p.content_id = c.id " +
+        value = "SELECT COUNT(1) FROM purchase p JOIN content c ON p.content_id = c.id " +
             "WHERE p.member_id = :memberId AND p.status = :status AND c.type = :type",
         nativeQuery = true,
     )
