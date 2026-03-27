@@ -1,11 +1,15 @@
 package com.tropig.backend.contents.service
 
+import com.tropig.backend.common.enums.Genre
 import com.tropig.backend.common.enums.MessageCode
-import com.tropig.backend.common.enums.OptionType
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.CursorSlice
-import com.tropig.backend.contents.entity.*
+import com.tropig.backend.contents.entity.Content
+import com.tropig.backend.contents.entity.ContentTag
+import com.tropig.backend.contents.entity.ContentThumbnail
+import com.tropig.backend.contents.entity.RelatedContent
 import com.tropig.backend.contents.enums.*
 import com.tropig.backend.contents.model.dto.SearchContentRequestDto
 import com.tropig.backend.contents.model.request.CreateContentRequest
@@ -15,12 +19,12 @@ import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.serialize.toJson
 import com.tropig.backend.contents.repository.ContentRepository
-import com.tropig.backend.contents.repository.ContentOptionRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
 import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
@@ -34,7 +38,6 @@ class ContentService(
     private val contentThumbnailRepository: ContentThumbnailRepository,
     private val tagRepository: TagRepository,
     private val relatedContentRepository: RelatedContentRepository,
-    private val contentOptionRepository: ContentOptionRepository,
     private val s3Service: S3Service,
 ) {
     fun findById(id: Long): Content? = contentRepository.findById(id).getOrNull()
@@ -65,7 +68,7 @@ class ContentService(
                 thumbnailPath = s3Service.toUrl(thumbnails[it.id]?.path),
                 writerId = it.memberId,
                 tags = tags[it.id] ?: emptyList(),
-                ruleId = it.ruleId,
+                rule = it.rule,
                 playerCountType = it.playerCountType,
                 publishingType = it.publishingType,
                 publishingInfo = it.publishingInfo,
@@ -129,16 +132,18 @@ class ContentService(
     @Transactional
     fun createContent(request: CreateContentRequest, memberId: Long, writerNickname: String): Content {
         // 1. Content 엔티티 생성 (임시 ID로 alias 생성)
-        val genre = findAllActiveOptions().find { request.genreId == it.id && it.type == OptionType.GENRE }
-        val rule = findAllActiveOptions().find { request.ruleId == it.id && it.type == OptionType.RULE }
-
         val tempContent = Content(
             alias = "", // 임시값, 저장 후 업데이트
             title = request.title ?: "",
             type = request.type,
             memberId = memberId,
-            ruleId = if (request.type == ContentType.SCENARIO) rule?.id else null,
-            genreId = genre?.id,
+            rule =
+                if (request.type == ContentType.SCENARIO) {
+                    request.rule!!
+                } else {
+                    Rule.RESOURCE
+                },
+            genre = request.genre ?: Genre.NONE,
             playerCountType = request.playerCountType ?: PlayerCountType.NONE,
             termType = request.termType ?: TermType.NONE,
             publishingType = request.publishingType ?: PublishingType.SCENARIO,
@@ -234,13 +239,12 @@ class ContentService(
                 .map { it.name }
         } ?: emptyList()
 
-
         val searchTextParts = mutableListOf<String>()
         searchTextParts.add(writerNickname)
         searchTextParts.add(savedContent.title)
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(request.genre?.displayName ?: "")
+        searchTextParts.add(request.rule?.displayName ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
@@ -281,11 +285,8 @@ class ContentService(
         // 3. Content 필드 업데이트 (alias는 수정하지 않음)
         request.title?.let { content.title = it }
 
-        val genre = findAllActiveOptions().find { request.genreId == it.id && it.type == OptionType.GENRE }
-        val rule = findAllActiveOptions().find { request.ruleId == it.id && it.type == OptionType.RULE }
-
-        content.ruleId = if (request.type == ContentType.SCENARIO) rule?.id else null
-        request.genreId?.let { content.genreId = genre?.id }
+        content.rule = if (request.type == ContentType.SCENARIO) request.rule ?: Rule.NONE else Rule.RESOURCE
+        request.genre?.let { content.genre = it }
         request.playerCountType?.let { content.playerCountType = it }
         request.termType?.let { content.termType = it }
         content.publishingType =
@@ -450,8 +451,8 @@ class ContentService(
         searchTextParts.add(writerNickname)
         searchTextParts.add(content.title)
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(request.genre?.displayName ?: "")
+        searchTextParts.add(request.rule?.displayName ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
@@ -518,33 +519,37 @@ class ContentService(
         return save(content)
     }
 
-    fun getRandomGenreContents(type: ContentType, genreIds: List<Long>, isAdult: Boolean, size: Int = 8): List<Content> {
-        val selectedIds = genreIds.shuffled().take(3)
+    fun getRandomGenreContents(type: ContentType, genres: String, isAdult: Boolean, size: Int = 8): List<Content> {
+        val genreList = Genre.fromList(genres)
+            .filter { it != Genre.NONE && it != Genre.RESOURCE }
+            .shuffled()
+            .take(3)
 
-        if (selectedIds.isEmpty()) {
+        if (genreList.isEmpty()) {
             return getRandomContents(type, isAdult, size)
         }
 
-        return selectedIds
+        return genreList
             .flatMap { contentRepository.findRandomGenreContents(type, it, isAdult) }
             .shuffled()
             .take(size)
     }
 
-    fun getRandomRuleContents(ruleIds: List<Long>, isAdult: Boolean, size: Int = 8): List<Content> {
-        val selectedIds = ruleIds.shuffled().take(3)
+    fun getRandomRuleContents(rules: String, isAdult: Boolean, size: Int = 8): List<Content> {
+        val ruleList = Rule.fromList(rules)
+            .filter { it != Rule.NONE && it != Rule.RESOURCE }
+            .shuffled()
+            .take(3)
 
-        if (selectedIds.isEmpty()) {
+        if (ruleList.isEmpty()) {
             return getRandomContents(ContentType.SCENARIO, isAdult, size)
         }
 
-        return selectedIds
+        return ruleList
             .flatMap { contentRepository.findRandomRuleContents(it, isAdult) }
             .shuffled()
             .take(size)
     }
-
-    fun findAllActiveOptions(): List<ContentOption> = contentOptionRepository.findAllByShowTrue()
 
     fun getRandomContents(type: ContentType, isAdult: Boolean, size: Int = 8): List<Content> =
         contentRepository.findRandomContents(type, isAdult).shuffled().take(size)
@@ -590,8 +595,8 @@ class ContentService(
     fun validatePublishing(content: Content) {
         if (content.status == ContentsStatus.PUBLISHED) {
             check(content.title.isNotEmpty())
-            if (content.type == ContentType.SCENARIO) check(content.ruleId != null)
-            check(content.genreId != null)
+            check(content.rule != Rule.NONE)
+            check(content.genre != Genre.NONE)
             check(content.playerCountType != PlayerCountType.NONE)
             check(content.termType != TermType.NONE)
         }

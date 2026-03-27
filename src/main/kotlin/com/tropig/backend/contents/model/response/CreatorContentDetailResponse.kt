@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.model.response
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
@@ -16,8 +18,8 @@ data class CreatorContentDetailResponse(
     val writer: WriterInfo,
     val publishedAt: LocalDateTime?,
     val title: String,
-    val ruleId: Long?,
-    val genreId: Long?,
+    val rule: Rule?,
+    val genre: Genre,
     val level: Int?,
     val playerCountType: PlayerCountType,
     val termType: TermType,
@@ -42,13 +44,18 @@ fun Content.toCreatorContentDetailResponse(
     writer = writer,
     publishedAt = publishedAt,
     title = title,
-    ruleId = if (type == ContentType.SCENARIO) ruleId else null,
-    genreId = genreId,
+    rule = if (type == ContentType.SCENARIO) rule else null,
+    genre = genre,
     level = if (type == ContentType.SCENARIO) level else null,
     playerCountType = playerCountType,
     termType = termType,
     tags = tags,
-    publishingType = if (type == ContentType.RESOURCE) publishingType else null,
+    publishingType =
+    if (type == ContentType.RESOURCE) {
+        publishingType
+    } else {
+        null
+    },
     publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
     freeContent = freeContent,
     nonFreeContent = nonFreeContent,

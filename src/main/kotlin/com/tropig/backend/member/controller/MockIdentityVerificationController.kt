@@ -50,13 +50,10 @@ class MockIdentityVerificationController(
         val testBirthDate = "1995-01-01"
         val isAdult = MemberAuthInfo.isAdult(testBirthDate)
 
-        val mockCiHash = MemberAuthInfo.sha256("MOCK_CI_${UUID.randomUUID()}")
-        val mockDiHash = MemberAuthInfo.sha256("MOCK_DI_${UUID.randomUUID()}")
-
         val authInfo = lastVerified?.let {
             it.phoneNumber = "01012345678"
-            it.ci = mockCiHash
-            it.di = mockDiHash
+            it.ci = "MOCK_CI_${UUID.randomUUID()}"
+            it.di = "MOCK_DI_${UUID.randomUUID()}"
             it.verifiedAt = LocalDateTime.now()
             it
         } ?: MemberAuthInfo(
@@ -64,8 +61,8 @@ class MockIdentityVerificationController(
             name = "테스트유저",
             birthDate = testBirthDate,
             phoneNumber = "01012345678",
-            ci = mockCiHash,
-            di = mockDiHash,
+            ci = "MOCK_CI_${UUID.randomUUID()}",
+            di = "MOCK_DI_${UUID.randomUUID()}",
             verifiedAt = LocalDateTime.now(),
         )
         memberAuthInfoRepository.save(authInfo)

@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.model.response
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
@@ -19,8 +21,8 @@ data class ContentDetailResponse(
     val thumbnailPath: String?,
     val publishedAt: LocalDateTime?,
     val title: String,
-    val ruleId: Long?,
-    val genreId: Long?,
+    val rule: Rule,
+    val genre: Genre,
     val level: Int,
     val playerCountType: PlayerCountType,
     val termType: TermType,
@@ -63,8 +65,8 @@ fun Content.toDetailResponse(
         thumbnailPath = thumbnailPath,
         publishedAt = publishedAt,
         title = title,
-        ruleId = ruleId,
-        genreId = genreId,
+        rule = rule,
+        genre = genre,
         level = level,
         playerCountType = playerCountType,
         termType = termType,

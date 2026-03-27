@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.model.result
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
 import java.time.LocalDateTime
@@ -10,8 +12,8 @@ data class SearchContentResult(
     val title: String,
     val type: ContentType,
     val memberId: Long,
-    val ruleId: Long?,
-    val genreId: Long?,
+    val rule: Rule,
+    val genre: Genre,
     val playerCountType: PlayerCountType,
     val adult: Boolean,
     val publishedAt: LocalDateTime,

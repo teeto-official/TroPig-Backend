@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.repository
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
@@ -42,15 +44,15 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         )
     }
 
-//    @Cacheable(cacheNames = ["randomGenreContents"], key = "#type.name + '_' + #genreId + '_' + #isAdult")
-    override fun findRandomGenreContents(type: ContentType, genreId: Long, isAdult: Boolean): List<Content> {
+//    @Cacheable(cacheNames = ["randomGenreContents"], key = "#type.name + '_' + #genre.name + '_' + #isAdult")
+    override fun findRandomGenreContents(type: ContentType, genre: Genre, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
             WHERE
                 c.type = :type
             AND c.status = :status
-            AND c.genre_id = :genreId
+            AND c.genre = :genre
             {adultCondition}
             ORDER BY RANDOM()
         """.trimIndent()
@@ -58,22 +60,22 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val params = mutableMapOf<String, Any?>(
             "type" to type.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "genreId" to genreId,
+            "genre" to genre.name,
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
         return executeRandomList(sql, params)
     }
 
-//    @Cacheable(cacheNames = ["randomRuleContents"], key = "#ruleId + '_' + #isAdult")
-    override fun findRandomRuleContents(ruleId: Long, isAdult: Boolean): List<Content> {
+//    @Cacheable(cacheNames = ["randomRuleContents"], key = "#rule.name + '_' + #isAdult")
+    override fun findRandomRuleContents(rule: Rule, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
             FROM content c
             WHERE
                 c.type = :type
             AND c.status = :status
-            AND c.rule_id = :ruleId
+            AND c.rule = :rule
             {adultCondition}
             ORDER BY RANDOM()
         """.trimIndent()
@@ -81,7 +83,7 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         val params = mutableMapOf<String, Any?>(
             "type" to ContentType.SCENARIO.name,
             "status" to ContentsStatus.PUBLISHED.name,
-            "ruleId" to ruleId,
+            "rule" to rule.name,
         )
 
         sql = sql.replace("{adultCondition}", if (isAdult) "" else "AND c.adult = false")
@@ -147,8 +149,8 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         MutableMap<String, Any?>,
     ) -> Unit =
         { sql, params ->
-            appendInEnum(sql, params, "c.rule_id", "ruleIds", this.ruleIds)
-            appendInEnum(sql, params, "c.genre_id", "genreIds", this.genreIds)
+            appendInEnum(sql, params, "c.rule", "rules", this.rules)
+            appendInEnum(sql, params, "c.genre", "genres", this.genres)
             appendInEnum(sql, params, "c.player_count_type", "playerCountTypes", this.playerCountTypes)
 
             // tag 필터가 있으면 ct 조인이 필요 (buildBase...에서 isIncludeTags로 조인 여부 결정)

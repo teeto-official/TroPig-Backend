@@ -202,8 +202,8 @@ class CreatorController(
                 title = it.title,
                 type = it.type,
                 status = it.status,
-                ruleId = it.ruleId,
-                genreId = it.genreId,
+                rule = it.rule,
+                genre = it.genre,
                 writer = authMember.nickname,
                 playerCountType = it.playerCountType,
                 thumbnailPath = thumbnailPaths[it.id],
@@ -308,7 +308,7 @@ class CreatorController(
             SimpleSearchContentResponse(
                 id = content.id,
                 title = content.title,
-                ruleId = content.ruleId,
+                rule = content.rule,
                 writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
                 thumbnailPath = ctx.thumbnailPaths[content.id],
             )

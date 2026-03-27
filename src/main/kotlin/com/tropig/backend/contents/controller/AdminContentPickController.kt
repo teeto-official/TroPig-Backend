@@ -5,11 +5,8 @@ import com.tropig.backend.contents.entity.PickContent
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.model.request.AdminPickContentRequest
 import com.tropig.backend.contents.model.response.AdminPickContentResponse
-import com.tropig.backend.contents.service.ContentMigrationService
 import com.tropig.backend.contents.service.ContentService
-import com.tropig.backend.contents.service.MigrateContentTagResult
 import com.tropig.backend.contents.service.PickContentService
-import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam
 class AdminContentPickController(
     private val contentService: ContentService,
     private val pickContentService: PickContentService,
-    private val contentMigrationService: ContentMigrationService,
 ) {
 
     companion object {
@@ -53,13 +49,4 @@ class AdminContentPickController(
             )
         }
     }
-
-    @PostMapping("/migrate/rule-genre")
-    @Operation(
-        summary = "콘텐츠 rule/genre ID 마이그레이션",
-        description = "content 테이블의 구 rule/genre 컬럼(enum 이름)을 rule_id/genre_id(content_option ID)로 일괄 변환합니다. " +
-            "완료 후 content_tag_master_cleanup.sql을 실행하여 구 컬럼을 삭제하세요.",
-    )
-    fun migrateRuleAndGenre(): MigrateContentTagResult =
-        contentMigrationService.migrateRuleAndGenreToIds()
 }

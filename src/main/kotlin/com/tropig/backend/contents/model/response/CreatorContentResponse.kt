@@ -1,5 +1,7 @@
 package com.tropig.backend.contents.model.response
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.enums.PlayerCountType
@@ -13,8 +15,8 @@ data class CreatorContentResponse(
     val title: String,
     val type: ContentType,
     val status: ContentsStatus,
-    val ruleId: Long?,
-    val genreId: Long?,
+    val rule: Rule,
+    val genre: Genre,
     val writer: String,
     val playerCountType: PlayerCountType,
     val thumbnailPath: String?,

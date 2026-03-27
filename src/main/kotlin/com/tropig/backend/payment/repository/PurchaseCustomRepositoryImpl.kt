@@ -1,5 +1,7 @@
 package com.tropig.backend.payment.repository
 
+import com.tropig.backend.common.enums.Genre
+import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.enums.ContentType
@@ -29,7 +31,7 @@ class PurchaseCustomRepositoryImpl(@PersistenceContext private val em: EntityMan
         val sql = StringBuilder(
             """
             SELECT p.id AS p_id, p.created_at AS p_created_at, p.amount AS p_amount,
-                   c.id, c.alias, c.title, c.type, c.member_id, c.rule_id, c.genre_id,
+                   c.id, c.alias, c.title, c.type, c.member_id, c.rule, c.genre,
                    c.player_count_type, c.term_type, c.publishing_type, c.publishing_info,
                    c.status, c.adult, c.published_at, c.free_content, c.non_free_content,
                    c.price, c.level, c.search_text, c.prevent_right_click,
@@ -112,8 +114,8 @@ class PurchaseCustomRepositoryImpl(@PersistenceContext private val em: EntityMan
                     title = r[5] as String,
                     type = ContentType.valueOf(r[6] as String),
                     memberId = (r[7] as Number).toLong(),
-                    ruleId = (r[8] as? Number)?.toLong(),
-                    genreId = (r[9] as? Number)?.toLong(),
+                    rule = Rule.valueOf(r[8] as String),
+                    genre = Genre.valueOf(r[9] as String),
                     playerCountType = PlayerCountType.valueOf(r[10] as String),
                     publishingType = PublishingType.valueOf(r[12] as String),
                     publishedAt = (r[16] as? Timestamp)?.toLocalDateTime(),

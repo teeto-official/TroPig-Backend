@@ -51,9 +51,6 @@ class CacheConfig {
                     "nicknameComponent" -> Caffeine.newBuilder()
                         .expireAfterWrite(30, TimeUnit.MINUTES) // TTL 30분 (닉네임 리스트는 자주 변경되지 않음)
 
-                    "contentOptions" -> Caffeine.newBuilder()
-                        .expireAfterWrite(1, TimeUnit.HOURS)
-
                     // 크리에이터 발행된 작품 조회 캐시
                     // TODO: 추후 Redis로 변경. 현재는 캐싱 삭제
 //                    "creatorContentsByMember" -> Caffeine.newBuilder()

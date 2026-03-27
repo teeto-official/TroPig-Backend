@@ -3,7 +3,6 @@ package com.tropig.backend.member.entity
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
-import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.time.Period
 import java.time.format.DateTimeFormatter
@@ -38,11 +37,11 @@ data class MemberAuthInfo(
     @Column(name = "phone_number", nullable = false, length = 11)
     var phoneNumber: String, // 01012345678 format (no hyphens)
 
-    @Column(length = 64, unique = true)
-    var ci: String? = null, // SHA-256 hash of CI
+    @Column(length = 200, unique = true)
+    var ci: String? = null, // Correlation ID (encrypted for privacy)
 
-    @Column(length = 64, unique = true)
-    var di: String? = null, // SHA-256 hash of DI
+    @Column(length = 200, unique = true)
+    var di: String? = null, // Site-specific ID (encrypted for privacy)
 
     @Column(name = "verified_at", nullable = false)
     var verifiedAt: LocalDateTime,
@@ -90,15 +89,6 @@ data class MemberAuthInfo(
          * 성인 여부를 판단합니다 (만 19세 이상).
          */
         fun isAdult(birthDate: String): Boolean = calculateAge(birthDate) >= 19
-
-        /**
-         * SHA-256 해시를 생성합니다 (CI/DI 단방향 해시 저장용).
-         */
-        fun sha256(value: String): String {
-            val digest = MessageDigest.getInstance("SHA-256")
-            val hashBytes = digest.digest(value.toByteArray(Charsets.UTF_8))
-            return hashBytes.joinToString("") { "%02x".format(it) }
-        }
     }
 
     /**
