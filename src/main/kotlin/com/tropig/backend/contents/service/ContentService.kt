@@ -156,6 +156,7 @@ class ContentService(
             price = request.price,
             level = request.level ?: 0,
             searchText = "", // 임시값, 나중에 업데이트
+            preventRightClick = request.preventRightClick,
         )
         validatePublishing(tempContent)
 
@@ -302,6 +303,7 @@ class ContentService(
         content.freeContent = request.freeContent
         content.price = request.price
         content.level = request.level ?: 0
+        content.preventRightClick = request.preventRightClick
 
         validatePublishing(content)
 

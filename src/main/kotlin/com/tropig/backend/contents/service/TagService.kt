@@ -18,7 +18,6 @@ class TagService(private val contentTagRepository: ContentTagRepository, private
     @Cacheable(cacheNames = ["tagList"])
     fun findAllTags(): List<Tag> = tagRepository.findAll()
 
-    @Cacheable(cacheNames = ["contentTags"], key = "#contentId")
     fun findByContentId(contentId: Long): List<TagDto> = contentTagRepository.findByContentId(contentId)
         .map { TagDto(it.tagId, it.type, it.name) }
 }
