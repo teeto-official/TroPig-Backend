@@ -1,7 +1,5 @@
 package com.tropig.backend.payment.model.result
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
 import com.tropig.backend.contents.enums.PublishingType
@@ -12,8 +10,8 @@ data class PurchasedContentData(
     val alias: String,
     val title: String,
     val type: ContentType,
-    val rule: Rule,
-    val genre: Genre,
+    val ruleId: Long?,
+    val genreId: Long?,
     val memberId: Long,
     val playerCountType: PlayerCountType,
     val publishingType: PublishingType,

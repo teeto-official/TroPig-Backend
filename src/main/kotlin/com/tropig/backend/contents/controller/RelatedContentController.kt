@@ -55,7 +55,7 @@ class RelatedContentController(
             id = content.id,
             title = content.title,
             alias = content.alias,
-            rule = content.rule,
+            ruleId = content.ruleId,
             playerCountType = content.playerCountType,
             thumbnailPath = s3Service.toUrl(thumbnailPaths[content.id]),
             tags = tagsByContentId[content.id].orEmpty(),

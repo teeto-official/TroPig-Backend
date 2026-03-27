@@ -42,10 +42,10 @@ data class Member(
     var deletedAt: LocalDateTime? = null
 
     @Column(nullable = true)
-    var favoriteGenres: String? = null
+    var favoriteGenres: String? = null  // content_option ID 콤마 구분 (예: "1,5,12")
 
     @Column(nullable = true)
-    var favoriteRules: String? = null
+    var favoriteRules: String? = null   // content_option ID 콤마 구분 (예: "3,7")
 
     var profile: String? = null
 

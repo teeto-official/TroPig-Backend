@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.repository
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
@@ -13,9 +11,9 @@ interface ContentCustomRepository {
     fun searchContents(request: SearchContentRequestDto): CursorSlice<Content>
     fun countSearchContents(request: SearchContentRequestDto): CountSearchContentsResult
 
-    fun findRandomGenreContents(type: ContentType, genre: Genre, isAdult: Boolean): List<Content>
+    fun findRandomGenreContents(type: ContentType, genreId: Long, isAdult: Boolean): List<Content>
 
-    fun findRandomRuleContents(rule: Rule, isAdult: Boolean): List<Content>
+    fun findRandomRuleContents(ruleId: Long, isAdult: Boolean): List<Content>
 
     fun findRandomContents(type: ContentType, isAdult: Boolean): List<Content>
 }
