@@ -1,10 +1,12 @@
 package com.tropig.backend.member.service
 
 import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.IllegalArgumentException
 import com.tropig.backend.common.exception.MemberException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.util.StringUtil
+import com.tropig.backend.contents.repository.ContentOptionRepository
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.member.enums.Role
@@ -31,6 +33,7 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val memberAuthInfoRepository: MemberAuthInfoRepository,
     private val withdrawMemberRepository: WithdrawMemberRepository,
+    private val contentOptionRepository: ContentOptionRepository,
     private val contentRepository: ContentRepository,
     private val s3Service: S3Service,
     private val jwtTokenProvider: JwtTokenProvider,
@@ -40,6 +43,8 @@ class MemberService(
     companion object {
         private const val REJOIN_DAYS: Long = 7
     }
+
+    fun saveMember(member: Member) = memberRepository.save(member)
 
     fun getUserByEmail(email: String): Member? = memberRepository.findByEmail(email)
 
@@ -161,14 +166,6 @@ class MemberService(
             request.nickname?.let { this.nickname = it }
             request.bio?.let { this.bio = it }
 
-            if (request.favoriteRules.isNotEmpty()) {
-                this.favoriteRules = request.favoriteRules.joinToString(",")
-            }
-
-            if (request.favoriteGenres.isNotEmpty()) {
-                this.favoriteGenres = request.favoriteGenres.joinToString(",")
-            }
-
             request.profile?.let {
                 val profilePath = s3Service.uploadFile(
                     it.inputStream,
@@ -201,6 +198,14 @@ class MemberService(
             }
         }
 
+        if (request.favoriteRuleIds.isNotEmpty()) {
+            member.favoriteRules = request.favoriteRuleIds.joinToString(",")
+        }
+
+        if (request.favoriteGenreIds.isNotEmpty()) {
+            member.favoriteGenres = request.favoriteGenreIds.joinToString(",")
+        }
+
         return memberRepository.save(member)
     }
 
@@ -220,6 +225,68 @@ class MemberService(
         // 7일간 보관용
         it.deletedAt = LocalDateTime.now()
         it
+    }
+
+    /**
+     * 저장된 즐겨찾기 문자열을 ID 목록으로 변환합니다.
+     * - 신규 형식 (숫자 콤마): "1,5,12" → [1, 5, 12]
+     * - 구 형식 (enum 이름 콤마): "ROMANCE,HORROR" → content_option 조회 후 ID로 치환
+     */
+    fun parseFavoriteIds(raw: String?, type: OptionType): List<Long> {
+        if (raw.isNullOrBlank()) return emptyList()
+        val tokens = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        val ids = tokens.mapNotNull { it.toLongOrNull() }
+        if (ids.size == tokens.size) return ids  // 이미 모두 숫자
+
+        val nameToId = contentOptionRepository.findAllByType(type).associate { it.name to it.id }
+        return tokens.mapNotNull { token ->
+            token.toLongOrNull() ?: nameToId[token]
+        }
+    }
+
+    /**
+     * 전체 회원의 favoriteGenres/favoriteRules를 구 enum 이름에서 content_option ID로 일괄 변환합니다.
+     * 이미 숫자 형식인 경우 건너뜁니다.
+     * @return 실제로 변환된 회원 수
+     */
+    @Transactional
+    fun migrateFavoriteTagsToIds(): Int {
+        val genreNameToId = contentOptionRepository.findAllByType(OptionType.GENRE).associate { it.name to it.id }
+        val ruleNameToId = contentOptionRepository.findAllByType(OptionType.RULE).associate { it.name to it.id }
+
+        val allMembers = memberRepository.findAll()
+        var migratedCount = 0
+
+        allMembers.forEach { member ->
+            var changed = false
+
+            val genres = member.favoriteGenres
+            if (!genres.isNullOrBlank() && genres.split(",").any { it.trim().toLongOrNull() == null }) {
+                member.favoriteGenres = genres.split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .mapNotNull { token -> token.toLongOrNull() ?: genreNameToId[token] }
+                    .joinToString(",")
+                changed = true
+            }
+
+            val rules = member.favoriteRules
+            if (!rules.isNullOrBlank() && rules.split(",").any { it.trim().toLongOrNull() == null }) {
+                member.favoriteRules = rules.split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .mapNotNull { token -> token.toLongOrNull() ?: ruleNameToId[token] }
+                    .joinToString(",")
+                changed = true
+            }
+
+            if (changed) {
+                memberRepository.save(member)
+                migratedCount++
+            }
+        }
+
+        return migratedCount
     }
 
     private fun makeNickname(): String {

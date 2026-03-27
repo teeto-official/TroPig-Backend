@@ -8,6 +8,7 @@ import com.tropig.backend.contents.model.response.RelatedContentItemResponse
 import com.tropig.backend.contents.model.response.RelatedContentsResponse
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.RelatedContentService
+import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
 import com.tropig.backend.member.service.CreatorService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -22,6 +23,7 @@ class RelatedContentController(
     private val creatorService: CreatorService,
     private val tagService: TagService,
     private val contentService: ContentService,
+    private val s3Service: S3Service,
 ) {
 
     @GetMapping("/related/{contentId}")
@@ -53,9 +55,9 @@ class RelatedContentController(
             id = content.id,
             title = content.title,
             alias = content.alias,
-            rule = content.rule,
+            ruleId = content.ruleId,
             playerCountType = content.playerCountType,
-            thumbnailPath = thumbnailPaths[content.id],
+            thumbnailPath = s3Service.toUrl(thumbnailPaths[content.id]),
             tags = tagsByContentId[content.id].orEmpty(),
             writer = writerNames[content.memberId] ?: "탈퇴한 작가입니다.",
             price = content.price.toInt(),

@@ -4,6 +4,7 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
+import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.service.ContentService
@@ -52,6 +53,8 @@ class MemberController(
 
         val memberAuthInfo = memberService.findMemberAuthInfo(memberId = member.id)
         val updatedMember = memberService.updateUser(member, request)
+//        val favoriteGenreIds = memberService.parseFavoriteIds(updatedMember.favoriteGenres, OptionType.GENRE)
+//        val favoriteRuleIds = memberService.parseFavoriteIds(updatedMember.favoriteRules, OptionType.RULE)
         return MemberResponse.from(updatedMember, memberAuthInfo)
             .let { it.copy(profile = s3Service.toUrl(it.profile)) }
     }

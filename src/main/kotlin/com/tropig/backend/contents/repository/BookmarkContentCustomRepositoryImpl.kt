@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.repository
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.common.enums.SortMode
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.enums.ContentType
@@ -31,8 +29,8 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 c.id,
                 c.alias,
                 c.title,
-                c.rule,
-                c.genre,
+                c.rule_id,
+                c.genre_id,
                 c.member_id,
                 c.player_count_type,
                 c.publishing_type,
@@ -105,8 +103,8 @@ class BookmarkContentCustomRepositoryImpl(@PersistenceContext private val em: En
                 id = (r[0] as Number).toLong(),
                 alias = r[1] as String,
                 title = r[2] as String,
-                rule = Rule.valueOf(r[3] as String),
-                genre = Genre.valueOf(r[4] as String),
+                ruleId = (r[3] as? Number)?.toLong(),
+                genreId = (r[4] as? Number)?.toLong(),
                 memberId = (r[5] as Number).toLong(),
                 playerCountType = PlayerCountType.valueOf(r[6] as String),
                 publishingType = (r[7] as? String)?.let { PublishingType.valueOf(it) },

@@ -105,8 +105,12 @@ class PaymentController(
     @RequireAuth
     @GetMapping("/purchase/count")
     @Operation(summary = "구매 건수 조회", description = "회원의 총 구매 건수를 조회합니다.")
-    fun getPurchaseCount(@LoginMember authMember: AuthMember): ResponseEntity<Map<String, Long>> {
-        val count = paymentContentService.getPurchaseCount(authMember.memberId)
+    fun getPurchaseCount(
+        @LoginMember authMember: AuthMember,
+        @Parameter(name = "type", description = "type. 없으면 전체 타입", `in` = ParameterIn.QUERY)
+        type: ContentType? = null,
+    ): ResponseEntity<Map<String, Long>> {
+        val count = paymentContentService.getPurchaseCount(authMember.memberId, type)
         return ResponseEntity.ok(mapOf("count" to count))
     }
 
@@ -115,7 +119,9 @@ class PaymentController(
     @Operation(summary = "구매한 컨텐츠 목록 조회", description = "회원이 구매한 컨텐츠 목록을 조회합니다.")
     fun getPurchasedContents(
         @LoginMember authMember: AuthMember,
-        @Parameter(name = "cursorId", description = "커서 bookmarkId", `in` = ParameterIn.QUERY)
+        @Parameter(name = "type", description = "type. 없으면 전체 타입", `in` = ParameterIn.QUERY)
+        type: ContentType? = null,
+        @Parameter(name = "cursorId", description = "커서 purchaseId", `in` = ParameterIn.QUERY)
         cursorId: Long? = null,
         @Parameter(name = "cursorCreatedAt", description = "커서 등록일자", `in` = ParameterIn.QUERY)
         cursorCreatedAt: LocalDateTime? = null,
@@ -133,6 +139,7 @@ class PaymentController(
         size: Int = 15,
     ): CursorSlice<PurchasedContentListResponse> {
         val request = PurchasedContentListRequest(
+            type = type,
             sortMode = sortMode,
             cursorCreatedAt = cursorCreatedAt,
             cursorId = cursorId ?: 0,
@@ -166,8 +173,8 @@ class PaymentController(
                 alias = content.alias,
                 title = content.title,
                 type = content.type,
-                rule = content.rule,
-                genre = content.genre,
+                ruleId = content.ruleId,
+                genreId = content.genreId,
                 writer = ctx.nickByMemberId[content.memberId] ?: "탈퇴한 작가입니다.",
                 playerCountType = content.playerCountType,
                 thumbnailPath = ctx.thumbnailPaths[content.id],

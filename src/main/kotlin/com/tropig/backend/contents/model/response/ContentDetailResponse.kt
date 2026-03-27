@@ -1,7 +1,5 @@
 package com.tropig.backend.contents.model.response
 
-import com.tropig.backend.common.enums.Genre
-import com.tropig.backend.common.enums.Rule
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.contents.enums.PlayerCountType
@@ -21,8 +19,8 @@ data class ContentDetailResponse(
     val thumbnailPath: String?,
     val publishedAt: LocalDateTime?,
     val title: String,
-    val rule: Rule,
-    val genre: Genre,
+    val ruleId: Long?,
+    val genreId: Long?,
     val level: Int,
     val playerCountType: PlayerCountType,
     val termType: TermType,
@@ -33,6 +31,7 @@ data class ContentDetailResponse(
     val nonFreeContent: String? = null,
     val isBookmark: Boolean,
     val price: Double,
+    val preventRightClick: Boolean = false,
 )
 
 fun Content.toDetailResponse(
@@ -64,8 +63,8 @@ fun Content.toDetailResponse(
         thumbnailPath = thumbnailPath,
         publishedAt = publishedAt,
         title = title,
-        rule = rule,
-        genre = genre,
+        ruleId = ruleId,
+        genreId = genreId,
         level = level,
         playerCountType = playerCountType,
         termType = termType,
@@ -76,6 +75,7 @@ fun Content.toDetailResponse(
         nonFreeContent = purchasedContent,
         isBookmark = isBookmark,
         price = price,
+        preventRightClick = preventRightClick,
     )
 }
 

@@ -59,8 +59,8 @@ class RelatedContentService(
                     }
 
                 RelatedContentsResult(
-                    scenarios = relatedScenarios,
-                    resources = relatedResources,
+                    scenarios = relatedScenarios.filter { it.status == ContentsStatus.PUBLISHED },
+                    resources = relatedResources.filter { it.status == ContentsStatus.PUBLISHED },
                 )
             }
 
