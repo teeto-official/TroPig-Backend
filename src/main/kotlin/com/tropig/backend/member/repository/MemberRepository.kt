@@ -8,11 +8,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface MemberRepository : JpaRepository<Member, Long> {
-    fun findByEmail(email: String): Member?
+    fun findByEmailHash(emailHash: String): Member?
 
-    fun existsByEmail(email: String): Boolean
+    fun existsByEmailHash(emailHash: String): Boolean
 
-    fun findBySnsIdAndSnsProviderAndEmail(snsId: String, snsProvider: SnsProvider, email: String): Member?
+    fun findBySnsIdAndSnsProviderAndEmailHash(snsId: String, snsProvider: SnsProvider, emailHash: String): Member?
 
     fun findByIdInAndRoleAndDeletedAtIsNull(ids: List<Long>, role: Role): List<Member>
 

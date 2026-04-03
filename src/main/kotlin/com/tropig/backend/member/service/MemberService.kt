@@ -9,9 +9,9 @@ import com.tropig.backend.common.util.StringUtil
 import com.tropig.backend.contents.repository.ContentOptionRepository
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.service.S3Service
-import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.MemberAuthInfo
+import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.entity.WithdrawMember
 import com.tropig.backend.member.model.request.SignInRequest
 import com.tropig.backend.member.model.request.SignUpRequest
@@ -46,7 +46,7 @@ class MemberService(
 
     fun saveMember(member: Member) = memberRepository.save(member)
 
-    fun getUserByEmail(email: String): Member? = memberRepository.findByEmail(email)
+    fun getUserByEmail(email: String): Member? = memberRepository.findByEmailHash(Member.sha256(email))
 
     fun getUserById(id: Long): Member? = memberRepository.findMemberByIdAndDeletedAtIsNull(id)
 
@@ -54,7 +54,7 @@ class MemberService(
 
     @Transactional
     fun createMember(request: SignUpRequest): Member {
-        memberRepository.findByEmail(request.email)?.let {
+        memberRepository.findByEmailHash(Member.sha256(request.email))?.let {
             it.deletedAt?.let { date ->
                 if (date.plusDays(REJOIN_DAYS) >= LocalDateTime.now()) {
                     // 탈퇴일로부터 7일이 지나지 않음
@@ -124,10 +124,10 @@ class MemberService(
     }
 
     private fun loginMember(request: SignInRequest): Member {
-        val member = memberRepository.findBySnsIdAndSnsProviderAndEmail(
+        val member = memberRepository.findBySnsIdAndSnsProviderAndEmailHash(
             request.snsId,
             request.snsProvider,
-            request.email,
+            Member.sha256(request.email),
         ) ?: throw NotFoundException(
             message = "가입된 정보가 없는 유저입니다.",
             code = MessageCode.NOT_FOUND_MEMBER,

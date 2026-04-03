@@ -41,5 +41,5 @@ interface MemberAuthInfoRepository : JpaRepository<MemberAuthInfo, Long> {
     /**
      * 휴대폰 번호로 본인인증 정보를 조회합니다.
      */
-    fun findByPhoneNumber(phoneNumber: String): MemberAuthInfo?
+    fun findByPhoneNumberHash(phoneNumberHash: String): MemberAuthInfo?
 }

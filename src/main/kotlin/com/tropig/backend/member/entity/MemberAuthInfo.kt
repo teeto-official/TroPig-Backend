@@ -1,5 +1,6 @@
 package com.tropig.backend.member.entity
 
+import com.tropig.backend.common.util.EncryptedStringConverter
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -18,7 +19,7 @@ import java.time.format.DateTimeFormatter
     name = "member_auth_info",
     indexes = [
         Index(name = "idx_member_auth_info_member_id", columnList = "member_id", unique = true),
-        Index(name = "idx_member_auth_info_phone_number", columnList = "phone_number"),
+        Index(name = "idx_member_auth_info_phone_hash", columnList = "phone_number_hash"),
     ],
 )
 data class MemberAuthInfo(
@@ -29,14 +30,20 @@ data class MemberAuthInfo(
     @Column(name = "member_id", nullable = false, unique = true)
     val memberId: Long,
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     val name: String,
 
-    @Column(name = "birth_date", nullable = false, length = 10)
+    @Column(name = "birth_date", nullable = false, length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     val birthDate: String, // YYYY-MM-DD format
 
-    @Column(name = "phone_number", nullable = false, length = 11)
+    @Column(name = "phone_number", nullable = false, length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     var phoneNumber: String, // 01012345678 format (no hyphens)
+
+    @Column(name = "phone_number_hash", length = 64)
+    var phoneNumberHash: String? = null,
 
     @Column(length = 64, unique = true)
     var ci: String? = null, // SHA-256 hash of CI
@@ -57,13 +64,20 @@ data class MemberAuthInfo(
     @Column(name = "auth_creator_at")
     var authCreatorAt: LocalDateTime? = null,
 
-    @Column(name = "bank_account", length = 255)
+    @Column(name = "bank_account", length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     var bankAccount: String? = null,
 
     @LastModifiedDate
     @Column(name = "updated_at")
     val updatedAt: LocalDateTime? = null,
 ) {
+
+    @PrePersist
+    @PreUpdate
+    fun computeHashes() {
+        phoneNumberHash = sha256(phoneNumber)
+    }
 
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")

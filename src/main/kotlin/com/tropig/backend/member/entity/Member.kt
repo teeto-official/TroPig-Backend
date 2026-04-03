@@ -1,10 +1,12 @@
 package com.tropig.backend.member.entity
 
+import com.tropig.backend.common.util.EncryptedStringConverter
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.enums.SnsProvider
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
+import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -15,8 +17,12 @@ data class Member(
     @Enumerated(value = EnumType.STRING)
     val snsProvider: SnsProvider,
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     val email: String,
+
+    @Column(name = "email_hash", nullable = false, length = 64, unique = true)
+    val emailHash: String = sha256(email),
 
     @Column(nullable = false)
     var nickname: String,
@@ -54,4 +60,12 @@ data class Member(
 
     @LastModifiedDate
     val updatedAt: LocalDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+
+    companion object {
+        fun sha256(value: String): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            return digest.digest(value.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.tropig.backend.member.entity
 
+import com.tropig.backend.common.util.EncryptedStringConverter
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -35,7 +36,8 @@ data class MemberAccount(
     @Column(name = "account_number_encrypted", nullable = false, length = 500)
     var accountNumberEncrypted: String, // AES-256-GCM encrypted
 
-    @Column(name = "account_holder", nullable = false, length = 20)
+    @Column(name = "account_holder", nullable = false, length = 500)
+    @Convert(converter = EncryptedStringConverter::class)
     var accountHolder: String,
 
     @Column(name = "portone_partner_id", nullable = false, length = 100)
