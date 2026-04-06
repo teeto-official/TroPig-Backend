@@ -19,7 +19,7 @@ data class CountSearchContentRequest(
     val publishingTypes: List<PublishingType>? = null,
 ) {
     fun toCountDto(isAdult: Boolean, tagIds: List<Long>?) = SearchContentRequestDto(
-        searchText = this.searchText,
+        searchText = this.searchText?.replace(" ", ""),
         level = this.level,
         ruleIds = this.rules,
         genreIds = this.genres,

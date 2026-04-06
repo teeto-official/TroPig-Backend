@@ -16,7 +16,7 @@ data class SimpleSearchContentRequest(
     val excludeContentId: Long? = null,
 ) {
     fun toDto(isAdult: Boolean): SearchContentRequestDto = SearchContentRequestDto(
-        searchText = this.searchText,
+        searchText = this.searchText?.replace(" ", ""),
         isAdult = isAdult,
         type = ContentType.SCENARIO,
         sortMode = this.sortMode,
