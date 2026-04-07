@@ -1,7 +1,9 @@
 package com.tropig.backend.payment.entity
 
+import com.tropig.backend.payment.enums.WithdrawalStatus
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
 
 @Entity
@@ -15,6 +17,13 @@ data class CreatorSettlement(
 
     @Column(nullable = true)
     val description: String? = null,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: WithdrawalStatus = WithdrawalStatus.PENDING,
+
+    @Column(nullable = true)
+    val settlementDate: String? = null,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,4 +31,7 @@ data class CreatorSettlement(
 
     @CreatedDate
     val createdAt: LocalDateTime = LocalDateTime.now()
+
+    @LastModifiedDate
+    var updatedAt: LocalDateTime = LocalDateTime.now()
 }

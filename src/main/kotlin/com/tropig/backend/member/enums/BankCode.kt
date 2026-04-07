@@ -2,9 +2,8 @@ package com.tropig.backend.member.enums
 
 /**
  * 한국 은행 코드 매핑
- * 한글 은행명을 PortOne 은행 코드로 변환
  */
-enum class BankCode(val koreanName: String, val portOneCode: String) {
+enum class BankCode(val koreanName: String, val code: String) {
     SHINHAN("신한은행", "SHINHAN"),
     KOOKMIN("국민은행", "KOOKMIN"),
     WOORI("우리은행", "WOORI"),
@@ -24,21 +23,8 @@ enum class BankCode(val koreanName: String, val portOneCode: String) {
     ;
 
     companion object {
-        /**
-         * 한글 은행명으로 BankCode 찾기
-         */
-        fun fromKoreanName(koreanName: String): BankCode? = values().find { it.koreanName == koreanName }
+        fun fromKoreanName(koreanName: String): BankCode? = entries.find { it.koreanName == koreanName }
 
-        /**
-         * 한글 은행명을 PortOne 은행 코드로 변환
-         * @throws IllegalArgumentException 지원하지 않는 은행인 경우
-         */
-        fun toPortOneCode(koreanName: String): String = fromKoreanName(koreanName)?.portOneCode
-            ?: throw IllegalArgumentException("Unsupported bank: $koreanName")
-
-        /**
-         * 지원되는 모든 한글 은행명 목록
-         */
-        fun getSupportedBankNames(): List<String> = values().map { it.koreanName }
+        fun getSupportedBankNames(): List<String> = entries.map { it.koreanName }
     }
 }

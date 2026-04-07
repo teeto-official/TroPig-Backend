@@ -199,7 +199,7 @@ class RevenueService(
                     id = settlement.id,
                     amount = settlement.amount,
                     createdAt = settlement.createdAt,
-                    withdrawalStatus = WithdrawalStatus.COMPLETED,
+                    withdrawalStatus = settlement.status,
                 )
             },
             hasNext = hasNext,
