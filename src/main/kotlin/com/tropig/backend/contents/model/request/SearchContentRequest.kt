@@ -31,7 +31,7 @@ data class SearchContentRequest(
 ) {
     fun toDto(isAdult: Boolean, type: ContentType, tagIds: List<Long>?): SearchContentRequestDto =
         SearchContentRequestDto(
-            searchText = this.searchText,
+            searchText = this.searchText?.replace(" ", ""),
             level = this.level,
             ruleIds = this.rules,
             genreIds = this.genres,

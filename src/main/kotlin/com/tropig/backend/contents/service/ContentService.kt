@@ -236,11 +236,11 @@ class ContentService(
 
 
         val searchTextParts = mutableListOf<String>()
-        searchTextParts.add(writerNickname)
-        searchTextParts.add(savedContent.title)
+        searchTextParts.add(writerNickname.replace(" ", ""))
+        searchTextParts.add(savedContent.title.replace(" ", ""))
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(genre?.displayName?.replace(" ", "") ?: "")
+        searchTextParts.add(rule?.displayName?.replace(" ", "") ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
@@ -447,11 +447,11 @@ class ContentService(
         } ?: emptyList()
 
         val searchTextParts = mutableListOf<String>()
-        searchTextParts.add(writerNickname)
-        searchTextParts.add(content.title)
+        searchTextParts.add(writerNickname.replace(" ", ""))
+        searchTextParts.add(content.title.replace(" ", ""))
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(genre?.displayName?.replace(" ", "") ?: "")
+        searchTextParts.add(rule?.displayName?.replace(" ", "") ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
