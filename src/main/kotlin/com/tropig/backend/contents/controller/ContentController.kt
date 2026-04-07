@@ -196,7 +196,7 @@ class ContentController(
                 publishedAt = content.publishedAt!!,
                 freeContent = Content.removeSpoilers(content.freeContent),
                 price = content.price,
-                publishingType = if (type == ContentType.RESOURCE) content.publishingType else null
+                publishingType = if (type == ContentType.RESOURCE) content.publishingType else null,
             )
         }
     }
@@ -336,7 +336,12 @@ class ContentController(
             when (parsedContentType) {
                 ContentType.SCENARIO -> {
                     if (recommendType == "GENRE" && favoriteGenreIds.isNotEmpty()) {
-                        contentService.getRandomGenreContents(ContentType.SCENARIO, favoriteGenreIds, it.adult, clampedSize)
+                        contentService.getRandomGenreContents(
+                            ContentType.SCENARIO,
+                            favoriteGenreIds,
+                            it.adult,
+                            clampedSize,
+                        )
                     } else if (recommendType == "RULE" && favoriteRuleIds.isNotEmpty()) {
                         contentService.getRandomRuleContents(favoriteRuleIds, it.adult, clampedSize)
                     } else {
@@ -345,7 +350,12 @@ class ContentController(
                 }
                 ContentType.RESOURCE -> {
                     if (favoriteGenreIds.isNotEmpty()) {
-                        contentService.getRandomGenreContents(ContentType.RESOURCE, favoriteGenreIds, it.adult, clampedSize)
+                        contentService.getRandomGenreContents(
+                            ContentType.RESOURCE,
+                            favoriteGenreIds,
+                            it.adult,
+                            clampedSize,
+                        )
                     } else {
                         contentService.getRandomContents(ContentType.RESOURCE, it.adult, clampedSize)
                     }

@@ -30,7 +30,7 @@ class ContentMigrationService(
 
         @Suppress("UNCHECKED_CAST")
         val rows = entityManager.createNativeQuery(
-            "SELECT id, rule, genre FROM content WHERE rule IS NOT NULL OR genre IS NOT NULL"
+            "SELECT id, rule, genre FROM content WHERE rule IS NOT NULL OR genre IS NOT NULL",
         ).resultList as List<Array<Any?>>
 
         var ruleCount = 0
@@ -46,7 +46,7 @@ class ContentMigrationService(
 
             if (ruleId != null) {
                 entityManager.createNativeQuery(
-                    "UPDATE content SET rule_id = :ruleId WHERE id = :contentId AND rule_id IS NULL"
+                    "UPDATE content SET rule_id = :ruleId WHERE id = :contentId AND rule_id IS NULL",
                 ).setParameter("ruleId", ruleId)
                     .setParameter("contentId", contentId)
                     .executeUpdate()
@@ -55,7 +55,7 @@ class ContentMigrationService(
 
             if (genreId != null) {
                 entityManager.createNativeQuery(
-                    "UPDATE content SET genre_id = :genreId WHERE id = :contentId AND genre_id IS NULL"
+                    "UPDATE content SET genre_id = :genreId WHERE id = :contentId AND genre_id IS NULL",
                 ).setParameter("genreId", genreId)
                     .setParameter("contentId", contentId)
                     .executeUpdate()
@@ -67,7 +67,4 @@ class ContentMigrationService(
     }
 }
 
-data class MigrateContentTagResult(
-    val ruleCount: Int,
-    val genreCount: Int,
-)
+data class MigrateContentTagResult(val ruleCount: Int, val genreCount: Int)
