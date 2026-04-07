@@ -6,8 +6,6 @@ import com.tropig.backend.contents.enums.PlayerCountType
 import com.tropig.backend.contents.enums.PublishingType
 import com.tropig.backend.contents.enums.TermType
 import com.tropig.backend.contents.model.result.TagDto
-import com.tropig.backend.contents.model.serialize.PublishingInfo
-import com.tropig.backend.contents.model.serialize.toPublishingInfoList
 import com.tropig.backend.member.entity.Member
 import java.time.LocalDateTime
 
@@ -26,7 +24,6 @@ data class ContentDetailResponse(
     val termType: TermType,
     val tags: List<TagDto>,
     val publishingType: PublishingType,
-    val publishingInfo: List<PublishingInfo>,
     val freeContent: String?,
     val nonFreeContent: String? = null,
     val isBookmark: Boolean,
@@ -70,7 +67,6 @@ fun Content.toDetailResponse(
         termType = termType,
         tags = tags,
         publishingType = publishingType,
-        publishingInfo = publishingInfo?.toPublishingInfoList() ?: emptyList(),
         freeContent = freeContent,
         nonFreeContent = purchasedContent,
         isBookmark = isBookmark,
