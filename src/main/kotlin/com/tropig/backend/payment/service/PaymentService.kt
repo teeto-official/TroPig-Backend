@@ -142,13 +142,25 @@ class PaymentService(
         val tossResponse = try {
             tossPaymentClient.confirmPayment(request.paymentKey, request.orderId, requestAmount)
         } catch (e: TossPaymentException) {
-            payment.status = PaymentStatus.FAILED
-            payment.failureReason = "[${e.code}] ${e.message}"
-            paymentRepository.save(payment)
-            throw PaymentException(
-                "결제 승인에 실패했습니다: ${e.message}",
-                MessageCode.PAYMENT_ERROR,
-            )
+            // confirm 실패 시 Toss 조회 API로 실제 승인 여부 확인 (이미 승인된 건일 수 있음)
+            val fallbackResponse = try {
+                tossPaymentClient.getPaymentByOrderId(request.orderId)
+            } catch (queryException: Exception) {
+                null
+            }
+
+            if (fallbackResponse != null && fallbackResponse.status == "DONE") {
+                // Toss에서 이미 승인된 건 → 정상 처리로 진행
+                fallbackResponse
+            } else {
+                payment.status = PaymentStatus.FAILED
+                payment.failureReason = "[${e.code}] ${e.message}"
+                paymentRepository.save(payment)
+                throw PaymentException(
+                    "결제 승인에 실패했습니다: ${e.message}",
+                    MessageCode.PAYMENT_ERROR,
+                )
+            }
         }
 
         // 6. Toss 응답 상태 확인

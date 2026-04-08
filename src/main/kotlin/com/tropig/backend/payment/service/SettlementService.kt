@@ -111,6 +111,47 @@ class SettlementService(
     }
 
     /**
+     * 정산 상태 완료 처리 (관리자용)
+     */
+    @Transactional
+    fun completeSettlement(settlementId: Long): SettlementResponse {
+        val settlement = creatorSettlementRepository.findById(settlementId).orElseThrow {
+            NotFoundException("정산 내역을 찾을 수 없습니다: $settlementId", MessageCode.PAYMENT_ERROR)
+        }
+        settlement.status = WithdrawalStatus.COMPLETED
+        creatorSettlementRepository.save(settlement)
+
+        return toSettlementResponse(settlement)
+    }
+
+    /**
+     * 정산 상태 실패 처리 (관리자용)
+     */
+    @Transactional
+    fun failSettlement(settlementId: Long, reason: String?): SettlementResponse {
+        val settlement = creatorSettlementRepository.findById(settlementId).orElseThrow {
+            NotFoundException("정산 내역을 찾을 수 없습니다: $settlementId", MessageCode.PAYMENT_ERROR)
+        }
+        settlement.status = WithdrawalStatus.FAILED
+        if (reason != null) {
+            settlement.description = "${settlement.description} (실패 사유: $reason)"
+        }
+        creatorSettlementRepository.save(settlement)
+
+        return toSettlementResponse(settlement)
+    }
+
+    private fun toSettlementResponse(settlement: CreatorSettlement) = SettlementResponse(
+        id = settlement.id,
+        memberId = settlement.memberId,
+        settlementAmount = settlement.amount,
+        status = settlement.status.name,
+        settlementDate = settlement.settlementDate ?: "",
+        memo = settlement.description,
+        createdAt = settlement.createdAt,
+    )
+
+    /**
      * 정산 가능 금액 조회
      */
     fun getAvailableSettlementAmount(authMember: AuthMember): RevenueSummaryResponse {

@@ -16,7 +16,7 @@ data class CreatorSettlement(
     val amount: Long,
 
     @Column(nullable = true)
-    val description: String? = null,
+    var description: String? = null,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

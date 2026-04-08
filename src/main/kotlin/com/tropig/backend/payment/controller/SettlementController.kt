@@ -38,4 +38,21 @@ class SettlementController(private val settlementService: SettlementService) {
         val response = settlementService.getAvailableSettlementAmount(authMember)
         return ResponseEntity.ok(response)
     }
+
+    @PostMapping("/{settlementId}/complete")
+    @Operation(summary = "정산 완료 처리", description = "정산 상태를 COMPLETED로 변경합니다.")
+    fun completeSettlement(@PathVariable settlementId: Long): ResponseEntity<SettlementResponse> {
+        val response = settlementService.completeSettlement(settlementId)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{settlementId}/fail")
+    @Operation(summary = "정산 실패 처리", description = "정산 상태를 FAILED로 변경합니다.")
+    fun failSettlement(
+        @PathVariable settlementId: Long,
+        @RequestParam(required = false) reason: String?,
+    ): ResponseEntity<SettlementResponse> {
+        val response = settlementService.failSettlement(settlementId, reason)
+        return ResponseEntity.ok(response)
+    }
 }
