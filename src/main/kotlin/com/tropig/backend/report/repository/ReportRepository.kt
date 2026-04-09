@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface ReportRepository : JpaRepository<Report, Long> {
-    fun findByMemberIdAndContentId(memberId: Long, contentId: Long): Report?
+    fun findTopByMemberIdAndContentIdOrderByCreatedAtDesc(memberId: Long, contentId: Long): Report?
 }

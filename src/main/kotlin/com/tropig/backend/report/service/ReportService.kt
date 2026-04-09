@@ -10,6 +10,8 @@ import com.tropig.backend.report.model.response.MyReportResponse
 import com.tropig.backend.report.model.response.ReportResponse
 import com.tropig.backend.report.model.response.ReportTypeResponse
 import com.tropig.backend.report.repository.ReportRepository
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -22,9 +24,6 @@ class ReportService(
 
     @Transactional
     fun createReport(memberId: Long, request: CreateReportRequest): ReportResponse {
-        if (request.reason.length < 15) {
-            throw IllegalArgumentException("신고 내용은 15자 이상이어야 합니다.", MessageCode.INVALID_PARAMS)
-        }
         val report = Report(
             contentId = request.contentId,
             type = request.type,
@@ -35,15 +34,14 @@ class ReportService(
     }
 
     @Transactional(readOnly = true)
-    fun getReports(): List<ReportResponse> {
-        val reports = reportRepository.findAll()
+    fun getReports(pageable: Pageable): Page<ReportResponse> {
+        val reportPage = reportRepository.findAll(pageable)
+        val reports = reportPage.content
         val contentIds = reports.map { it.contentId }.distinct()
         val memberIds = reports.map { it.memberId }.distinct()
-        val aliasById: Map<Long, String> = contentRepository.findAliasesByIds(contentIds)
-            .associate { it.id to it.alias }
-        val nicknameById: Map<Long, String> = memberRepository.findNicknamesByIds(memberIds)
-            .associate { it.id to it.nickname }
-        return reports.map { ReportResponse.from(it, aliasById[it.contentId], nicknameById[it.memberId]) }
+        val aliasById = contentRepository.findByIdIn(contentIds).associate { it.id to it.alias }
+        val nicknameById = memberRepository.findByIdInAndDeletedAtIsNull(memberIds).associate { it.id to it.nickname }
+        return reportPage.map { ReportResponse.from(it, aliasById[it.contentId], nicknameById[it.memberId]) }
     }
 
     fun getReportTypes(): List<ReportTypeResponse> = ReportTypeResponse.fromAll()
@@ -61,11 +59,8 @@ class ReportService(
 
     @Transactional(readOnly = true)
     fun getMyReport(memberId: Long, contentId: Long): MyReportResponse {
-        val report = reportRepository.findByMemberIdAndContentId(memberId, contentId)
-        return if (report == null) {
-            MyReportResponse(reported = false, resolved = false)
-        } else {
-            MyReportResponse(reported = true, resolved = report.resolved)
-        }
+        val report = reportRepository.findTopByMemberIdAndContentIdOrderByCreatedAtDesc(memberId, contentId)
+        val canReport = report == null || report.resolved
+        return MyReportResponse(canReport = canReport)
     }
 }

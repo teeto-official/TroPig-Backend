@@ -13,6 +13,9 @@ import com.tropig.backend.report.model.response.ReportResponse
 import com.tropig.backend.report.model.response.ReportTypeResponse
 import com.tropig.backend.report.service.ReportService
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 
 @ApiController
 @RequestMapping("/api/report")
@@ -46,11 +50,15 @@ class ReportController(private val reportService: ReportService) {
 
     @GetMapping
     @RequireAuth
-    fun getReports(@LoginMember authMember: AuthMember): List<ReportResponse> {
+    fun getReports(
+        @LoginMember authMember: AuthMember,
+        @RequestParam(defaultValue = "0") page: Int,
+    ): Page<ReportResponse> {
         if (authMember.role != Role.ADMIN) {
             throw IllegalArgumentException("관리자 권한이 필요합니다.", MessageCode.INCORRECT_ROLE)
         }
-        return reportService.getReports()
+        val pageable = PageRequest.of(page, 15, Sort.by("createdAt").descending())
+        return reportService.getReports(pageable)
     }
 
     @PatchMapping("/{id}/resolve")
