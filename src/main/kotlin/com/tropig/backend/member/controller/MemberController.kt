@@ -4,7 +4,6 @@ import com.tropig.backend.common.annotation.ApiController
 import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
-import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.service.ContentService

@@ -211,7 +211,7 @@ class CreatorController(
                 publishedAt = it.publishedAt ?: it.updatedAt,
                 freeContent = Content.removeSpoilers(it.freeContent),
                 price = it.price.toInt(),
-                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null
+                publishingType = if (type == ContentType.RESOURCE) it.publishingType else null,
             )
         }
     }
@@ -270,8 +270,8 @@ class CreatorController(
             writer = WriterInfo(
                 writerId = writer.id,
                 nickname = writer.nickname,
-                profilePath = s3Service.toUrl(writer.profile)
-            )
+                profilePath = s3Service.toUrl(writer.profile),
+            ),
         )
     }
 

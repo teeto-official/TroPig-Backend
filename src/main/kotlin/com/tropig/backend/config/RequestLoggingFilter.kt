@@ -15,8 +15,13 @@ class RequestLoggingFilter : OncePerRequestFilter() {
     companion object {
         private val BLOCKED_EXTENSIONS = listOf(".php", ".asp", ".aspx", ".jsp", ".cgi", ".env")
         private val BLOCKED_PATHS = listOf(
-            "/wp-admin", "/wp-login", "/wp-content", "/wordpress",
-            "/phpmyadmin", "/.git", "/.svn",
+            "/wp-admin",
+            "/wp-login",
+            "/wp-content",
+            "/wordpress",
+            "/phpmyadmin",
+            "/.git",
+            "/.svn",
         )
     }
 

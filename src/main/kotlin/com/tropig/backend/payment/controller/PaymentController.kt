@@ -185,7 +185,7 @@ class PaymentController(
                 purchasedAt = item.purchasedAt,
                 purchaseAmount = item.purchaseAmount,
                 price = content.price.toInt(),
-                publishingType = if (content.type == ContentType.RESOURCE) content.publishingType else null
+                publishingType = if (content.type == ContentType.RESOURCE) content.publishingType else null,
             )
         }
     }

@@ -23,12 +23,11 @@ class PaymentContentService(private val purchaseRepository: PurchaseRepository) 
             status = PurchaseStatus.COMPLETED,
         )
 
-    fun getPurchaseCount(memberId: Long, type: ContentType? = null): Long =
-        if (type != null) {
-            purchaseRepository.countByMemberIdAndStatusAndType(memberId, PurchaseStatus.COMPLETED.name, type.name)
-        } else {
-            purchaseRepository.countByMemberIdAndStatus(memberId, PurchaseStatus.COMPLETED)
-        }
+    fun getPurchaseCount(memberId: Long, type: ContentType? = null): Long = if (type != null) {
+        purchaseRepository.countByMemberIdAndStatusAndType(memberId, PurchaseStatus.COMPLETED.name, type.name)
+    } else {
+        purchaseRepository.countByMemberIdAndStatus(memberId, PurchaseStatus.COMPLETED)
+    }
 
     fun getPurchasedContents(
         memberId: Long,

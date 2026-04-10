@@ -21,7 +21,6 @@ import com.tropig.backend.payment.model.response.WithdrawalItemResponse
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 

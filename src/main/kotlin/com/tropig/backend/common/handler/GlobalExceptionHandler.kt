@@ -60,17 +60,15 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoHandlerFoundException::class)
-    fun handleNoHandlerFoundException(e: NoHandlerFoundException): ResponseEntity<ErrorResponse> {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    fun handleNoHandlerFoundException(e: NoHandlerFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(ErrorResponse(message = "요청한 경로를 찾을 수 없습니다."))
-    }
 
     @ExceptionHandler(HttpMediaTypeNotAcceptableException::class)
-    fun handleMediaTypeNotAcceptable(e: HttpMediaTypeNotAcceptableException): ResponseEntity<String> {
-        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+    fun handleMediaTypeNotAcceptable(e: HttpMediaTypeNotAcceptableException): ResponseEntity<String> =
+        ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
             .contentType(MediaType.APPLICATION_JSON)
             .body("""{"message":"Not Acceptable"}""")
-    }
 
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ErrorResponse> {

@@ -14,8 +14,8 @@ import com.tropig.backend.contents.model.result.ContentTagResult
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.serialize.toJson
-import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentOptionRepository
+import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
@@ -233,7 +233,6 @@ class ContentService(
             tagRepository.findAllById(tagIds)
                 .map { it.name }
         } ?: emptyList()
-
 
         val searchTextParts = mutableListOf<String>()
         searchTextParts.add(writerNickname.replace(" ", ""))
@@ -518,7 +517,12 @@ class ContentService(
         return save(content)
     }
 
-    fun getRandomGenreContents(type: ContentType, genreIds: List<Long>, isAdult: Boolean, size: Int = 8): List<Content> {
+    fun getRandomGenreContents(
+        type: ContentType,
+        genreIds: List<Long>,
+        isAdult: Boolean,
+        size: Int = 8,
+    ): List<Content> {
         val selectedIds = genreIds.shuffled().take(3)
 
         if (selectedIds.isEmpty()) {
