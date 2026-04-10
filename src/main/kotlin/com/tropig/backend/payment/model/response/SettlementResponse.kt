@@ -3,13 +3,11 @@ package com.tropig.backend.payment.model.response
 import java.time.LocalDateTime
 
 data class SettlementResponse(
-    val id: String, // PortOne transfer ID
-    val partnerId: String,
+    val id: Long,
     val memberId: Long,
     val settlementAmount: Long,
-    val status: String, // PENDING, COMPLETED, FAILED
+    val status: String,
     val settlementDate: String,
     val memo: String?,
-    val createdAt: LocalDateTime?,
-    val completedAt: LocalDateTime?,
+    val createdAt: LocalDateTime,
 )

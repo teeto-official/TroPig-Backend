@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PaymentRepository : JpaRepository<Payment, Long> {
-    fun findByPortonePaymentId(portonePaymentId: String): Payment?
+    fun findByOrderId(orderId: String): Payment?
+    fun findByPaymentKey(paymentKey: String): Payment?
 }

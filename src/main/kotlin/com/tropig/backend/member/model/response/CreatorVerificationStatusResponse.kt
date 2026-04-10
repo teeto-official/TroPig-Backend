@@ -14,7 +14,6 @@ data class CreatorVerificationStatusResponse(
     val expired: Boolean = false,
     val canRenew: Boolean,
     val accountInfo: MaskedAccountInfo?,
-    val partnerId: String?,
     val lastChangedAt: LocalDateTime?,
     val canChangeAccount: Boolean,
     val nextChangeAvailableAt: LocalDateTime?,

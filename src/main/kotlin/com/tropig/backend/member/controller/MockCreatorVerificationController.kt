@@ -112,7 +112,6 @@ class MockCreatorVerificationController(
             role = member.role,
             expiresAt = newExpiresAt,
             message = message,
-            partnerId = "mock_partner_${UUID.randomUUID()}",
         )
     }
 
@@ -143,7 +142,6 @@ class MockCreatorVerificationController(
                 expired = false,
                 canRenew = false,
                 accountInfo = null,
-                partnerId = null,
                 lastChangedAt = null,
                 canChangeAccount = false,
                 nextChangeAvailableAt = null,
@@ -182,7 +180,6 @@ class MockCreatorVerificationController(
             expired = expired,
             canRenew = canRenew,
             accountInfo = accountInfo,
-            partnerId = null,
             lastChangedAt = authInfo.authCreatorAt,
             canChangeAccount = canChangeAccount,
             nextChangeAvailableAt = nextChangeAvailableAt,

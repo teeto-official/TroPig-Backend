@@ -19,11 +19,6 @@ interface MemberAccountRepository : JpaRepository<MemberAccount, Long> {
     fun existsByMemberId(memberId: Long): Boolean
 
     /**
-     * Find account by PortOne partner ID
-     */
-    fun findByPortonePartnerId(partnerId: String): MemberAccount?
-
-    /**
      * Find accounts expiring within specified time range
      */
     fun findByExpiresAtBetween(start: LocalDateTime, end: LocalDateTime): List<MemberAccount>
