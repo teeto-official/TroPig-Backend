@@ -7,7 +7,7 @@
 # HTTP → HTTPS 리다이렉트
 server {
     listen 80;
-    server_name dev.triquest.me;
+    server_name dev.teeto.to;
 
     # Let's Encrypt 인증서 발급용
     location /.well-known/acme-challenge/ {
@@ -23,11 +23,11 @@ server {
 # HTTPS 서버
 server {
     listen 443 ssl http2;
-    server_name dev.triquest.me;
+    server_name dev.teeto.to;
 
     # SSL 인증서 경로
-    ssl_certificate /etc/letsencrypt/live/dev.triquest.me/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/dev.triquest.me/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/dev.teeto.to/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.teeto.to/privkey.pem;
 
     # SSL 설정 (보안 강화)
     ssl_protocols TLSv1.2 TLSv1.3;
