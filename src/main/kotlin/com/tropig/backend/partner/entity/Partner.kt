@@ -16,9 +16,6 @@ data class Partner(
     val memberId: Long,
 
     @Column(nullable = false)
-    val portonePartnerId: String,
-
-    @Column(nullable = false)
     val name: String,
 
     @Column(nullable = false)

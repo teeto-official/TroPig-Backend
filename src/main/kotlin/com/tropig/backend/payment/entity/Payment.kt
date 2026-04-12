@@ -16,35 +16,29 @@ data class Payment(
     val contentId: Long,
 
     @Column(nullable = false, unique = true)
-    val portonePaymentId: String, // 포트원 결제 ID
+    val orderId: String,
 
     @Column(nullable = false)
-    val amount: Long, // 결제 금액 (원)
+    val amount: Long,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: PaymentStatus, // 결제 상태
+    var status: PaymentStatus,
 
     @Column(nullable = false)
-    val currency: String = "KRW", // 통화
+    val currency: String = "KRW",
 
     @Column(nullable = true)
-    var method: String? = null, // 결제 수단 (카드, 계좌이체 등)
+    var method: String? = null,
 
-    @Column(nullable = true)
-    val channelKey: String? = null, // 채널 키
-
-    @Column(nullable = true)
-    val storeId: String? = null, // 스토어 ID
-
-    @Column(nullable = true)
-    var receiptId: String? = null, // 포트원 트랜잭션 ID
+    @Column(nullable = true, unique = true)
+    var paymentKey: String? = null,
 
     @Column(nullable = true, columnDefinition = "TEXT")
-    var portoneResponse: String? = null, // 포트원 응답 전체 (JSON)
+    var tossResponse: String? = null,
 
     @Column(nullable = true)
-    var failureReason: String? = null, // 실패 사유
+    var failureReason: String? = null,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

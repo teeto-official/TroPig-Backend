@@ -12,7 +12,6 @@ import com.tropig.backend.member.repository.MemberAuthInfoRepository
 import com.tropig.backend.member.repository.MemberRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.context.annotation.Profile
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -43,7 +42,9 @@ class MockIdentityVerificationController(
         val memberId = authMember.memberId
 
         val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
-        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
+        if (lastVerified?.verifiedAt != null &&
+            lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()
+        ) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 

@@ -14,18 +14,18 @@ data class CountSearchContentRequest(
     val genres: List<Long>? = null,
     @field:Size(max = 3, message = "playerCountTypes는 최대 3개까지 선택할 수 있습니다.")
     val playerCountTypes: List<PlayerCountType>? = null,
-    @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
-    val tags: List<String>? = null,
+    @field:Size(max = 8, message = "tagIds는 최대 8개까지 선택할 수 있습니다.")
+    val tagIds: List<Long>? = null,
     val publishingTypes: List<PublishingType>? = null,
 ) {
-    fun toCountDto(isAdult: Boolean, tagIds: List<Long>?) = SearchContentRequestDto(
-        searchText = this.searchText,
+    fun toCountDto(isAdult: Boolean) = SearchContentRequestDto(
+        searchText = this.searchText?.replace(" ", ""),
         level = this.level,
         ruleIds = this.rules,
         genreIds = this.genres,
         playerCountTypes = this.playerCountTypes,
         publishingTypes = publishingTypes,
-        tags = tagIds,
+        tags = this.tagIds,
         isAdult = isAdult,
     )
 }

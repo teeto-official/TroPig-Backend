@@ -20,7 +20,5 @@ enum class PublishingType(val displayName: String) {
     BOT("봇"),
     TEMPLATE("템플릿"),
     ETC("기타"),
-    EXTERNAL_LINK("외부 링크"),
-    EXTERNAL_FILE(""),
     SCENARIO(""),
 }

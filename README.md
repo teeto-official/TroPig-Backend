@@ -1,6 +1,6 @@
-# TriQuest Backend
+# Teeto Backend
 
-TriQuest 서비스의 백엔드 API 서버입니다.
+Teeto 서비스의 백엔드 API 서버입니다.
 Kotlin + Spring Boot 기반으로 구현되었으며, PostgreSQL / Redis / AWS S3를 사용합니다.
 
 ## 기술 스택

@@ -95,15 +95,17 @@ aws:
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
 
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  base-url: ${TOSS_BASE_URL:https://api.tosspayments.com}
+  client-key: ${TOSS_CLIENT_KEY}
+
 portone:
   key:
     secret-v2: ${PORTONE_SECRET_V2}
   base-url: ${PORTONE_BASE_URL:https://api.portone.io}
-  store-id: ${PORTONE_STORE_ID}
   identity-verification:
     channel-key: ${PORTONE_IDENTITY_VERIFICATION_CHANNEL_KEY}
-  channels:
-    kg-inicis: ${PORTONE_KG_INICIS_CHANNEL_KEY}
 
 encryption:
   secret-key: ${ENCRYPTION_SECRET_KEY}

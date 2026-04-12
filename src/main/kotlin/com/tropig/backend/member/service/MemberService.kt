@@ -9,10 +9,10 @@ import com.tropig.backend.common.util.StringUtil
 import com.tropig.backend.contents.repository.ContentOptionRepository
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.service.S3Service
-import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.entity.Member
 import com.tropig.backend.member.entity.MemberAuthInfo
 import com.tropig.backend.member.entity.WithdrawMember
+import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.model.request.SignInRequest
 import com.tropig.backend.member.model.request.SignUpRequest
 import com.tropig.backend.member.model.request.UpdateMemberRequest
@@ -236,7 +236,7 @@ class MemberService(
         if (raw.isNullOrBlank()) return emptyList()
         val tokens = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val ids = tokens.mapNotNull { it.toLongOrNull() }
-        if (ids.size == tokens.size) return ids  // 이미 모두 숫자
+        if (ids.size == tokens.size) return ids // 이미 모두 숫자
 
         val nameToId = contentOptionRepository.findAllByType(type).associate { it.name to it.id }
         return tokens.mapNotNull { token ->

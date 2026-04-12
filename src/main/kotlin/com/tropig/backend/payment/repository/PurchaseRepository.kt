@@ -1,6 +1,5 @@
 package com.tropig.backend.payment.repository
 
-import com.tropig.backend.contents.enums.ContentType
 import com.tropig.backend.payment.entity.Purchase
 import com.tropig.backend.payment.enums.PurchaseStatus
 import org.springframework.data.domain.Pageable

@@ -13,7 +13,6 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
-import java.time.LocalDateTime
 import kotlin.math.min
 
 @Repository

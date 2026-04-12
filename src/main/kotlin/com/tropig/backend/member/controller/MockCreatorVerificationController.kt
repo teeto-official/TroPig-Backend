@@ -20,7 +20,6 @@ import com.tropig.backend.member.repository.MemberRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.context.annotation.Profile
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 /**
  * 로컬 개발 전용 창작자 인증 Mock 컨트롤러
@@ -113,7 +111,6 @@ class MockCreatorVerificationController(
             role = member.role,
             expiresAt = newExpiresAt,
             message = message,
-            partnerId = "mock_partner_${UUID.randomUUID()}",
         )
     }
 
@@ -144,7 +141,6 @@ class MockCreatorVerificationController(
                 expired = false,
                 canRenew = false,
                 accountInfo = null,
-                partnerId = null,
                 lastChangedAt = null,
                 canChangeAccount = false,
                 nextChangeAvailableAt = null,
@@ -183,7 +179,6 @@ class MockCreatorVerificationController(
             expired = expired,
             canRenew = canRenew,
             accountInfo = accountInfo,
-            partnerId = null,
             lastChangedAt = authInfo.authCreatorAt,
             canChangeAccount = canChangeAccount,
             nextChangeAvailableAt = nextChangeAvailableAt,

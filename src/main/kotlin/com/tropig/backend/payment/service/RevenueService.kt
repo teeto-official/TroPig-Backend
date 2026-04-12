@@ -12,7 +12,6 @@ import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
-import com.tropig.backend.payment.enums.WithdrawalStatus
 import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse
@@ -21,7 +20,6 @@ import com.tropig.backend.payment.model.response.WithdrawalItemResponse
 import com.tropig.backend.payment.repository.CreatorSettlementRepository
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 
@@ -199,7 +197,7 @@ class RevenueService(
                     id = settlement.id,
                     amount = settlement.amount,
                     createdAt = settlement.createdAt,
-                    withdrawalStatus = WithdrawalStatus.COMPLETED,
+                    withdrawalStatus = settlement.status,
                 )
             },
             hasNext = hasNext,

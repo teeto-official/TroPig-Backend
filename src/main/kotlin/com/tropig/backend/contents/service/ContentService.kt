@@ -14,8 +14,8 @@ import com.tropig.backend.contents.model.result.ContentTagResult
 import com.tropig.backend.contents.model.result.CountSearchContentsResult
 import com.tropig.backend.contents.model.result.PickContentResult
 import com.tropig.backend.contents.model.serialize.toJson
-import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentOptionRepository
+import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.contents.repository.ContentTagRepository
 import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
@@ -234,13 +234,12 @@ class ContentService(
                 .map { it.name }
         } ?: emptyList()
 
-
         val searchTextParts = mutableListOf<String>()
-        searchTextParts.add(writerNickname)
-        searchTextParts.add(savedContent.title)
+        searchTextParts.add(writerNickname.replace(" ", ""))
+        searchTextParts.add(savedContent.title.replace(" ", ""))
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(genre?.displayName?.replace(" ", "") ?: "")
+        searchTextParts.add(rule?.displayName?.replace(" ", "") ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
@@ -447,11 +446,11 @@ class ContentService(
         } ?: emptyList()
 
         val searchTextParts = mutableListOf<String>()
-        searchTextParts.add(writerNickname)
-        searchTextParts.add(content.title)
+        searchTextParts.add(writerNickname.replace(" ", ""))
+        searchTextParts.add(content.title.replace(" ", ""))
         searchTextParts.addAll(tagNames)
-        searchTextParts.add(genre?.displayName ?: "")
-        searchTextParts.add(rule?.displayName ?: "")
+        searchTextParts.add(genre?.displayName?.replace(" ", "") ?: "")
+        searchTextParts.add(rule?.displayName?.replace(" ", "") ?: "")
         if (request.type == ContentType.RESOURCE) {
             searchTextParts.add(request.publishingType!!.displayName)
         }
@@ -518,7 +517,12 @@ class ContentService(
         return save(content)
     }
 
-    fun getRandomGenreContents(type: ContentType, genreIds: List<Long>, isAdult: Boolean, size: Int = 8): List<Content> {
+    fun getRandomGenreContents(
+        type: ContentType,
+        genreIds: List<Long>,
+        isAdult: Boolean,
+        size: Int = 8,
+    ): List<Content> {
         val selectedIds = genreIds.shuffled().take(3)
 
         if (selectedIds.isEmpty()) {

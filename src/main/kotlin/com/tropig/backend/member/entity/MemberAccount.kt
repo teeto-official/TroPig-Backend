@@ -17,7 +17,6 @@ import java.time.temporal.ChronoUnit
     indexes = [
         Index(name = "idx_member_account_member_id", columnList = "member_id"),
         Index(name = "idx_member_account_expires_at", columnList = "expires_at"),
-        Index(name = "idx_member_account_portone_partner_id", columnList = "portone_partner_id"),
     ],
 )
 @EntityListeners(AuditingEntityListener::class)
@@ -37,9 +36,6 @@ data class MemberAccount(
 
     @Column(name = "account_holder", nullable = false, length = 20)
     var accountHolder: String,
-
-    @Column(name = "portone_partner_id", nullable = false, length = 100)
-    val portonePartnerId: String,
 
     @Column(name = "verified_at", nullable = false)
     var verifiedAt: LocalDateTime,

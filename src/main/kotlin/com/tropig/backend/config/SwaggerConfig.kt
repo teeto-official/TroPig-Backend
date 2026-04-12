@@ -25,9 +25,9 @@ class SwaggerConfig(private val environment: Environment) {
         val serverUrl = if (activeProfiles.contains("local")) {
             "http://localhost:8080"
         } else if (activeProfiles.contains("production")) {
-            "https://api.triquest.me"
+            "https://api.teeto.to"
         } else {
-            "https://api-dev.triquest.me"
+            "https://api-dev.teeto.to"
         }
 
         return OpenAPI()

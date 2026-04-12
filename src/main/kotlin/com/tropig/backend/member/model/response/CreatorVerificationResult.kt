@@ -11,5 +11,4 @@ data class CreatorVerificationResult(
     val role: Role,
     val expiresAt: LocalDateTime,
     val message: String,
-    val partnerId: String?,
 )

@@ -25,10 +25,7 @@ data class MemberResponse(
     val phoneNumber: String?,
 ) {
     companion object {
-        fun from(
-            member: Member,
-            memberAuthInfo: MemberAuthInfo?,
-        ): MemberResponse = MemberResponse(
+        fun from(member: Member, memberAuthInfo: MemberAuthInfo?): MemberResponse = MemberResponse(
             id = member.id,
             nickname = member.nickname,
             snsProvider = member.snsProvider,

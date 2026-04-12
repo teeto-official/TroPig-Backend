@@ -44,7 +44,9 @@ class IdentityVerificationService(
 
         // 1. 이미 인증된 사용자 체크
         val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
-        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
+        if (lastVerified?.verifiedAt != null &&
+            lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()
+        ) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 
@@ -205,7 +207,9 @@ class IdentityVerificationService(
 
         // 1. 이미 인증된 사용자 체크
         val lastVerified = memberAuthInfoRepository.findByMemberId(memberId)
-        if (lastVerified?.verifiedAt != null && lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()) {
+        if (lastVerified?.verifiedAt != null &&
+            lastVerified.verifiedAt.plusYears(1).minusDays(7) >= LocalDateTime.now()
+        ) {
             throw MemberException("이미 본인인증이 완료되었습니다.", MessageCode.ALREADY_VERIFIED)
         }
 

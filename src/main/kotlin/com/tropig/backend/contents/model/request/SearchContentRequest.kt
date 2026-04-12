@@ -17,9 +17,9 @@ data class SearchContentRequest(
     val genres: List<Long>? = null,
     @field:Size(max = 3, message = "playerCountTypes는 최대 3개까지 선택할 수 있습니다.")
     val playerCountTypes: List<PlayerCountType>? = null,
-    @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
-    val tags: List<String>? = null,
-    @field:Size(max = 8, message = "tags는 최대 8개까지 선택할 수 있습니다.")
+    @field:Size(max = 8, message = "tagIds는 최대 8개까지 선택할 수 있습니다.")
+    val tagIds: List<Long>? = null,
+    @field:Size(max = 8, message = "publishingTypes는 최대 8개까지 선택할 수 있습니다.")
     val publishingTypes: List<PublishingType>? = null,
 
     val sortMode: SortMode,
@@ -29,14 +29,14 @@ data class SearchContentRequest(
 
     val size: Int = 15,
 ) {
-    fun toDto(isAdult: Boolean, type: ContentType, tagIds: List<Long>?): SearchContentRequestDto =
+    fun toDto(isAdult: Boolean, type: ContentType): SearchContentRequestDto =
         SearchContentRequestDto(
-            searchText = this.searchText,
+            searchText = this.searchText?.replace(" ", ""),
             level = this.level,
             ruleIds = this.rules,
             genreIds = this.genres,
             playerCountTypes = this.playerCountTypes,
-            tags = tagIds,
+            tags = this.tagIds,
             isAdult = isAdult,
             type = type,
             publishingTypes = this.publishingTypes,

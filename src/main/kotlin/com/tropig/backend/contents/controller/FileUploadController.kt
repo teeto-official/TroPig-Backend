@@ -26,10 +26,7 @@ import org.springframework.web.bind.annotation.*
 
 @ApiController
 @RequestMapping("/api/files")
-class FileUploadController(
-    private val s3Service: S3Service,
-    private val contentService: ContentService,
-) {
+class FileUploadController(private val s3Service: S3Service, private val contentService: ContentService) {
 
     @RequireAuth
     @PostMapping("/uploads/{contentId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -154,7 +151,7 @@ class FileUploadController(
                 val s3Key = s3Service.generateS3Key(
                     directory = it.fileType.path,
                     extension = extension,
-                    contentId = contentId
+                    contentId = contentId,
                 )
 
                 val presignedUrl = s3Service.generateUploadPresignerUrl(
