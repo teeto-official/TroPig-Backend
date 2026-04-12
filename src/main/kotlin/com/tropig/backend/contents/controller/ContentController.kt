@@ -122,15 +122,7 @@ class ContentController(
         @RequestBody request: CountSearchContentRequest,
     ): CountSearchContentResponse {
         val isAdult = authMember?.adult ?: false
-        val tagIds = request.tags?.let { tagList ->
-            val nameSet = tagList.toSet()
-            tagService.findAllTags()
-                .asSequence()
-                .filter { it.name in nameSet }
-                .map { it.id }
-                .toList()
-        }
-        val dto = request.toCountDto(isAdult, tagIds)
+        val dto = request.toCountDto(isAdult)
         return contentService.countSearchContents(dto).toResponse()
     }
 
@@ -144,17 +136,7 @@ class ContentController(
         val isAdult = authMember?.adult ?: false
         val memberId = authMember?.memberId
 
-        val tagIds = request.tags?.let { tagList ->
-            val nameSet = tagList.toSet()
-
-            tagService.findAllTags()
-                .asSequence()
-                .filter { it.name in nameSet }
-                .map { it.id }
-                .toList()
-        }
-
-        val dto = request.toDto(isAdult, type, tagIds)
+        val dto = request.toDto(isAdult, type)
         val contents = contentService.searchContents(dto)
 
         return contents.mapWith(
