@@ -29,21 +29,20 @@ data class SearchContentRequest(
 
     val size: Int = 15,
 ) {
-    fun toDto(isAdult: Boolean, type: ContentType): SearchContentRequestDto =
-        SearchContentRequestDto(
-            searchText = this.searchText?.replace(" ", ""),
-            level = this.level,
-            ruleIds = this.rules,
-            genreIds = this.genres,
-            playerCountTypes = this.playerCountTypes,
-            tags = this.tagIds,
-            isAdult = isAdult,
-            type = type,
-            publishingTypes = this.publishingTypes,
-            sortMode = this.sortMode,
-            cursorPublishedAt = this.cursorPublishedAt,
-            cursorTitle = this.cursorTitle,
-            cursorId = this.cursorId,
-            size = this.size,
-        )
+    fun toDto(isAdult: Boolean, type: ContentType): SearchContentRequestDto = SearchContentRequestDto(
+        searchText = this.searchText?.replace(" ", ""),
+        level = this.level,
+        ruleIds = this.rules,
+        genreIds = this.genres,
+        playerCountTypes = this.playerCountTypes,
+        tags = this.tagIds,
+        isAdult = isAdult,
+        type = type,
+        publishingTypes = this.publishingTypes,
+        sortMode = this.sortMode,
+        cursorPublishedAt = this.cursorPublishedAt,
+        cursorTitle = this.cursorTitle,
+        cursorId = this.cursorId,
+        size = this.size,
+    )
 }

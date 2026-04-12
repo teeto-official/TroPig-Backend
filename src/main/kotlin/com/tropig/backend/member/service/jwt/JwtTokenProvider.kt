@@ -60,6 +60,15 @@ class JwtTokenProvider(
         false
     }
 
+    fun getExpiration(token: String): Date {
+        val claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .body
+        return claims.expiration
+    }
+
     fun parseToken(token: String): Map<String, Any> {
         try {
             val claimsJws = Jwts.parserBuilder()

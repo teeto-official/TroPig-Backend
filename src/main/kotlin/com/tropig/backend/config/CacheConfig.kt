@@ -2,21 +2,27 @@ package com.tropig.backend.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.CachingConfigurer
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.cache.caffeine.CaffeineCache
 import org.springframework.cache.caffeine.CaffeineCacheManager
+import org.springframework.cache.interceptor.CacheErrorHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import java.util.concurrent.TimeUnit
 
 @Configuration
 @EnableCaching
-class CacheConfig {
+class CacheConfig(private val cacheErrorHandler: CacheErrorHandler) : CachingConfigurer {
 
     private val logger = LoggerFactory.getLogger(CacheConfig::class.java)
 
+    override fun errorHandler(): CacheErrorHandler = cacheErrorHandler
+
     @Bean
-    fun cacheManager(): CaffeineCacheManager {
+    @Primary
+    override fun cacheManager(): CaffeineCacheManager {
         val cacheManager = object : CaffeineCacheManager() {
 
             override fun createCaffeineCache(name: String): CaffeineCache {

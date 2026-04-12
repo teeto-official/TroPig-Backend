@@ -10,6 +10,7 @@ import com.tropig.backend.report.model.response.MyReportResponse
 import com.tropig.backend.report.model.response.ReportResponse
 import com.tropig.backend.report.model.response.ReportTypeResponse
 import com.tropig.backend.report.repository.ReportRepository
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -44,6 +45,7 @@ class ReportService(
         return reportPage.map { ReportResponse.from(it, aliasById[it.contentId], nicknameById[it.memberId]) }
     }
 
+    @Cacheable(cacheNames = ["report:types"])
     fun getReportTypes(): List<ReportTypeResponse> = ReportTypeResponse.fromAll()
 
     @Transactional
