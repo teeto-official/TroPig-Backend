@@ -107,7 +107,7 @@ class MemberController(
 
     @GetMapping("/profile/{nickname}")
     fun getMemberProfile(@PathVariable nickname: String): MemberProfileResponse {
-        val member = memberService.getUserByNickname(nickname) ?: throw NotFoundException(
+        val member = memberService.getMemberProfile(nickname) ?: throw NotFoundException(
             message = "회원 정보를 찾을 수 없습니다.",
             code = MessageCode.NOT_FOUND_MEMBER,
         )
@@ -120,7 +120,7 @@ class MemberController(
         @LoginMember authMember: AuthMember?,
         @PathVariable nickname: String,
     ): CountSearchContentResponse {
-        val member = memberService.getUserByNickname(nickname) ?: throw NotFoundException(
+        val member = memberService.getMemberProfile(nickname) ?: throw NotFoundException(
             message = "회원 정보를 찾을 수 없습니다.",
             code = MessageCode.NOT_FOUND_MEMBER,
         )
@@ -130,8 +130,8 @@ class MemberController(
         }
 
         val isAdult = authMember?.adult ?: false
-        val scenarioCount = contentService.getPublishedContentsByMember(member.id, ContentType.SCENARIO, isAdult).size.toLong()
-        val resourceCount = contentService.getPublishedContentsByMember(member.id, ContentType.RESOURCE, isAdult).size.toLong()
+        val scenarioCount = contentService.getPublishedContentCountByMember(member.id, ContentType.SCENARIO, isAdult)
+        val resourceCount = contentService.getPublishedContentCountByMember(member.id, ContentType.RESOURCE, isAdult)
         return CountSearchContentResponse(scenarioCount = scenarioCount, resourceCount = resourceCount)
     }
 
