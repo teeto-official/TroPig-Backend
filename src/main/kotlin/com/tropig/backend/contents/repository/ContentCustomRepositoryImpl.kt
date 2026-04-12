@@ -403,9 +403,9 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
 
     private fun appendKeywordClause(sql: StringBuilder, params: MutableMap<String, Any?>, keyword: String?) {
         val q = keyword?.trim().orEmpty()
-        if (q.isEmpty() || q.length == 1) return
+        if (q.isEmpty()) return
 
-        val pattern = if (q.length == 2) "${q.lowercase()}%" else "%${q.lowercase()}%"
+        val pattern = "%${q.lowercase()}%"
         sql.append("\n  AND lower(c.search_text) LIKE :kw")
         params["kw"] = pattern
     }
