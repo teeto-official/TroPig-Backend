@@ -52,6 +52,8 @@ class MemberService(
 
     fun getUserById(id: Long): Member? = memberRepository.findMemberByIdAndDeletedAtIsNull(id)
 
+    fun getUserByNickname(nickname: String): Member? = memberRepository.findByNicknameAndDeletedAtIsNull(nickname)
+
     fun findMemberAuthInfo(memberId: Long): MemberAuthInfo? = memberAuthInfoRepository.findByMemberId(memberId)
 
     @Transactional
