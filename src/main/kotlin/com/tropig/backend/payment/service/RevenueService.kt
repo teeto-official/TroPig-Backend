@@ -12,7 +12,6 @@ import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.payment.enums.PaymentStatus
 import com.tropig.backend.payment.enums.PurchaseStatus
-import com.tropig.backend.payment.enums.WithdrawalStatus
 import com.tropig.backend.payment.model.request.RevenueListRequest
 import com.tropig.backend.payment.model.request.WithdrawalListRequest
 import com.tropig.backend.payment.model.response.RevenueItemResponse

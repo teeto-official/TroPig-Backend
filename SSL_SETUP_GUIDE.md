@@ -22,11 +22,11 @@ Lightsail 콘솔
 #### B. DNS 설정 확인
 
 ```bash
-# dev.triquest.me가 Lightsail IP를 가리키는지 확인
-nslookup dev.triquest.me
+# dev.teeto.to가 Lightsail IP를 가리키는지 확인
+nslookup dev.teeto.to
 
 # 또는
-dig dev.triquest.me
+dig dev.teeto.to
 ```
 
 ### 2. 코드 커밋 & 배포
@@ -66,7 +66,7 @@ docker compose up -d
 docker logs certbot
 
 # 인증서 발급 확인
-sudo ls -la /var/lib/docker/volumes/dev_certbot-etc/_data/live/dev.triquest.me/
+sudo ls -la /var/lib/docker/volumes/dev_certbot-etc/_data/live/dev.teeto.to/
 ```
 
 ### 4. HTTPS 설정 활성화
@@ -94,10 +94,10 @@ docker compose restart nginx
 
 ```bash
 # HTTPS 접속 테스트
-curl -v https://dev.triquest.me/api/health
+curl -v https://dev.teeto.to/api/health
 
 # 브라우저에서
-https://dev.triquest.me/swagger-ui.html
+https://dev.teeto.to/swagger-ui.html
 ```
 
 ## 자동 갱신 설정
@@ -135,7 +135,7 @@ crontab -e
 **해결:**
 ```bash
 # DNS 확인
-nslookup dev.triquest.me
+nslookup dev.teeto.to
 
 # Lightsail IP와 일치하는지 확인
 curl ifconfig.me
@@ -156,7 +156,7 @@ curl ifconfig.me
 **해결:**
 ```bash
 # 인증서 확인
-docker exec nginx ls -la /etc/letsencrypt/live/dev.triquest.me/
+docker exec nginx ls -la /etc/letsencrypt/live/dev.teeto.to/
 
 # 없으면 certbot 다시 실행
 docker compose up certbot
@@ -186,10 +186,10 @@ SSL 설정이 복잡하면 **HTTP만** 사용할 수도 있습니다:
 
 ```javascript
 // ❌ HTTPS
-const API_URL = 'https://dev.triquest.me';
+const API_URL = 'https://dev.teeto.to';
 
 // ✅ HTTP (임시)
-const API_URL = 'http://dev.triquest.me';
+const API_URL = 'http://dev.teeto.to';
 ```
 
 ### 2. Mixed Content 경고 해결
@@ -206,7 +206,7 @@ const API_URL = 'http://dev.triquest.me';
 
 ```bash
 # 1. HTTP로 접근
-curl http://dev.triquest.me/api/health
+curl http://dev.teeto.to/api/health
 
 # 2. 프론트엔드에서도 HTTP 사용
 ```
@@ -233,7 +233,7 @@ mv nginx/conf.d/default.conf nginx/conf.d/default.conf.disabled
 docker exec nginx nginx -s reload
 
 # 5. 테스트
-curl https://dev.triquest.me/api/health
+curl https://dev.teeto.to/api/health
 ```
 
 ## 참고 자료
@@ -246,4 +246,4 @@ curl https://dev.triquest.me/api/health
 
 **작성일:** 2026-02-07
 **프로젝트:** TroPig Backend
-**도메인:** dev.triquest.me
+**도메인:** dev.teeto.to

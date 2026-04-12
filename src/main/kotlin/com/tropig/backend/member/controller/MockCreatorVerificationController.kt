@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 /**
  * 로컬 개발 전용 창작자 인증 Mock 컨트롤러
