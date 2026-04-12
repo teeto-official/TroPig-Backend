@@ -18,6 +18,8 @@ import com.tropig.backend.payment.model.response.CreatePurchaseResponse
 import com.tropig.backend.payment.model.response.PurchaseResponse
 import com.tropig.backend.payment.repository.PaymentRepository
 import com.tropig.backend.payment.repository.PurchaseRepository
+import org.slf4j.LoggerFactory
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -27,7 +29,9 @@ class PaymentService(
     private val paymentRepository: PaymentRepository,
     private val purchaseRepository: PurchaseRepository,
     private val contentRepository: ContentRepository,
+    private val redisTemplate: RedisTemplate<String, String>,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
      * 구매 요청 생성 (결제 생성)
@@ -191,6 +195,8 @@ class PaymentService(
         )
         val savedPurchase = purchaseRepository.save(purchase)
 
+        evictPurchaseCountCache(memberId)
+
         return PurchaseResponse(
             id = savedPurchase.id,
             memberId = savedPurchase.memberId,
@@ -278,6 +284,17 @@ class PaymentService(
             contentId,
             PurchaseStatus.COMPLETED,
         )
+
+    private fun evictPurchaseCountCache(memberId: Long) {
+        try {
+            val keys = redisTemplate.keys("purchaseCount::$memberId:*")
+            if (!keys.isNullOrEmpty()) {
+                redisTemplate.delete(keys)
+            }
+        } catch (e: Exception) {
+            logger.warn("구매 카운트 캐시 삭제 실패 - memberId={}, error={}", memberId, e.message)
+        }
+    }
 
     private fun generateOrderId(memberId: Long, contentId: Long): String =
         "payment-content-$contentId-${System.currentTimeMillis()}"
