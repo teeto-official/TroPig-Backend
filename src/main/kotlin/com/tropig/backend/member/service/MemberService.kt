@@ -38,6 +38,8 @@ class MemberService(
     private val s3Service: S3Service,
     private val jwtTokenProvider: JwtTokenProvider,
     private val stringUtil: StringUtil,
+    private val memberCacheService: MemberCacheService,
+    private val redisRefreshTokenService: RedisRefreshTokenService,
 ) {
 
     companion object {
@@ -80,6 +82,8 @@ class MemberService(
         val now = Date()
         val token = jwtTokenProvider.getToken(member, now)
 
+        redisRefreshTokenService.save(member.id, token.second)
+
         return TokenResponse(
             token.first,
             token.second,
@@ -94,6 +98,8 @@ class MemberService(
 
         val token = jwtTokenProvider.getToken(member, Date())
 
+        redisRefreshTokenService.save(member.id, token.second)
+
         return TokenResponse(
             token.first,
             token.second,
@@ -107,12 +113,21 @@ class MemberService(
         if (!jwtTokenProvider.validateToken(token)) {
             throw IllegalArgumentException("유효하지 않은 refresh token입니다.")
         }
-        return jwtTokenProvider.getUserIdFromToken(token)
+        val memberId = jwtTokenProvider.getUserIdFromToken(token)
+
+        val storedToken = redisRefreshTokenService.findByMemberId(memberId)
+        if (storedToken != null && storedToken != token) {
+            throw IllegalArgumentException("폐기된 refresh token입니다.")
+        }
+
+        return memberId
     }
 
     fun refreshToken(member: Member): TokenResponse {
         val now = Date()
         val token = jwtTokenProvider.getToken(member, now)
+
+        redisRefreshTokenService.save(member.id, token.second)
 
         return TokenResponse(
             token.first,
@@ -206,7 +221,9 @@ class MemberService(
             member.favoriteGenres = request.favoriteGenres.joinToString(",")
         }
 
-        return memberRepository.save(member)
+        return memberRepository.save(member).also {
+            memberCacheService.evictMember(member.id)
+        }
     }
 
     @Transactional
@@ -224,6 +241,8 @@ class MemberService(
         )
         // 7일간 보관용
         it.deletedAt = LocalDateTime.now()
+        memberCacheService.evictMember(id)
+        redisRefreshTokenService.deleteByMemberId(id)
         it
     }
 

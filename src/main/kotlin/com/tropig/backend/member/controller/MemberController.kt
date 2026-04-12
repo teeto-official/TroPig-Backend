@@ -15,6 +15,9 @@ import com.tropig.backend.member.model.request.UpdateMemberRequest
 import com.tropig.backend.member.model.response.MemberResponse
 import com.tropig.backend.member.model.response.TokenResponse
 import com.tropig.backend.member.service.MemberService
+import com.tropig.backend.member.service.RedisRefreshTokenService
+import com.tropig.backend.member.service.jwt.JwtTokenProvider
+import com.tropig.backend.member.service.jwt.TokenBlacklistService
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -27,6 +30,9 @@ class MemberController(
     private val memberService: MemberService,
     private val contentService: ContentService,
     private val s3Service: S3Service,
+    private val tokenBlacklistService: TokenBlacklistService,
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val redisRefreshTokenService: RedisRefreshTokenService,
 ) {
     @PostMapping("/sign-up")
     fun createUser(@RequestBody request: SignUpRequest): ResponseEntity<Any> = try {
@@ -40,6 +46,19 @@ class MemberController(
     fun loginUser(@RequestBody request: SignInRequest): TokenResponse {
         val member = memberService.signIn(request)
         return member
+    }
+
+    @RequireAuth
+    @PostMapping("/sign-out")
+    fun signOut(
+        @LoginMember authMember: AuthMember,
+        @RequestHeader("Authorization") authorizationHeader: String,
+    ): ResponseEntity<Void> {
+        val token = authorizationHeader.removePrefix("Bearer ")
+        val expiration = jwtTokenProvider.getExpiration(token)
+        tokenBlacklistService.blacklist(token, expiration)
+        redisRefreshTokenService.deleteByMemberId(authMember.memberId)
+        return ResponseEntity.noContent().build()
     }
 
     @RequireAuth
