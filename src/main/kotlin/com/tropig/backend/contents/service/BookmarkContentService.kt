@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class BookmarkContentService(private val bookmarkContentRepository: BookmarkContentRepository) {
+class BookmarkContentService(
+    private val bookmarkContentRepository: BookmarkContentRepository,
+    private val counterCacheService: CounterCacheService,
+) {
 
     fun getBookmarkInfo(memberId: Long?, contentIds: List<Long>): Map<Long, BookmarkContentInfo> {
         val bookmarkInfo = memberId?.let {
@@ -49,11 +52,13 @@ class BookmarkContentService(private val bookmarkContentRepository: BookmarkCont
     @Transactional
     fun saveBookmark(memberId: Long, contentId: Long) {
         bookmarkContentRepository.upsertBookmark(memberId, contentId)
+        counterCacheService.incrementBookmark(contentId)
     }
 
     @Transactional
     fun deleteBookmark(memberId: Long, contentId: Long) {
         bookmarkContentRepository.deleteBookmark(memberId, contentId)
+        counterCacheService.decrementBookmark(contentId)
     }
 
     fun existsBookmark(memberId: Long, contentId: Long): Boolean =
