@@ -22,6 +22,7 @@ import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.member.repository.WithdrawMemberRepository
 import com.tropig.backend.member.service.jwt.JwtTokenProvider
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
@@ -51,6 +52,11 @@ class MemberService(
     fun getUserByEmail(email: String): Member? = memberRepository.findByEmail(email)
 
     fun getUserById(id: Long): Member? = memberRepository.findMemberByIdAndDeletedAtIsNull(id)
+
+    fun getUserByNickname(nickname: String): Member? = memberRepository.findByNicknameAndDeletedAtIsNull(nickname)
+
+    @Cacheable(value = ["memberProfile"], key = "#nickname")
+    fun getMemberProfile(nickname: String): Member? = memberRepository.findByNicknameAndDeletedAtIsNull(nickname)
 
     fun findMemberAuthInfo(memberId: Long): MemberAuthInfo? = memberAuthInfoRepository.findByMemberId(memberId)
 

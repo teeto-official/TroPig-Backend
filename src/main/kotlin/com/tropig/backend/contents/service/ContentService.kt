@@ -102,6 +102,20 @@ class ContentService(
     fun getDraftContent(memberId: Long): List<Content> =
         contentRepository.findByMemberIdAndStatus(memberId, ContentsStatus.DRAFT)
 
+    @Cacheable(value = ["memberContentCount"], key = "#memberId + '_' + #type.name() + '_' + #isAdult")
+    fun getPublishedContentCountByMember(memberId: Long, type: ContentType, isAdult: Boolean): Long {
+        return getPublishedContentsByMember(memberId, type, isAdult).size.toLong()
+    }
+
+    fun getPublishedContentsByMember(memberId: Long, type: ContentType, isAdult: Boolean): List<Content> {
+        val contents = contentRepository.findByMemberIdAndTypeAndStatusIn(
+            memberId,
+            type,
+            listOf(ContentsStatus.PUBLISHED),
+        )
+        return if (isAdult) contents else contents.filter { !it.adult }
+    }
+
     fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> =
         contentRepository.searchContents(request)
 

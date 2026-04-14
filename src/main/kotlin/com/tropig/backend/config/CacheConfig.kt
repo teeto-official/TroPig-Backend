@@ -60,6 +60,14 @@ class CacheConfig(private val cacheErrorHandler: CacheErrorHandler) : CachingCon
                     "contentOptions" -> Caffeine.newBuilder()
                         .expireAfterWrite(1, TimeUnit.HOURS)
 
+                    "memberProfile" -> Caffeine.newBuilder()
+                        .expireAfterWrite(5, TimeUnit.MINUTES)
+                        .maximumSize(500)
+
+                    "memberContentCount" -> Caffeine.newBuilder()
+                        .expireAfterWrite(3, TimeUnit.MINUTES)
+                        .maximumSize(500)
+
                     // 크리에이터 발행된 작품 조회 캐시
                     // TODO: 추후 Redis로 변경. 현재는 캐싱 삭제
 //                    "creatorContentsByMember" -> Caffeine.newBuilder()
