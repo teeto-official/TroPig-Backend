@@ -12,9 +12,14 @@ class PickContentService(private val pickContentRepository: PickContentRepositor
 
     @Transactional
     @CacheEvict(value = ["pickContent", "pickContentByType"], allEntries = true)
-    fun updatePickContents(pickContents: List<PickContent>): List<PickContent> {
-        pickContentRepository.deleteAll()
-        return pickContentRepository.saveAll(pickContents)
+    fun updatePickContentsByType(
+        existingContentIds: List<Long>,
+        newPickContents: List<PickContent>,
+    ): List<PickContent> {
+        if (existingContentIds.isNotEmpty()) {
+            pickContentRepository.deleteAllByContentIdIn(existingContentIds)
+        }
+        return pickContentRepository.saveAll(newPickContents)
     }
 
     @Cacheable(value = ["pickContent"])
