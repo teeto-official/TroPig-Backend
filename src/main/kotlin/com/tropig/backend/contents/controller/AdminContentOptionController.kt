@@ -9,6 +9,7 @@ import com.tropig.backend.common.exception.ContentException
 import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.entity.ContentOption
+import com.tropig.backend.contents.model.request.AdminContentOptionBatchUpdateRequest
 import com.tropig.backend.contents.model.request.AdminContentOptionRequest
 import com.tropig.backend.contents.model.request.AdminContentOptionUpdateRequest
 import com.tropig.backend.contents.model.response.AdminContentOptionResponse
@@ -58,6 +59,26 @@ class AdminContentOptionController(private val contentOptionRepository: ContentO
             sortOrder = request.sortOrder,
         )
         return contentOptionRepository.save(option).toAdminResponse()
+    }
+
+    @PutMapping("/batch")
+    @RequireAuth
+    fun batchUpdateOptions(
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: AdminContentOptionBatchUpdateRequest,
+    ): List<AdminContentOptionResponse> {
+        checkAdminRole(authMember)
+        return request.items.map { item ->
+            val existing = contentOptionRepository.findById(item.id).orElseThrow {
+                NotFoundException("해당 옵션을 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT_INFO)
+            }
+            val updated = existing.copy(
+                displayName = item.displayName,
+                show = item.show,
+                sortOrder = item.sortOrder,
+            )
+            contentOptionRepository.save(updated).toAdminResponse()
+        }
     }
 
     @PutMapping("/{id}")
