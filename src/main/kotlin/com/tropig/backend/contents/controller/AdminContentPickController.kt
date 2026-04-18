@@ -5,6 +5,7 @@ import com.tropig.backend.common.annotation.LoginMember
 import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.ContentException
+import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.contents.entity.PickContent
 import com.tropig.backend.contents.enums.ContentType
@@ -19,12 +20,15 @@ import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import io.swagger.v3.oas.annotations.Operation
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 
 @ApiController
 @RequestMapping("/api/admin/content")
@@ -105,6 +109,16 @@ class AdminContentPickController(
                 orderNo = it.orderNo,
             )
         }
+    }
+
+    @PatchMapping("/{contentId}/ban")
+    @RequireAuth
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun banContent(@LoginMember authMember: AuthMember, @PathVariable contentId: Long) {
+        checkAdminRole(authMember)
+        val content = contentService.findById(contentId)
+            ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
+        contentService.banContent(content)
     }
 
     @PostMapping("/migrate/rule-genre")

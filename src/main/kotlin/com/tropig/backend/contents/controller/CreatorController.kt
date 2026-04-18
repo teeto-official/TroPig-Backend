@@ -147,6 +147,13 @@ class CreatorController(
             ?.takeIf { it.status != ContentsStatus.DELETED }
             ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
 
+        if (content.status == ContentsStatus.BANNED) {
+            throw ContentException(
+                message = "관리자에 의해 비공개 처리된 콘텐츠의 상태는 변경할 수 없습니다.",
+                code = MessageCode.INCORRECT_ROLE,
+            )
+        }
+
         val updatedContent = contentService.updateContentStatus(
             content = content,
             memberId = authMember.memberId,
@@ -173,8 +180,9 @@ class CreatorController(
         }
         val contents = when (status) {
             ContentsStatus.PUBLISHED -> {
-                revenueService.getCreatorContents(authMember.memberId, type)
-                    .sortedByDescending { it.publishedAt }
+                val published = revenueService.getCreatorContents(authMember.memberId, type)
+                val banned = contentService.getBannedContentsByMember(authMember.memberId, type)
+                (published + banned).sortedByDescending { it.publishedAt ?: it.updatedAt }
             }
             ContentsStatus.DRAFT -> {
                 contentService.getDraftContent(authMember.memberId)

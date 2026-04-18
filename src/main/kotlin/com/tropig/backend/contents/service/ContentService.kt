@@ -115,6 +115,9 @@ class ContentService(
         return if (isAdult) contents else contents.filter { !it.adult }
     }
 
+    fun getBannedContentsByMember(memberId: Long, type: ContentType): List<Content> =
+        contentRepository.findByMemberIdAndTypeAndStatusIn(memberId, type, listOf(ContentsStatus.BANNED))
+
     fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> =
         contentRepository.searchContents(request)
 
@@ -546,6 +549,12 @@ class ContentService(
         } else {
             alias
         }
+    }
+
+    @Transactional
+    fun banContent(content: Content): Content {
+        content.status = ContentsStatus.BANNED
+        return save(content)
     }
 
     @Transactional
