@@ -22,7 +22,6 @@ import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
-import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.service.RevenueService
 import org.springframework.http.HttpStatus
@@ -43,7 +42,7 @@ class CreatorController(
     @ResponseStatus(HttpStatus.CREATED)
     fun createContent(@LoginMember authMember: AuthMember, @RequestBody request: CreateContentRequest): Long {
         // CREATOR 권한 체크
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠를 생성할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -67,7 +66,7 @@ class CreatorController(
         @RequestBody request: UpdateContentRequest,
     ): Long {
         // 1. CREATOR 권한 체크
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠를 수정할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -106,7 +105,7 @@ class CreatorController(
         contentId: Long,
     ) {
         // 1. AuthMember의 role이 CREATOR인지 확인
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 "CREATOR 권한이 필요합니다.",
                 MessageCode.INCORRECT_ROLE,
@@ -129,7 +128,7 @@ class CreatorController(
         @PathVariable contentId: Long,
         @RequestBody request: UpdateContentStatusRequest,
     ): Long {
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠 상태를 변경할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -172,7 +171,7 @@ class CreatorController(
         @RequestParam(defaultValue = "15") size: Int,
         @RequestParam(defaultValue = "0") cursorContentId: Long,
     ): List<CreatorContentResponse> {
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw MemberException(
                 message = "창작자가 아닙니다. memberId: ${authMember.memberId}",
                 code = MessageCode.INCORRECT_ROLE,
@@ -239,7 +238,7 @@ class CreatorController(
             )
 
         // 2. CREATOR 권한 확인
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "창작자 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
