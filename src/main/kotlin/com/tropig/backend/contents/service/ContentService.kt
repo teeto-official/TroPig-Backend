@@ -23,6 +23,7 @@ import com.tropig.backend.contents.repository.RelatedContentRepository
 import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
@@ -58,9 +59,9 @@ class ContentService(
     @Cacheable(value = ["pickContentByType"], key = "#type.name() + '_' + #isAdult")
     fun getPickContentsByType(type: ContentType, isAdult: Boolean, contentIds: List<Long>): List<PickContentResult> {
         val contents = if (isAdult) {
-            contentRepository.findByIdInAndType(contentIds, type)
+            contentRepository.findByIdInAndTypeAndStatus(contentIds, type, ContentsStatus.PUBLISHED)
         } else {
-            contentRepository.findContentsByIdInAndTypeAndAdult(contentIds, type, false)
+            contentRepository.findByIdInAndTypeAndAdultAndStatus(contentIds, type, false, ContentsStatus.PUBLISHED)
         }
         val thumbnails = getThumbnailPath(contentIds).associateBy { it.contentId }
         val tags = getTags(contentIds)
@@ -552,6 +553,10 @@ class ContentService(
     }
 
     @Transactional
+    @CacheEvict(
+        value = ["randomContents", "randomGenreContents", "randomRuleContents", "getNewestContents"],
+        allEntries = true,
+    )
     fun banContent(content: Content): Content {
         content.status = ContentsStatus.BANNED
         return save(content)
