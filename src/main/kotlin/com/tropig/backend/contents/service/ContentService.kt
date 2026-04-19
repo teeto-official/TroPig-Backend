@@ -554,7 +554,10 @@ class ContentService(
 
     @Transactional
     @CacheEvict(
-        value = ["randomContents", "randomGenreContents", "randomRuleContents", "getNewestContents"],
+        value = [
+            "randomContents", "randomGenreContents", "randomRuleContents",
+            "getNewestContents", "pickContentByType",
+        ],
         allEntries = true,
     )
     fun banContent(content: Content): Content {
