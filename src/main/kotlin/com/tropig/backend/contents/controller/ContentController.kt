@@ -211,8 +211,15 @@ class ContentController(
                 MessageCode.NOT_FOUND_CONTENT,
             )
 
-        // 1. 작가이고 본인 작품일 경우: DRAFT, PRIVATE, PUBLISHED 상태에서 조회 가능
-        val isCreatorAndOwnContent = authMember?.role == Role.CREATOR && authMember.memberId == content.memberId
+        // 0. 관리자의 경우: DELETED를 제외한 모든 상태 조회 가능
+        if (authMember?.role == Role.ADMIN) {
+            if (content.status != ContentsStatus.DELETED) {
+                return buildContentDetailResponse(content, authMember)
+            }
+        }
+
+        // 1. 작가이고 본인 작품일 경우: DRAFT, PRIVATE, PUBLISHED, BANNED 상태에서 조회 가능
+        val isCreatorAndOwnContent = authMember?.role?.isCreator == true && authMember.memberId == content.memberId
         if (isCreatorAndOwnContent) {
             if (content.status in ContentsStatus.authorStatuses) {
                 // 작가는 성인 인증이 되어 있으므로 성인 콘텐츠 체크 불필요

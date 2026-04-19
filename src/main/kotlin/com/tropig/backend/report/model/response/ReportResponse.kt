@@ -14,9 +14,15 @@ data class ReportResponse(
     val reason: String,
     val resolved: Boolean,
     val createdAt: LocalDateTime,
+    val contentBanned: Boolean = false,
 ) {
     companion object {
-        fun from(report: Report, contentAlias: String? = null, reporterNickname: String? = null) = ReportResponse(
+        fun from(
+            report: Report,
+            contentAlias: String? = null,
+            reporterNickname: String? = null,
+            contentBanned: Boolean = false,
+        ) = ReportResponse(
             id = report.id,
             contentId = report.contentId,
             contentAlias = contentAlias,
@@ -26,6 +32,7 @@ data class ReportResponse(
             reason = report.reason,
             resolved = report.resolved,
             createdAt = report.createdAt,
+            contentBanned = contentBanned,
         )
     }
 }
