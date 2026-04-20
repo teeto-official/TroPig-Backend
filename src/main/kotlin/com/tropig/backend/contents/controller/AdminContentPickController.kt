@@ -81,7 +81,7 @@ class AdminContentPickController(
 
         val existingPickContentIds = pickContentService.getAllPickContent()
             .map { it.contentId }
-            .let { ids -> contentService.findByIdInAndType(ids, type).map { it.id } }
+            .let { ids -> contentService.findPublishedByIdInAndType(ids, type).map { it.id } }
 
         if (request.isEmpty()) {
             pickContentService.updatePickContentsByType(existingPickContentIds, emptyList())

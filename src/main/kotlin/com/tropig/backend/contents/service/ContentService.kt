@@ -51,6 +51,9 @@ class ContentService(
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
         contentRepository.findByIdInAndType(ids, type)
 
+    fun findPublishedByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
+        contentRepository.findByIdInAndTypeAndStatus(ids, type, ContentsStatus.PUBLISHED)
+
     fun getTags(contentIds: List<Long>): Map<Long, List<ContentTagResult>> =
         contentTagRepository.findByContentIdIn(contentIds)
             .map { ContentTagResult(it.tagId, it.contentId, it.type, it.name) }
