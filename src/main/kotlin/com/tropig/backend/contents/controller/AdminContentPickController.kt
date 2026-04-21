@@ -48,14 +48,14 @@ class AdminContentPickController(
     ): List<AdminPickContentDetailResponse> {
         checkAdminRole(authMember)
 
-        val pickContents = pickContentService.getAllPickContent()
-        val contentIds = pickContents.map { it.contentId }
-        val contents = contentService.findByIdInAndType(contentIds, type)
+        val allPickContents = pickContentService.getAllPickContent()
+        val allContentIds = allPickContents.map { it.contentId }
+        val contents = contentService.findByIdInAndType(allContentIds, type)
         val writerNames = creatorService.getWritersName(contents.map { it.memberId })
-        val thumbnails = contentService.getThumbnailPath(contentIds).associateBy { it.contentId }
+        val thumbnails = contentService.getThumbnailPath(allContentIds).associateBy { it.contentId }
         val contentsMap = contents.associateBy { it.id }
 
-        return pickContents.mapNotNull { pick ->
+        return allPickContents.mapNotNull { pick ->
             val content = contentsMap[pick.contentId] ?: return@mapNotNull null
             AdminPickContentDetailResponse(
                 id = content.id,
@@ -79,7 +79,14 @@ class AdminContentPickController(
     ): List<AdminPickContentResponse> {
         checkAdminRole(authMember)
 
-        if (request.isEmpty()) return emptyList()
+        val existingPickContentIds = pickContentService.getAllPickContent()
+            .map { it.contentId }
+            .let { ids -> contentService.findPublishedByIdInAndType(ids, type).map { it.id } }
+
+        if (request.isEmpty()) {
+            pickContentService.updatePickContentsByType(existingPickContentIds, emptyList())
+            return emptyList()
+        }
 
         val originContents = contentService.findByIdInAndType(request.map { it.contentId }, type)
         val orderMap = request.associate { it.contentId to it.orderNo }
@@ -92,7 +99,7 @@ class AdminContentPickController(
                 )
             }
 
-        return pickContentService.updatePickContents(sortedContents).map {
+        return pickContentService.updatePickContentsByType(existingPickContentIds, sortedContents).map {
             AdminPickContentResponse(
                 contentId = it.contentId,
                 orderNo = it.orderNo,

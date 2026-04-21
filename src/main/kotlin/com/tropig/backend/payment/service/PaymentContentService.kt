@@ -6,6 +6,7 @@ import com.tropig.backend.payment.enums.PurchaseStatus
 import com.tropig.backend.payment.model.request.PurchasedContentListRequest
 import com.tropig.backend.payment.model.result.PurchasedContentProjection
 import com.tropig.backend.payment.repository.PurchaseRepository
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
@@ -23,6 +24,11 @@ class PaymentContentService(private val purchaseRepository: PurchaseRepository) 
             status = PurchaseStatus.COMPLETED,
         )
 
+    @Cacheable(
+        cacheNames = ["purchaseCount"],
+        key = "#memberId + ':' + (#type?.name ?: 'ALL')",
+        cacheManager = "redisCacheManager",
+    )
     fun getPurchaseCount(memberId: Long, type: ContentType? = null): Long = if (type != null) {
         purchaseRepository.countByMemberIdAndStatusAndType(memberId, PurchaseStatus.COMPLETED.name, type.name)
     } else {

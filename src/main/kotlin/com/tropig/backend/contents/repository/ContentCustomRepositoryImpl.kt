@@ -42,7 +42,11 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         )
     }
 
-//    @Cacheable(cacheNames = ["randomGenreContents"], key = "#type.name + '_' + #genreId + '_' + #isAdult")
+    @Cacheable(
+        cacheNames = ["randomGenreContents"],
+        key = "#type.name + '_' + #genreId + '_' + #isAdult",
+        cacheManager = "redisCacheManager",
+    )
     override fun findRandomGenreContents(type: ContentType, genreId: Long, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *
@@ -65,7 +69,11 @@ class ContentCustomRepositoryImpl(@PersistenceContext private val em: EntityMana
         return executeRandomList(sql, params)
     }
 
-//    @Cacheable(cacheNames = ["randomRuleContents"], key = "#ruleId + '_' + #isAdult")
+    @Cacheable(
+        cacheNames = ["randomRuleContents"],
+        key = "#ruleId + '_' + #isAdult",
+        cacheManager = "redisCacheManager",
+    )
     override fun findRandomRuleContents(ruleId: Long, isAdult: Boolean): List<Content> {
         var sql = """
             SELECT *

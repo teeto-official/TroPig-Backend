@@ -1,5 +1,6 @@
 package com.tropig.backend.contents.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.ContentException
@@ -21,10 +22,14 @@ import com.tropig.backend.contents.repository.ContentThumbnailRepository
 import com.tropig.backend.contents.repository.RelatedContentRepository
 import com.tropig.backend.contents.repository.TagRepository
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -36,11 +41,18 @@ class ContentService(
     private val relatedContentRepository: RelatedContentRepository,
     private val contentOptionRepository: ContentOptionRepository,
     private val s3Service: S3Service,
+    private val redisTemplate: RedisTemplate<String, String>,
+    private val objectMapper: ObjectMapper,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun findById(id: Long): Content? = contentRepository.findById(id).getOrNull()
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
         contentRepository.findByIdInAndType(ids, type)
+
+    fun findPublishedByIdInAndType(ids: List<Long>, type: ContentType): List<Content> =
+        contentRepository.findByIdInAndTypeAndStatus(ids, type, ContentsStatus.PUBLISHED)
 
     fun getTags(contentIds: List<Long>): Map<Long, List<ContentTagResult>> =
         contentTagRepository.findByContentIdIn(contentIds)
@@ -50,9 +62,9 @@ class ContentService(
     @Cacheable(value = ["pickContentByType"], key = "#type.name() + '_' + #isAdult")
     fun getPickContentsByType(type: ContentType, isAdult: Boolean, contentIds: List<Long>): List<PickContentResult> {
         val contents = if (isAdult) {
-            contentRepository.findByIdInAndType(contentIds, type)
+            contentRepository.findByIdInAndTypeAndStatus(contentIds, type, ContentsStatus.PUBLISHED)
         } else {
-            contentRepository.findContentsByIdInAndTypeAndAdult(contentIds, type, false)
+            contentRepository.findByIdInAndTypeAndAdultAndStatus(contentIds, type, false, ContentsStatus.PUBLISHED)
         }
         val thumbnails = getThumbnailPath(contentIds).associateBy { it.contentId }
         val tags = getTags(contentIds)
@@ -94,11 +106,62 @@ class ContentService(
     fun getDraftContent(memberId: Long): List<Content> =
         contentRepository.findByMemberIdAndStatus(memberId, ContentsStatus.DRAFT)
 
+    @Cacheable(value = ["memberContentCount"], key = "#memberId + '_' + #type.name() + '_' + #isAdult")
+    fun getPublishedContentCountByMember(memberId: Long, type: ContentType, isAdult: Boolean): Long =
+        getPublishedContentsByMember(memberId, type, isAdult).size.toLong()
+
+    fun getPublishedContentsByMember(memberId: Long, type: ContentType, isAdult: Boolean): List<Content> {
+        val contents = contentRepository.findByMemberIdAndTypeAndStatusIn(
+            memberId,
+            type,
+            listOf(ContentsStatus.PUBLISHED),
+        )
+        return if (isAdult) contents else contents.filter { !it.adult }
+    }
+
+    fun getBannedContentsByMember(memberId: Long, type: ContentType): List<Content> =
+        contentRepository.findByMemberIdAndTypeAndStatusIn(memberId, type, listOf(ContentsStatus.BANNED))
+
     fun searchContents(request: SearchContentRequestDto): CursorSlice<Content> =
         contentRepository.searchContents(request)
 
-    fun countSearchContents(request: SearchContentRequestDto): CountSearchContentsResult =
-        contentRepository.countSearchContents(request)
+    fun countSearchContents(request: SearchContentRequestDto): CountSearchContentsResult {
+        val cacheKey = buildSearchCountCacheKey(request)
+        try {
+            redisTemplate.opsForValue().get(cacheKey)?.let {
+                return objectMapper.readValue(it, CountSearchContentsResult::class.java)
+            }
+        } catch (e: Exception) {
+            logger.warn("검색 카운트 캐시 조회 실패 - key={}, error={}", cacheKey, e.message)
+        }
+
+        return contentRepository.countSearchContents(request).also {
+            try {
+                redisTemplate.opsForValue().set(
+                    cacheKey,
+                    objectMapper.writeValueAsString(it),
+                    SEARCH_COUNT_TTL_SECONDS,
+                    TimeUnit.SECONDS,
+                )
+            } catch (e: Exception) {
+                logger.warn("검색 카운트 캐시 저장 실패 - key={}, error={}", cacheKey, e.message)
+            }
+        }
+    }
+
+    private fun buildSearchCountCacheKey(request: SearchContentRequestDto): String {
+        val filterKey = "${request.searchText}:${request.level}:${request.ruleIds}:" +
+            "${request.genreIds}:${request.playerCountTypes}:${request.tags}:" +
+            "${request.publishingTypes}:${request.isAdult}"
+        val hash = MessageDigest.getInstance("MD5")
+            .digest(filterKey.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        return "search:count:$hash"
+    }
+
+    companion object {
+        private const val SEARCH_COUNT_TTL_SECONDS = 60L
+    }
 
     fun saveAllContentThumbnail(contentThumbnails: List<ContentThumbnail>): List<ContentThumbnail> =
         contentThumbnailRepository.saveAll(contentThumbnails)
@@ -490,6 +553,19 @@ class ContentService(
         } else {
             alias
         }
+    }
+
+    @Transactional
+    @CacheEvict(
+        value = [
+            "randomContents", "randomGenreContents", "randomRuleContents",
+            "getNewestContents", "pickContentByType",
+        ],
+        allEntries = true,
+    )
+    fun banContent(content: Content): Content {
+        content.status = ContentsStatus.BANNED
+        return save(content)
     }
 
     @Transactional

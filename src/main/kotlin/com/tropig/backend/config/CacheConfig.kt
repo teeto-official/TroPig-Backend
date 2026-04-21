@@ -2,21 +2,27 @@ package com.tropig.backend.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.CachingConfigurer
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.cache.caffeine.CaffeineCache
 import org.springframework.cache.caffeine.CaffeineCacheManager
+import org.springframework.cache.interceptor.CacheErrorHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import java.util.concurrent.TimeUnit
 
 @Configuration
 @EnableCaching
-class CacheConfig {
+class CacheConfig(private val cacheErrorHandler: CacheErrorHandler) : CachingConfigurer {
 
     private val logger = LoggerFactory.getLogger(CacheConfig::class.java)
 
+    override fun errorHandler(): CacheErrorHandler = cacheErrorHandler
+
     @Bean
-    fun cacheManager(): CaffeineCacheManager {
+    @Primary
+    override fun cacheManager(): CaffeineCacheManager {
         val cacheManager = object : CaffeineCacheManager() {
 
             override fun createCaffeineCache(name: String): CaffeineCache {
@@ -53,6 +59,14 @@ class CacheConfig {
 
                     "contentOptions" -> Caffeine.newBuilder()
                         .expireAfterWrite(1, TimeUnit.HOURS)
+
+                    "memberProfile" -> Caffeine.newBuilder()
+                        .expireAfterWrite(5, TimeUnit.MINUTES)
+                        .maximumSize(500)
+
+                    "memberContentCount" -> Caffeine.newBuilder()
+                        .expireAfterWrite(3, TimeUnit.MINUTES)
+                        .maximumSize(500)
 
                     // 크리에이터 발행된 작품 조회 캐시
                     // TODO: 추후 Redis로 변경. 현재는 캐싱 삭제

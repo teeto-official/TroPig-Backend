@@ -2,6 +2,7 @@ package com.tropig.backend.report.service
 
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.exception.IllegalArgumentException
+import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.repository.ContentRepository
 import com.tropig.backend.member.repository.MemberRepository
 import com.tropig.backend.report.entity.Report
@@ -10,6 +11,7 @@ import com.tropig.backend.report.model.response.MyReportResponse
 import com.tropig.backend.report.model.response.ReportResponse
 import com.tropig.backend.report.model.response.ReportTypeResponse
 import com.tropig.backend.report.repository.ReportRepository
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -39,11 +41,21 @@ class ReportService(
         val reports = reportPage.content
         val contentIds = reports.map { it.contentId }.distinct()
         val memberIds = reports.map { it.memberId }.distinct()
-        val aliasById = contentRepository.findByIdIn(contentIds).associate { it.id to it.alias }
+        val contentById = contentRepository.findByIdIn(contentIds).associateBy { it.id }
+        val aliasById = contentById.mapValues { it.value.alias }
+        val bannedById = contentById.mapValues { it.value.status == ContentsStatus.BANNED }
         val nicknameById = memberRepository.findByIdInAndDeletedAtIsNull(memberIds).associate { it.id to it.nickname }
-        return reportPage.map { ReportResponse.from(it, aliasById[it.contentId], nicknameById[it.memberId]) }
+        return reportPage.map {
+            ReportResponse.from(
+                it,
+                aliasById[it.contentId],
+                nicknameById[it.memberId],
+                bannedById[it.contentId] ?: false,
+            )
+        }
     }
 
+    @Cacheable(cacheNames = ["report:types"])
     fun getReportTypes(): List<ReportTypeResponse> = ReportTypeResponse.fromAll()
 
     @Transactional
@@ -52,9 +64,11 @@ class ReportService(
             .orElseThrow { IllegalArgumentException("존재하지 않는 신고입니다.", MessageCode.INVALID_PARAMS) }
         report.resolved = true
         val saved = reportRepository.save(report)
-        val alias = contentRepository.findById(saved.contentId).orElse(null)?.alias
+        val content = contentRepository.findById(saved.contentId).orElse(null)
+        val alias = content?.alias
+        val contentBanned = content?.status == ContentsStatus.BANNED
         val nickname = memberRepository.findMemberByIdAndDeletedAtIsNull(saved.memberId)?.nickname
-        return ReportResponse.from(saved, alias, nickname)
+        return ReportResponse.from(saved, alias, nickname, contentBanned)
     }
 
     @Transactional(readOnly = true)

@@ -15,6 +15,15 @@ interface ContentRepository :
 
     fun findByIdInAndType(ids: List<Long>, type: ContentType): List<Content>
 
+    fun findByIdInAndTypeAndStatus(ids: List<Long>, type: ContentType, status: ContentsStatus): List<Content>
+
+    fun findByIdInAndTypeAndAdultAndStatus(
+        ids: List<Long>,
+        type: ContentType,
+        adult: Boolean,
+        status: ContentsStatus,
+    ): List<Content>
+
     fun findContentsByIdInAndTypeAndAdult(ids: List<Long>, type: ContentType, adult: Boolean): List<Content>
 
     fun findByMemberId(memberId: Long): List<Content>

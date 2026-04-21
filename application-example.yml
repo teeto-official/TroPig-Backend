@@ -1,21 +1,92 @@
 spring:
+  profiles:
+    active:
+  mvc:
+    throw-exception-if-no-handler-found:
+  web:
+    resources:
+      add-mappings:
+
   datasource:
     url:
     username:
     password:
+    driver-class-name:
+  jpa:
+    hibernate:
+      ddl-auto:
+    show-sql:
+    properties:
+      hibernate:
+        dialect:
+        format_sql:
+  sql:
+    init:
+      platform:
+      mode:
+
   data:
     redis:
       host:
       port:
       password:
+      timeout:
+      lettuce:
+        pool:
+          max-active:
+          max-idle:
+          min-idle:
+
+  cache:
+    type:
+    caffeine:
+      spec:
+
+  mail:
+    host:
+    port: 587
+    username:
+    password:
+    properties:
+      mail.smtp:
+        auth:
+        starttls.enable:
+
+server:
+  port:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+  endpoint:
+    health:
+      show-details:
+  health:
+    mail:
+      enabled:
+
+logging:
+  level:
+    com.tropig.backend:
+    org.springframework.web:
+    org.springframework.web.servlet.resource:
+  pattern:
+    console:
 
 jwt:
   secret:
+  expiration:
+  refresh-expiration:
 
 mail:
   sender:
     address:
     name:
+  subjects:
+    sign_up:
+    receipt:
 
 aws:
   s3:
@@ -24,20 +95,17 @@ aws:
     access-key:
     secret-key:
 
-ses:
-  smtp:
-    username:
-    password:
+toss:
+  secret-key:
+  base-url:
+  client-key:
 
 portone:
   key:
     secret-v2:
-  store-id:
+  base-url:
   identity-verification:
     channel-key:
-  channels:
-    kcp:
-    kakao-pay:
 
 encryption:
   secret-key:
