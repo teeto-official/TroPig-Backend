@@ -9,7 +9,6 @@ import com.tropig.backend.common.model.AuthMember
 import com.tropig.backend.common.model.CursorSlice
 import com.tropig.backend.contents.entity.Content
 import com.tropig.backend.contents.enums.ContentType
-import com.tropig.backend.contents.enums.ContentsStatus
 import com.tropig.backend.contents.model.response.CountSearchContentResponse
 import com.tropig.backend.contents.model.response.SearchContentResponse
 import com.tropig.backend.contents.service.BookmarkContentService

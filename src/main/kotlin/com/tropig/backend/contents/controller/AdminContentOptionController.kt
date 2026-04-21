@@ -6,14 +6,13 @@ import com.tropig.backend.common.annotation.RequireAuth
 import com.tropig.backend.common.enums.MessageCode
 import com.tropig.backend.common.enums.OptionType
 import com.tropig.backend.common.exception.ContentException
-import com.tropig.backend.common.exception.NotFoundException
 import com.tropig.backend.common.model.AuthMember
-import com.tropig.backend.contents.entity.ContentOption
+import com.tropig.backend.contents.model.request.AdminContentOptionBatchUpdateRequest
 import com.tropig.backend.contents.model.request.AdminContentOptionRequest
 import com.tropig.backend.contents.model.request.AdminContentOptionUpdateRequest
 import com.tropig.backend.contents.model.response.AdminContentOptionResponse
 import com.tropig.backend.contents.model.response.toAdminResponse
-import com.tropig.backend.contents.repository.ContentOptionRepository
+import com.tropig.backend.contents.service.ContentOptionService
 import com.tropig.backend.member.enums.Role
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -27,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 
 @ApiController
 @RequestMapping("/api/admin/content/option")
-class AdminContentOptionController(private val contentOptionRepository: ContentOptionRepository) {
+class AdminContentOptionController(private val contentOptionService: ContentOptionService) {
 
     @GetMapping("/{type}")
     @RequireAuth
@@ -36,9 +35,7 @@ class AdminContentOptionController(private val contentOptionRepository: ContentO
         @PathVariable type: OptionType,
     ): List<AdminContentOptionResponse> {
         checkAdminRole(authMember)
-        return contentOptionRepository.findAllByType(type)
-            .sortedBy { it.sortOrder }
-            .map { it.toAdminResponse() }
+        return contentOptionService.getOptions(type).map { it.toAdminResponse() }
     }
 
     @PostMapping("/{type}")
@@ -50,14 +47,17 @@ class AdminContentOptionController(private val contentOptionRepository: ContentO
         @RequestBody request: AdminContentOptionRequest,
     ): AdminContentOptionResponse {
         checkAdminRole(authMember)
-        val option = ContentOption(
-            type = type,
-            name = request.name,
-            displayName = request.displayName,
-            show = request.show,
-            sortOrder = request.sortOrder,
-        )
-        return contentOptionRepository.save(option).toAdminResponse()
+        return contentOptionService.createOption(type, request).toAdminResponse()
+    }
+
+    @PutMapping("/bulk/update")
+    @RequireAuth
+    fun batchUpdateOptions(
+        @LoginMember authMember: AuthMember,
+        @RequestBody request: AdminContentOptionBatchUpdateRequest,
+    ): List<AdminContentOptionResponse> {
+        checkAdminRole(authMember)
+        return contentOptionService.batchUpdateOptions(request).map { it.toAdminResponse() }
     }
 
     @PutMapping("/{id}")
@@ -68,15 +68,7 @@ class AdminContentOptionController(private val contentOptionRepository: ContentO
         @RequestBody request: AdminContentOptionUpdateRequest,
     ): AdminContentOptionResponse {
         checkAdminRole(authMember)
-        val existing = contentOptionRepository.findById(id).orElseThrow {
-            NotFoundException("해당 옵션을 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT_INFO)
-        }
-        val updated = existing.copy(
-            displayName = request.displayName,
-            show = request.show,
-            sortOrder = request.sortOrder,
-        )
-        return contentOptionRepository.save(updated).toAdminResponse()
+        return contentOptionService.updateOption(id, request).toAdminResponse()
     }
 
     @DeleteMapping("/{id}")
@@ -84,10 +76,7 @@ class AdminContentOptionController(private val contentOptionRepository: ContentO
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteOption(@LoginMember authMember: AuthMember, @PathVariable id: Long) {
         checkAdminRole(authMember)
-        if (!contentOptionRepository.existsById(id)) {
-            throw NotFoundException("해당 옵션을 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT_INFO)
-        }
-        contentOptionRepository.deleteById(id)
+        contentOptionService.deleteOption(id)
     }
 
     private fun checkAdminRole(authMember: AuthMember) {

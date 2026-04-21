@@ -22,7 +22,6 @@ import com.tropig.backend.contents.model.response.*
 import com.tropig.backend.contents.service.ContentService
 import com.tropig.backend.contents.service.S3Service
 import com.tropig.backend.contents.service.TagService
-import com.tropig.backend.member.enums.Role
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.payment.service.RevenueService
 import org.springframework.http.HttpStatus
@@ -43,7 +42,7 @@ class CreatorController(
     @ResponseStatus(HttpStatus.CREATED)
     fun createContent(@LoginMember authMember: AuthMember, @RequestBody request: CreateContentRequest): Long {
         // CREATOR 권한 체크
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠를 생성할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -67,7 +66,7 @@ class CreatorController(
         @RequestBody request: UpdateContentRequest,
     ): Long {
         // 1. CREATOR 권한 체크
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠를 수정할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -106,7 +105,7 @@ class CreatorController(
         contentId: Long,
     ) {
         // 1. AuthMember의 role이 CREATOR인지 확인
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 "CREATOR 권한이 필요합니다.",
                 MessageCode.INCORRECT_ROLE,
@@ -129,7 +128,7 @@ class CreatorController(
         @PathVariable contentId: Long,
         @RequestBody request: UpdateContentStatusRequest,
     ): Long {
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "콘텐츠 상태를 변경할 권한이 없습니다. CREATOR 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
@@ -146,6 +145,13 @@ class CreatorController(
         val content = contentService.findById(contentId)
             ?.takeIf { it.status != ContentsStatus.DELETED }
             ?: throw NotFoundException("콘텐츠를 찾을 수 없습니다.", MessageCode.NOT_FOUND_CONTENT)
+
+        if (content.status == ContentsStatus.BANNED) {
+            throw ContentException(
+                message = "관리자에 의해 비공개 처리된 콘텐츠의 상태는 변경할 수 없습니다.",
+                code = MessageCode.INCORRECT_ROLE,
+            )
+        }
 
         val updatedContent = contentService.updateContentStatus(
             content = content,
@@ -165,7 +171,7 @@ class CreatorController(
         @RequestParam(defaultValue = "15") size: Int,
         @RequestParam(defaultValue = "0") cursorContentId: Long,
     ): List<CreatorContentResponse> {
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw MemberException(
                 message = "창작자가 아닙니다. memberId: ${authMember.memberId}",
                 code = MessageCode.INCORRECT_ROLE,
@@ -173,8 +179,9 @@ class CreatorController(
         }
         val contents = when (status) {
             ContentsStatus.PUBLISHED -> {
-                revenueService.getCreatorContents(authMember.memberId, type)
-                    .sortedByDescending { it.publishedAt }
+                val published = revenueService.getCreatorContents(authMember.memberId, type)
+                val banned = contentService.getBannedContentsByMember(authMember.memberId, type)
+                (published + banned).sortedByDescending { it.publishedAt ?: it.updatedAt }
             }
             ContentsStatus.DRAFT -> {
                 contentService.getDraftContent(authMember.memberId)
@@ -231,7 +238,7 @@ class CreatorController(
             )
 
         // 2. CREATOR 권한 확인
-        if (authMember.role != Role.CREATOR) {
+        if (!authMember.role.isCreator) {
             throw ContentException(
                 message = "창작자 권한이 필요합니다.",
                 code = MessageCode.INCORRECT_ROLE,
