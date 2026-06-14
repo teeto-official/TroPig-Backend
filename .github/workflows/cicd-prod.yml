@@ -123,6 +123,10 @@ jobs:
             # Encryption
             ENCRYPTION_SECRET_KEY=${{ secrets.ENCRYPTION_SECRET_KEY }}
 
+            # EMAIL
+            GMAIL_USERNAME=${{ secrets.GMAIL_USERNAME }}
+            GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
+
             INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
 
             EOF

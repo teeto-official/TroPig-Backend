@@ -43,14 +43,15 @@ spring:
       spec: maximumSize=100,expireAfterWrite=10m
 
   mail:
-    host: email-smtp.ap-northeast-2.amazonaws.com
+    host: smtp.gmail.com
     port: 587
-    username: ${SES_SMTP_USERNAME}
-    password: ${SES_SMTP_PASSWORD}
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
     properties:
       mail.smtp:
         auth: true
         starttls.enable: true
+        starttls.required: true
 
 server:
   port: 8080
@@ -82,11 +83,12 @@ jwt:
 
 mail:
   sender:
-    address: ${MAIL_ADDRESS}
+    address: ${MAIL_ADDRESS:${GMAIL_USERNAME}}
     name: ${MAIL_NAME}
   subjects:
     sign_up: "가입을 환영합니다"
     receipt: "구매 확정 안내"
+    creator_totp: "창작자 이메일 인증번호 안내"
 
 aws:
   s3:
