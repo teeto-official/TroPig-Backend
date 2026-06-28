@@ -60,6 +60,14 @@ class CacheConfig(private val cacheErrorHandler: CacheErrorHandler) : CachingCon
                     "contentOptions" -> Caffeine.newBuilder()
                         .expireAfterWrite(1, TimeUnit.HOURS)
 
+                    "bannerDisplay" -> Caffeine.newBuilder()
+                        .expireAfterWrite(5, TimeUnit.MINUTES)
+                        .maximumSize(10)
+
+                    "bannerHtml" -> Caffeine.newBuilder()
+                        .expireAfterWrite(5, TimeUnit.MINUTES)
+                        .maximumSize(100)
+
                     "memberProfile" -> Caffeine.newBuilder()
                         .expireAfterWrite(5, TimeUnit.MINUTES)
                         .maximumSize(500)
