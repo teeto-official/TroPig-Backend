@@ -3,6 +3,7 @@ package com.tropig.backend.common.enums
 enum class MessageCode {
     NOT_FOUND_MEMBER,
     NOT_FOUND_CONTENT,
+    NOT_FOUND_BANNER,
     NOT_FOUND_PURCHASE_INFO,
     NOT_FOUND_PAYMENT_INFO,
     NOT_FOUND_CONTENT_INFO,

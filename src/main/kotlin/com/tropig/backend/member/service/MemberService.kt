@@ -88,6 +88,7 @@ class MemberService(
         val now = Date()
         val token = jwtTokenProvider.getToken(member, now)
 
+        memberCacheService.evictMember(member.id)
         redisRefreshTokenService.save(member.id, token.second)
 
         return TokenResponse(
@@ -104,6 +105,7 @@ class MemberService(
 
         val token = jwtTokenProvider.getToken(member, Date())
 
+        memberCacheService.evictMember(member.id)
         redisRefreshTokenService.save(member.id, token.second)
 
         return TokenResponse(
@@ -133,6 +135,7 @@ class MemberService(
         val now = Date()
         val token = jwtTokenProvider.getToken(member, now)
 
+        memberCacheService.evictMember(member.id)
         redisRefreshTokenService.save(member.id, token.second)
 
         return TokenResponse(
