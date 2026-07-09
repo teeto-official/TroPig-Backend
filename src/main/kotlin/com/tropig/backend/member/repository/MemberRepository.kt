@@ -24,4 +24,6 @@ interface MemberRepository : JpaRepository<Member, Long> {
     fun existsByNicknameAndIdNot(nickname: String, id: Long): Boolean
 
     fun findByNicknameAndDeletedAtIsNull(nickname: String): Member?
+
+    fun findTop10ByNicknameContainingIgnoreCaseAndDeletedAtIsNullOrderByNicknameAsc(nickname: String): List<Member>
 }
