@@ -13,7 +13,7 @@ import com.tropig.backend.common.exception.IllegalArgumentException as TroPigIll
 class RecruitmentAccessGuard(private val recruitmentRepository: RecruitmentRepository) {
     fun findVisible(id: Long): Recruitment = requireVisible(recruitmentRepository.findById(id).orElse(null), id)
 
-    /** 상태 변경(수정/삭제/완료) 시 동시 요청 경합을 막기 위해 행 잠금으로 조회한다. */
+    /** 상태 변경(수정/삭제/완료) 및 신청 시 동시 요청 경합을 막기 위해 행 잠금으로 조회한다. */
     fun findVisibleForUpdate(id: Long): Recruitment = requireVisible(recruitmentRepository.findByIdForUpdate(id), id)
 
     fun checkWriter(recruitment: Recruitment, memberId: Long) {

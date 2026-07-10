@@ -96,6 +96,17 @@ class RecruitmentServiceTest {
     }
 
     @Test
+    fun `마감일시가 과거면 수정 불가`() {
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment(writerMemberId = 1L))
+
+        val exception = assertThrows<TroPigIllegalArgumentException> {
+            service.updateRecruitment(10L, 1L, request(deadlineAt = LocalDateTime.now().minusMinutes(1)))
+        }
+
+        assertEquals(MessageCode.INVALID_PARAMS, exception.code)
+    }
+
+    @Test
     fun `정상 요청이면 저장하고 상세 응답을 반환`() {
         given(recruitmentRepository.save(any())).willAnswer { it.arguments[0] as Recruitment }
         given(mapper.toDetail(anyArg(), anyArg(), anyArg(), anyArg())).willReturn(dummyDetail())

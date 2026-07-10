@@ -35,7 +35,8 @@ class RecruitmentApplicationService(
 
     @Transactional
     fun apply(recruitmentId: Long, memberId: Long, request: CreateApplicationRequest): ApplicationResponse {
-        val recruitment = accessGuard.findVisible(recruitmentId)
+        // 완료/삭제 트랜잭션과 같은 행 잠금을 잡아 모집 종료 직후 신청이 저장되는 경합을 막는다.
+        val recruitment = accessGuard.findVisibleForUpdate(recruitmentId)
 
         if (recruitment.writerMemberId == memberId) {
             throw TroPigIllegalArgumentException(

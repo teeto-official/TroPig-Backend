@@ -66,9 +66,6 @@ class RecruitmentService(
     @Transactional
     fun createRecruitment(memberId: Long, request: CreateRecruitmentRequest): RecruitmentDetailResponse {
         validateRequest(request)
-        if (!request.deadlineAt.isAfter(LocalDateTime.now())) {
-            throwInvalid("모집 마감일시는 현재 이후여야 합니다.")
-        }
 
         val recruitment = Recruitment(
             writerMemberId = memberId,
@@ -176,6 +173,9 @@ class RecruitmentService(
     private fun validateRequest(request: CreateRecruitmentRequest) {
         if (request.title.isBlank()) {
             throwInvalid("제목을 입력해주세요.")
+        }
+        if (!request.deadlineAt.isAfter(LocalDateTime.now())) {
+            throwInvalid("모집 마감일시는 현재 이후여야 합니다.")
         }
         if (request.rules.isEmpty()) {
             throwInvalid("룰을 1개 이상 입력해주세요.")

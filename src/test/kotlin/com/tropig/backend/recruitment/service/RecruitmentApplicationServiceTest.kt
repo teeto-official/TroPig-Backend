@@ -33,7 +33,7 @@ class RecruitmentApplicationServiceTest {
 
     @Test
     fun `본인이 작성한 구인글에는 신청할 수 없다`() {
-        given(recruitmentRepository.findById(10L)).willReturn(Optional.of(recruitment(writerMemberId = 1L)))
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment(writerMemberId = 1L))
 
         val exception = assertThrows<TroPigIllegalArgumentException> {
             service.apply(10L, 1L, CreateApplicationRequest("신청합니다"))
@@ -45,7 +45,7 @@ class RecruitmentApplicationServiceTest {
     @Test
     fun `마감일이 지난 구인글에는 신청할 수 없다`() {
         val recruitment = recruitment(writerMemberId = 1L, deadlineAt = LocalDateTime.now().minusMinutes(1))
-        given(recruitmentRepository.findById(10L)).willReturn(Optional.of(recruitment))
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment)
 
         val exception = assertThrows<TroPigIllegalArgumentException> {
             service.apply(10L, 2L, CreateApplicationRequest("신청합니다"))
@@ -59,7 +59,7 @@ class RecruitmentApplicationServiceTest {
         val recruitment = recruitment(writerMemberId = 1L).apply {
             status = RecruitmentStatus.RECRUITMENT_COMPLETED
         }
-        given(recruitmentRepository.findById(10L)).willReturn(Optional.of(recruitment))
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment)
 
         val exception = assertThrows<TroPigIllegalArgumentException> {
             service.apply(10L, 2L, CreateApplicationRequest("신청합니다"))
@@ -70,7 +70,7 @@ class RecruitmentApplicationServiceTest {
 
     @Test
     fun `신청 내용이 비어 있으면 신청 불가`() {
-        given(recruitmentRepository.findById(10L)).willReturn(Optional.of(recruitment(writerMemberId = 1L)))
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment(writerMemberId = 1L))
 
         val exception = assertThrows<TroPigIllegalArgumentException> {
             service.apply(10L, 2L, CreateApplicationRequest("  "))
@@ -81,7 +81,7 @@ class RecruitmentApplicationServiceTest {
 
     @Test
     fun `이미 신청한 구인글에는 다시 신청할 수 없다`() {
-        given(recruitmentRepository.findById(10L)).willReturn(Optional.of(recruitment(writerMemberId = 1L)))
+        given(recruitmentRepository.findByIdForUpdate(10L)).willReturn(recruitment(writerMemberId = 1L))
         given(applicationRepository.existsByRecruitmentIdAndApplicantMemberId(10L, 2L)).willReturn(true)
 
         val exception = assertThrows<TroPigIllegalArgumentException> {
