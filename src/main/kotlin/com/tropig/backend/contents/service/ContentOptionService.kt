@@ -13,9 +13,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Service
 
 @Service
-class ContentOptionService(
-    private val contentOptionRepository: ContentOptionRepository,
-) {
+class ContentOptionService(private val contentOptionRepository: ContentOptionRepository) {
 
     fun getOptions(type: OptionType): List<ContentOption> =
         contentOptionRepository.findAllByType(type).sortedBy { it.sortOrder }

@@ -32,9 +32,7 @@ interface RecruitmentApplicationRepository : JpaRepository<RecruitmentApplicatio
         GROUP BY a.recruitmentId
         """,
     )
-    fun countByRecruitmentIds(
-        @Param("recruitmentIds") recruitmentIds: List<Long>,
-    ): List<RecruitmentApplicationCount>
+    fun countByRecruitmentIds(@Param("recruitmentIds") recruitmentIds: List<Long>): List<RecruitmentApplicationCount>
 
     @Query(
         """

@@ -19,9 +19,7 @@ interface RecruitmentRepository :
     RecruitmentCustomRepository {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Recruitment r WHERE r.id = :id")
-    fun findByIdForUpdate(
-        @Param("id") id: Long,
-    ): Recruitment?
+    fun findByIdForUpdate(@Param("id") id: Long): Recruitment?
 
     fun findAllByWriterMemberIdAndDeletedAtIsNull(writerMemberId: Long, pageable: Pageable): Page<Recruitment>
 

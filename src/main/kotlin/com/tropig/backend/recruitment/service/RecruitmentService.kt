@@ -237,7 +237,9 @@ class RecruitmentService(
     }
 
     private fun CreateRecruitmentRequest.toDetails(): RecruitmentDetails = RecruitmentDetails(
-        scenarios = scenarios.map { ScenarioRef(it.scenarioId, it.text?.trim()?.takeUnless { text -> text.isBlank() }) },
+        scenarios = scenarios.map {
+            ScenarioRef(it.scenarioId, it.text?.trim()?.takeUnless { text -> text.isBlank() })
+        },
         rules = rules.map { RuleRef(it.ruleId, it.text?.trim()?.takeUnless { text -> text.isBlank() }) },
         gm = gm.map { PersonRef(it.memberId, it.text?.trim()?.takeUnless { text -> text.isBlank() }) },
         pl = pl.map { PersonRef(it.memberId, it.text?.trim()?.takeUnless { text -> text.isBlank() }) },
