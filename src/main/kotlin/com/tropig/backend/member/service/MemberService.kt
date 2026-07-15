@@ -55,6 +55,9 @@ class MemberService(
 
     fun getUserByNickname(nickname: String): Member? = memberRepository.findByNicknameAndDeletedAtIsNull(nickname)
 
+    fun searchMembersByNickname(keyword: String): List<Member> =
+        memberRepository.findTop10ByNicknameContainingIgnoreCaseAndDeletedAtIsNullOrderByNicknameAsc(keyword)
+
     @Cacheable(value = ["memberProfile"], key = "#nickname")
     fun getMemberProfile(nickname: String): Member? = memberRepository.findByNicknameAndDeletedAtIsNull(nickname)
 

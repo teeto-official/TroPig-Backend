@@ -22,6 +22,6 @@ fun Banner.toDetailResponse(s3Service: S3Service): BannerDetailResponse? {
         type = type,
         htmlPath = htmlPath,
         startedAt = startedAt,
-        endedAt = endedAt
+        endedAt = endedAt,
     )
 }

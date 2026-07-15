@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 
 @ApiController
 @RequestMapping("/api/admin/ban")
-class AdminBanController(
-    private val adminBanService: AdminBanService,
-) {
+class AdminBanController(private val adminBanService: AdminBanService) {
 
     @PatchMapping("/content/{contentId}")
     @RequireAuth

@@ -5,9 +5,7 @@ import com.tropig.backend.common.exception.NotFoundException
 import org.springframework.stereotype.Service
 
 @Service
-class AdminBanService(
-    private val contentService: ContentService,
-) {
+class AdminBanService(private val contentService: ContentService) {
 
     fun banContent(contentId: Long) {
         val content = contentService.findById(contentId)

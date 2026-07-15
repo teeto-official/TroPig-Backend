@@ -20,11 +20,9 @@ class BannerController(private val bannerService: BannerService) {
         bannerService.getDisplayBanners(device)
 
     @GetMapping("/{alias}")
-    fun getBanner(
-        @PathVariable alias: String,
-    ): BannerDetailResponse =
+    fun getBanner(@PathVariable alias: String): BannerDetailResponse =
         bannerService.getDisplayBanner(alias) ?: throw NotFoundException(
             code = MessageCode.NOT_FOUND_BANNER,
-            message = "해당 배너는 유효하지 않습니다."
+            message = "해당 배너는 유효하지 않습니다.",
         )
 }

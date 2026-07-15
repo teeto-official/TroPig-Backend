@@ -22,6 +22,7 @@ import com.tropig.backend.member.model.request.SignUpRequest
 import com.tropig.backend.member.model.request.UpdateMemberRequest
 import com.tropig.backend.member.model.response.MemberProfileResponse
 import com.tropig.backend.member.model.response.MemberResponse
+import com.tropig.backend.member.model.response.MemberSearchResponse
 import com.tropig.backend.member.model.response.TokenResponse
 import com.tropig.backend.member.service.CreatorService
 import com.tropig.backend.member.service.MemberService
@@ -102,6 +103,23 @@ class MemberController(
         val memberAuthInfo = memberService.findMemberAuthInfo(authMember.memberId)
         return MemberResponse.from(member, memberAuthInfo)
             .let { it.copy(profile = s3Service.toUrl(it.profile)) }
+    }
+
+    @GetMapping("/search")
+    @RequireAuth
+    fun searchMembers(@RequestParam keyword: String): List<MemberSearchResponse> {
+        val trimmed = keyword.trim()
+        if (trimmed.isEmpty()) {
+            return emptyList()
+        }
+
+        return memberService.searchMembersByNickname(trimmed).map { member ->
+            MemberSearchResponse(
+                id = member.id,
+                nickname = member.nickname,
+                profileUrl = s3Service.toUrl(member.profile),
+            )
+        }
     }
 
     @GetMapping("/profile/{nickname}")
