@@ -44,7 +44,7 @@ services:
       - web-root:/var/www/html
     depends_on:
       - nginx
-    command: certonly --webroot --keep-until-expiring --webroot-path=/var/www/html --email teeto.team.official@gmail.com --agree-tos --no-eff-email -d api.teeto.to -d teeto.to
+    command: certonly --webroot --keep-until-expiring --webroot-path=/var/www/html --email teeto.team.official@gmail.com --agree-tos --no-eff-email --cert-name api.teeto.to -d api.teeto.to -d teeto.to
     networks:
       - internal
 
